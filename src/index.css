@@ -1,0 +1,112 @@
+
+@import "tailwindcss";
+
+html {
+  scroll-behavior: auto;
+  overscroll-behavior-y: none;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  overflow-x: clip;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+
+/* =====================================================
+   GLOBAL SETTINGS
+===================================================== */
+
+:root {
+  --scrollbar-track: #171717;
+  --scrollbar-thumb: #f97316;
+  --scrollbar-thumb-hover: #fb923c;
+  --scrollbar-thumb-active: #ea580c;
+}
+
+html {
+  scroll-behavior: auto;
+  overscroll-behavior-y: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =====================================================
+   CUSTOM ORANGE SCROLLBAR — CHROME / EDGE
+===================================================== */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    #fb923c 0%,
+    #f97316 50%,
+    #ea580c 100%
+  );
+  border: 2px solid var(--scrollbar-track);
+  border-radius: 10px;
+  min-height: 35px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-thumb-active);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
+/* =====================================================
+   GLOBAL INTERACTION
+===================================================== */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+/* =====================================================
+   ACCESSIBILITY
+===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
