@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Hammer, Ruler, Users } from "lucide-react";
 
 import kitchenImg from "../assets/kitchen1.webp";
 import wardrobeImg from "../assets/word1.webp";
@@ -15,19 +14,16 @@ const IMAGES = {
 
 const INTRO_POINTS = [
   {
-    icon: Users,
     title: "Understanding Your Space",
-    text: "Every project starts with understanding your requirements, preferences, available space and everyday lifestyle.",
+    text: "Every project starts with your requirements, preferences and everyday lifestyle.",
   },
   {
-    icon: Ruler,
     title: "Considered Design",
-    text: "Contemporary style, practical functionality and carefully considered details come together in every interior.",
+    text: "Modern style, practical functionality and carefully selected details.",
   },
   {
-    icon: Hammer,
     title: "Skilled Manufacturing",
-    text: "We create kitchens, wardrobes, bedroom furniture and media walls with attention to detail and quality.",
+    text: "Custom kitchens, wardrobes, bedroom furniture and media walls.",
   },
 ];
 
@@ -35,7 +31,78 @@ const STATS = [
   { value: "04", label: "Interior Categories" },
   { value: "2D / 3D", label: "Design Visualisation" },
   { value: "01", label: "Coordinated Team" },
-  { value: "Faisalabad", label: "Based In" },
+  { value: "Pakistan", label: "Service Coverage" },
+];
+
+const ECOSYSTEM = [
+  {
+    title: "Same Style",
+    text: "A consistent modern look connects every room in your home.",
+  },
+  {
+    title: "Same Colour",
+    text: "Coordinated colours, finishes and materials create a balanced interior.",
+  },
+  {
+    title: "Same Quality",
+    text: "Every cabinet, panel and fitting receives careful attention.",
+  },
+  {
+    title: "Same Team",
+    text: "One coordinated team manages design, manufacturing and installation.",
+  },
+];
+
+const JOURNEY = [
+  {
+    step: "01",
+    title: "Consultation",
+    text: "We discuss your requirements, ideas and budget.",
+  },
+  {
+    step: "02",
+    title: "Site Measurement",
+    text: "Accurate measurements help create a precise layout.",
+  },
+  {
+    step: "03",
+    title: "2D / 3D Design",
+    text: "Review your layout, colours and finishes before production.",
+  },
+  {
+    step: "04",
+    title: "Manufacturing",
+    text: "Your furniture is crafted with attention to detail.",
+  },
+  {
+    step: "05",
+    title: "Installation",
+    text: "Our team installs your interior for a neat finish.",
+  },
+  {
+    step: "06",
+    title: "Final Handover",
+    text: "We review the completed project with you.",
+  },
+];
+
+const STANDARDS = [
+  {
+    value: "06",
+    label: "Clear Project Stages",
+    text: "A structured process from consultation to handover.",
+  },
+  {
+    value: "04",
+    label: "Interior Categories",
+    text: "Kitchens, wardrobes, bedrooms and media walls.",
+  },
+  {
+    value: "100%",
+    label: "Custom Design",
+    text: "Solutions tailored to your space and preferences.",
+  },
+ 
 ];
 
 const SPACES = [
@@ -56,14 +123,14 @@ const SPACES = [
   {
     number: "03",
     title: "Media Walls",
-    text: "Distinctive designs for contemporary living.",
+    text: "Contemporary designs for modern living.",
     img: IMAGES.media,
     to: "/media-walls",
   },
   {
     number: "04",
     title: "Bedroom Interiors",
-    text: "Comfortable spaces with considered details.",
+    text: "Comfortable spaces with thoughtful details.",
     img: IMAGES.bed,
     to: "/bedroom-walls",
   },
@@ -76,9 +143,6 @@ function Img({ src, alt, className = "" }) {
       alt={alt}
       loading="lazy"
       className={className}
-      onError={(event) => {
-        event.currentTarget.style.opacity = "0";
-      }}
     />
   );
 }
@@ -87,25 +151,27 @@ export default function AboutUs() {
   return (
     <main className="ab-page">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap');
 
         .ab-page {
-          --ab-bg: #0a0a0a;
-          --ab-surface: #11100f;
+          --ab-bg: #090909;
+          --ab-surface: #10100f;
           --ab-card: #151311;
-          --ab-accent: #c0652b;
-          --ab-accent-light: #e08a4f;
-          --ab-white: #f7f4f0;
-          --ab-muted: rgba(255,255,255,.66);
+          --ab-orange: #c0652b;
+          --ab-orange-light: #e08a4f;
+          --ab-white: #fff;
+          --ab-muted: #b9b4ad;
           --ab-border: rgba(255,255,255,.11);
-          --ab-display: 'Cormorant Garamond', Georgia, serif;
-          --ab-sans: 'Jost', Arial, sans-serif;
 
           width: 100%;
+          max-width: none;
+          margin: 0;
           overflow-x: clip;
           color: var(--ab-white);
           background: var(--ab-bg);
-          font-family: var(--ab-sans);
+          font-family: 'Open Sans', Arial, sans-serif;
+          font-size: 14px;
+          font-weight: 400;
         }
 
         .ab-page *,
@@ -116,125 +182,103 @@ export default function AboutUs() {
 
         .ab-page img {
           display: block;
+          width: 100%;
           max-width: 100%;
         }
 
         .ab-page a {
           color: inherit;
+          text-decoration: none;
         }
 
         .ab-wrap {
           width: 100%;
-          max-width: 1600px;
+          max-width: none;
           margin: 0 auto;
-          padding-inline: clamp(20px, 5.2vw, 84px);
+          padding-inline: clamp(18px, 4vw, 64px);
         }
 
         .ab-eyebrow {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
-          gap: 12px;
+          gap: 9px;
           margin: 0;
-          color: var(--ab-accent-light);
-          font-size: 10px;
+          color: var(--ab-orange-light);
+          font-size: 11px;
           font-weight: 500;
-          letter-spacing: .24em;
-          line-height: 1.7;
+          letter-spacing: .13em;
+          line-height: 1.5;
           text-transform: uppercase;
         }
 
         .ab-eyebrow::before {
-          width: 28px;
-          height: 1px;
-          background: var(--ab-accent);
+          width: 22px;
+          height: 2px;
+          flex-shrink: 0;
+          background: var(--ab-orange);
           content: "";
         }
 
+        /* HEADINGS */
+
         .ab-title,
-        .ab-h2,
-        .ab-h3 {
-          font-family: var(--ab-display);
+        .ab-h2 {
+          margin: 0;
+          color: #fff;
           font-weight: 500;
           letter-spacing: -.025em;
+          line-height: 1.2;
         }
 
         .ab-title {
-          max-width: 1050px;
-          margin: 23px auto 0;
-          color: #fff;
-          font-size: clamp(46px, 7.1vw, 100px);
-          line-height: .99;
+          font-size: clamp(30px, 3.2vw, 44px);
+        }
+
+        .ab-h2 {
+          margin-top: 10px;
+          font-size: clamp(25px, 2.4vw, 34px);
         }
 
         .ab-title em,
         .ab-h2 em {
-          color: var(--ab-accent-light);
+          color: var(--ab-orange-light);
+          font-style: normal;
           font-weight: 500;
-        }
-
-        .ab-h2 {
-          margin: 15px 0 0;
-          color: #fff;
-          font-size: clamp(36px, 4.2vw, 59px);
-          line-height: 1.05;
-        }
-
-        .ab-h3 {
-          margin: 0;
-          color: #fff;
-          font-size: 27px;
-          line-height: 1.12;
         }
 
         .ab-body {
           margin: 0;
           color: var(--ab-muted);
           font-size: 14px;
-          font-weight: 300;
-          line-height: 1.9;
+          font-weight: 400;
+          line-height: 1.8;
+        }
+
+        .ab-body strong {
+          color: #fff;
+          font-weight: 500;
         }
 
         .ab-btn {
           display: inline-flex;
-          min-height: 51px;
+          min-height: 45px;
           align-items: center;
           justify-content: center;
-          gap: 12px;
-          padding: 0 25px;
-          border: 1px solid transparent;
+          padding: 0 23px;
+          border: 1px solid #fff;
           border-radius: 2px;
-          font-family: var(--ab-sans);
-          font-size: 10px;
+          background: #fff;
+          color: #090909 !important;
+          font-family: inherit;
+          font-size: 12px;
           font-weight: 500;
-          letter-spacing: .12em;
-          text-align: center;
-          text-decoration: none;
-          text-transform: uppercase;
-          transition:
-            background .25s ease,
-            border-color .25s ease,
-            color .25s ease;
+          transition: background .2s ease, border-color .2s ease, color .2s ease;
         }
 
-        .ab-btn svg {
-          transition: transform .25s ease;
-        }
-
-        .ab-btn:hover svg {
-          transform: translateX(4px);
-        }
-
-        .ab-btn-primary {
-          border-color: var(--ab-accent);
-          background: var(--ab-accent);
-          color: #fff;
-        }
-
-        .ab-btn-primary:hover {
-          border-color: var(--ab-accent-light);
-          background: var(--ab-accent-light);
-          color: #fff;
+        .ab-btn:hover {
+          border-color: var(--ab-orange);
+          background: var(--ab-orange);
+          color: #fff !important;
         }
 
         /* HERO */
@@ -243,24 +287,21 @@ export default function AboutUs() {
           position: relative;
           isolation: isolate;
           display: flex;
-          min-height: 510px;
-          align-items: center;
-          justify-content: center;
+          min-height: 440px;
+          align-items: flex-end;
           overflow: hidden;
-          padding: 120px 0 90px;
+          padding: 105px 0 48px;
           background: #100e0c;
-          text-align: center;
         }
 
         .ab-hero-img {
           position: absolute;
           z-index: -3;
           inset: 0;
-          width: 100%;
           height: 100%;
           object-fit: cover;
-          object-position: center 54%;
-          opacity: .45;
+          object-position: center 55%;
+          opacity: .58;
         }
 
         .ab-hero-shade {
@@ -268,237 +309,48 @@ export default function AboutUs() {
           z-index: -2;
           inset: 0;
           background:
-            linear-gradient(
-              90deg,
-              rgba(10,10,10,.7),
-              rgba(10,10,10,.34) 50%,
-              rgba(10,10,10,.7)
-            ),
-            linear-gradient(
-              180deg,
-              rgba(10,10,10,.3),
-              rgba(10,10,10,.45) 55%,
-              #0a0a0a 100%
-            );
-        }
-
-        .ab-hero-grid {
-          position: absolute;
-          z-index: -1;
-          inset: 0;
-          pointer-events: none;
-          background-image: linear-gradient(
-            90deg,
-            transparent calc(100% - 1px),
-            rgba(255,255,255,.055) calc(100% - 1px)
-          );
-          background-size: 25% 100%;
-          mask-image: linear-gradient(
-            180deg,
-            transparent,
-            #000 20%,
-            #000 80%,
-            transparent
-          );
-        }
-
-        .ab-hero-inner {
-          width: 100%;
-          max-width: 1150px;
-          margin: auto;
-          padding-inline: 22px;
-        }
-
-        .ab-hero .ab-title {
-          text-shadow: 0 2px 30px rgba(0,0,0,.25);
+            linear-gradient(90deg, rgba(8,8,8,.91), rgba(8,8,8,.62) 48%, rgba(8,8,8,.2)),
+            linear-gradient(0deg, #090909 0%, transparent 65%);
         }
 
         .ab-hero-text {
-          max-width: 570px;
-          margin: 23px auto 0;
-          color: rgba(255,255,255,.79);
-          font-size: 15px;
-          line-height: 1.9;
+          max-width: 540px;
+          margin: 16px 0 0;
+          color: #f0ede9;
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 1.85;
+        }
+
+        .ab-hero-text strong {
+          color: #fff;
+          font-weight: 500;
         }
 
         .ab-hero-bottom {
           display: flex;
           align-items: center;
-          justify-content: center;
-          gap: 12px;
-          margin-top: 33px;
-          color: rgba(255,255,255,.6);
-          font-size: 9px;
+          gap: 10px;
+          margin-top: 22px;
+          color: #fff;
+          font-size: 10px;
           font-weight: 500;
-          letter-spacing: .2em;
+          letter-spacing: .13em;
           text-transform: uppercase;
         }
 
-        .ab-hero-bottom::before,
-        .ab-hero-bottom::after {
-          width: 35px;
-          height: 1px;
-          background: var(--ab-accent);
-          content: "";
-        }
-
-        /* ABOUT INTRODUCTION */
-
-        .ab-intro-section {
-          padding-block: 100px;
-        }
-
-        .ab-intro {
-          display: grid;
-          grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
-          align-items: center;
-          gap: clamp(38px, 7vw, 100px);
-        }
-
-        .ab-intro-copy {
-          min-width: 0;
-        }
-
-        .ab-intro-copy .ab-h2 {
-          max-width: 520px;
-        }
-
-        .ab-divider {
-          width: 55px;
+        .ab-hero-bottom::before {
+          width: 26px;
           height: 2px;
-          margin: 25px 0;
-          background: var(--ab-accent);
-        }
-
-        .ab-intro-description {
-          display: grid;
-          gap: 14px;
-          max-width: 530px;
-        }
-
-        .ab-intro-image {
-          position: relative;
-          min-width: 0;
-          padding: 0 0 20px 20px;
-        }
-
-        .ab-intro-image::before {
-          position: absolute;
-          top: -15px;
-          right: -12px;
-          bottom: 38px;
-          left: 38px;
-          border: 1px solid rgba(192,101,43,.48);
+          background: var(--ab-orange);
           content: "";
-        }
-
-        .ab-image-frame {
-          position: relative;
-          overflow: hidden;
-          aspect-ratio: 4 / 4.5;
-          background: #191614;
-        }
-
-        .ab-image-frame img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform .7s ease;
-        }
-
-        .ab-intro-image:hover .ab-image-frame img {
-          transform: scale(1.035);
-        }
-
-        .ab-image-caption {
-          position: absolute;
-          right: -1px;
-          bottom: 0;
-          display: flex;
-          width: min(88%, 360px);
-          align-items: center;
-          gap: 16px;
-          padding: 21px 24px;
-          border: 1px solid rgba(255,255,255,.08);
-          background: #171412;
-        }
-
-        .ab-caption-line {
-          width: 2px;
-          height: 37px;
-          flex: 0 0 auto;
-          background: var(--ab-accent);
-        }
-
-        .ab-caption-title {
-          margin: 0;
-          color: #fff;
-          font-family: var(--ab-display);
-          font-size: 22px;
-          line-height: 1.1;
-        }
-
-        .ab-caption-text {
-          margin: 5px 0 0;
-          color: rgba(255,255,255,.55);
-          font-size: 9px;
-          letter-spacing: .11em;
-          text-transform: uppercase;
-        }
-
-        .ab-intro-features {
-          display: grid;
-          gap: 0;
-          margin-top: 29px;
-          border-top: 1px solid var(--ab-border);
-        }
-
-        .ab-feature {
-          display: flex;
-          align-items: flex-start;
-          gap: 16px;
-          padding: 19px 0;
-          border-bottom: 1px solid var(--ab-border);
-        }
-
-        .ab-feature-icon {
-          display: flex;
-          width: 43px;
-          height: 43px;
-          flex: 0 0 auto;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(192,101,43,.35);
-          background: rgba(192,101,43,.08);
-          color: var(--ab-accent-light);
-        }
-
-        .ab-feature h3 {
-          margin: 1px 0 5px;
-          color: #fff;
-          font-size: 13px;
-          font-weight: 500;
-        }
-
-        .ab-feature p {
-          max-width: 440px;
-          margin: 0;
-          color: rgba(255,255,255,.58);
-          font-size: 12px;
-          font-weight: 300;
-          line-height: 1.8;
-        }
-
-        .ab-intro-action {
-          margin-top: 27px;
         }
 
         /* STATS */
 
         .ab-stats-section {
-          border-top: 1px solid var(--ab-border);
           border-bottom: 1px solid var(--ab-border);
-          background: #100f0e;
+          background: #10100f;
         }
 
         .ab-stats {
@@ -507,302 +359,572 @@ export default function AboutUs() {
         }
 
         .ab-stat {
-          display: flex;
-          min-height: 135px;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 24px 15px;
+          min-width: 0;
+          padding: 24px 20px 24px 0;
           text-align: center;
         }
 
         .ab-stat + .ab-stat {
+          padding-left: 22px;
           border-left: 1px solid var(--ab-border);
         }
 
         .ab-stat-value {
           margin: 0;
-          color: var(--ab-accent-light);
-          font-family: var(--ab-display);
-          font-size: clamp(27px, 3vw, 39px);
+          color: var(--ab-orange-light);
+          font-size: clamp(22px, 2.2vw, 30px);
+          font-weight: 500;
+          line-height: 1.2;
+          overflow-wrap: anywhere;
+        }
+
+        .ab-stat-label {
+          margin: 7px 0 0;
+          color: #fff;
+          font-size: 11px;
+          font-weight: 500;
+          letter-spacing: .04em;
+          text-transform: uppercase;
+        }
+
+        /* INTRO */
+
+        .ab-intro-section {
+          padding-block: 70px;
+        }
+
+        .ab-intro {
+          display: grid;
+          grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+          align-items: center;
+          gap: clamp(28px, 5vw, 70px);
+        }
+
+        .ab-intro-copy,
+        .ab-intro-image {
+          min-width: 0;
+        }
+
+        .ab-divider {
+          width: 43px;
+          height: 2px;
+          margin: 18px 0;
+          background: var(--ab-orange);
+        }
+
+        .ab-intro-description {
+          display: grid;
+          gap: 12px;
+          max-width: 650px;
+        }
+
+        .ab-intro-description .ab-body:first-child {
+          color: #fff;
+        }
+
+        .ab-intro-image {
+          position: relative;
+          padding: 0 15px 15px 0;
+        }
+
+        .ab-intro-image::before {
+          position: absolute;
+          top: 15px;
+          right: 0;
+          bottom: 0;
+          left: 15px;
+          border: 1px solid rgba(192,101,43,.55);
+          content: "";
+        }
+
+        .ab-image-frame {
+          position: relative;
+          overflow: hidden;
+          aspect-ratio: 4 / 4.1;
+          background: #191614;
+        }
+
+        .ab-image-frame img {
+          height: 100%;
+          object-fit: cover;
+          transition: transform .5s ease;
+        }
+
+        .ab-intro-image:hover .ab-image-frame img {
+          transform: scale(1.025);
+        }
+
+        .ab-image-caption {
+          position: absolute;
+          bottom: 15px;
+          left: -1px;
+          display: flex;
+          width: min(88%, 350px);
+          align-items: center;
+          gap: 12px;
+          padding: 15px 18px;
+          border: 1px solid rgba(255,255,255,.08);
+          background: rgba(17,16,15,.97);
+        }
+
+        .ab-caption-line {
+          width: 2px;
+          height: 36px;
+          flex-shrink: 0;
+          background: var(--ab-orange);
+        }
+
+        .ab-caption-title {
+          margin: 0;
+          color: #fff;
+          font-size: 14px;
+          font-weight: 500;
+          line-height: 1.5;
+        }
+
+        .ab-caption-text {
+          margin: 5px 0 0;
+          color: var(--ab-orange-light);
+          font-size: 10px;
+          font-weight: 500;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+        }
+
+        .ab-intro-features {
+          display: grid;
+          margin-top: 22px;
+          border-top: 1px solid var(--ab-border);
+        }
+
+        .ab-feature {
+          padding: 15px 0;
+          border-bottom: 1px solid var(--ab-border);
+        }
+
+        .ab-feature h3 {
+          margin: 0 0 6px;
+          color: #fff;
+          font-size: 15px;
+          font-weight: 500;
+        }
+
+        .ab-feature p {
+          max-width: 560px;
+          margin: 0;
+          color: var(--ab-muted);
+          font-size: 13px;
+          font-weight: 400;
+          line-height: 1.8;
+        }
+
+        .ab-intro-action {
+          margin-top: 22px;
+        }
+
+        /* WHOLE HOME */
+
+        .ab-eco-section {
+          padding-block: 70px;
+          border-top: 1px solid var(--ab-border);
+          border-bottom: 1px solid var(--ab-border);
+          background: var(--ab-surface);
+        }
+
+        .ab-eco {
+          display: grid;
+          grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+          align-items: start;
+          gap: clamp(28px, 5vw, 70px);
+        }
+
+        .ab-eco-head {
+          position: sticky;
+          top: 100px;
+        }
+
+        .ab-eco-head .ab-body {
+          max-width: 430px;
+          margin-top: 16px;
+        }
+
+        .ab-eco-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          border: 1px solid var(--ab-border);
+        }
+
+        .ab-eco-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 27px 23px;
+          border-right: 1px solid var(--ab-border);
+          border-bottom: 1px solid var(--ab-border);
+          background: var(--ab-card);
+          text-align: center;
+        }
+
+        .ab-eco-item:nth-child(2n) {
+          border-right: 0;
+        }
+
+        .ab-eco-item:nth-child(n+3) {
+          border-bottom: 0;
+        }
+
+        .ab-eco-item h3 {
+          margin: 0 0 9px;
+          color: #fff;
+          font-size: 16px;
+          font-weight: 500;
+          line-height: 1.45;
+        }
+
+        .ab-eco-item p {
+          margin: 0;
+          color: var(--ab-muted);
+          font-size: 13px;
+          font-weight: 400;
+          line-height: 1.8;
+        }
+
+        /* PROCESS */
+
+        .ab-journey-section {
+          padding-block: 70px;
+        }
+
+        .ab-journey-layout {
+          display: grid;
+          grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+          align-items: start;
+          gap: clamp(28px, 5vw, 70px);
+        }
+
+        .ab-journey-head {
+          position: sticky;
+          top: 100px;
+          order: 2;
+        }
+
+        .ab-journey-head .ab-body {
+          max-width: 420px;
+          margin-top: 16px;
+        }
+
+        .ab-journey {
+          order: 1;
+          border-top: 1px solid var(--ab-border);
+        }
+
+        .ab-step {
+          display: grid;
+          grid-template-columns: 58px minmax(0, 1fr);
+          align-items: start;
+          gap: 8px;
+          padding: 20px 0;
+          border-bottom: 1px solid var(--ab-border);
+        }
+
+        .ab-step-number {
+          color: var(--ab-orange-light);
+          font-size: 25px;
+          font-weight: 500;
+          line-height: 1.2;
+        }
+
+        .ab-step h3 {
+          margin: 0 0 7px;
+          color: #fff;
+          font-size: 15px;
+          font-weight: 500;
+        }
+
+        .ab-step p {
+          max-width: 480px;
+          margin: 0;
+          color: var(--ab-muted);
+          font-size: 13px;
+          font-weight: 400;
+          line-height: 1.8;
+        }
+
+        /* STANDARDS */
+
+        .ab-standards-section {
+          padding-block: 70px;
+          border-top: 1px solid var(--ab-border);
+          background: #0d0c0b;
+        }
+
+        .ab-standards-head {
+          max-width: 620px;
+          margin: 0 auto 35px;
+          text-align: center;
+        }
+
+        .ab-standards-head .ab-body {
+          max-width: 480px;
+          margin: 14px auto 0;
+        }
+
+        .ab-standards {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 13px;
+        }
+
+        .ab-standard {
+          display: flex;
+          min-width: 0;
+          flex-direction: column;
+          align-items: center;
+          padding: 25px 22px 27px;
+          border: 1px solid var(--ab-border);
+          background: var(--ab-card);
+          text-align: center;
+          transition: border-color .2s ease;
+        }
+
+        .ab-standard:hover {
+          border-color: rgba(192,101,43,.6);
+        }
+
+        .ab-standard-value {
+          margin: 0;
+          color: var(--ab-orange-light);
+          font-size: clamp(28px, 2.8vw, 37px);
           font-weight: 500;
           line-height: 1.15;
           overflow-wrap: anywhere;
         }
 
-        .ab-stat-label {
-          margin: 10px 0 0;
-          color: rgba(255,255,255,.55);
-          font-size: 9px;
+        .ab-standard-label {
+          margin: 10px 0 7px;
+          color: #fff;
+          font-size: 13px;
           font-weight: 500;
-          letter-spacing: .12em;
-          line-height: 1.7;
-          text-transform: uppercase;
         }
 
-        /* INTERIOR COLLECTIONS */
+        .ab-standard-text {
+          margin: 0;
+          color: var(--ab-muted);
+          font-size: 13px;
+          font-weight: 400;
+          line-height: 1.8;
+        }
+
+        /* COLLECTIONS */
 
         .ab-spaces-section {
-          padding-block: 100px 110px;
+          padding-block: 70px 80px;
         }
 
         .ab-section-heading {
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
-          gap: 30px;
-          margin-bottom: 39px;
+          gap: 24px;
+          margin-bottom: 30px;
         }
 
         .ab-section-heading .ab-h2 {
-          max-width: 650px;
+          max-width: 600px;
         }
 
         .ab-section-description {
-          max-width: 300px;
-          padding-bottom: 5px;
+          max-width: 360px;
+          padding-bottom: 4px;
         }
 
         .ab-spaces-grid {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 17px;
+          gap: 16px;
         }
 
         .ab-space {
-          position: relative;
           display: block;
           min-width: 0;
-          overflow: hidden;
-          border: 1px solid var(--ab-border);
-          background: var(--ab-card);
-          text-decoration: none;
+          text-align: center;
         }
 
         .ab-space-image {
           position: relative;
           overflow: hidden;
-          aspect-ratio: 3 / 4;
+          aspect-ratio: 3 / 3.7;
           background: #1b1714;
         }
 
         .ab-space-image img {
-          width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: transform .65s ease;
+          transition: transform .5s ease;
         }
 
         .ab-space:hover .ab-space-image img {
-          transform: scale(1.055);
-        }
-
-        .ab-space-image::after {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            180deg,
-            rgba(0,0,0,.03) 25%,
-            rgba(0,0,0,.14) 48%,
-            rgba(0,0,0,.77) 100%
-          );
-          content: "";
+          transform: scale(1.035);
         }
 
         .ab-space-number {
           position: absolute;
-          z-index: 1;
-          top: 15px;
-          left: 15px;
+          top: 0;
+          left: 0;
           display: flex;
-          width: 37px;
-          height: 37px;
+          width: 34px;
+          height: 34px;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(255,255,255,.4);
-          background: rgba(10,10,10,.35);
+          background: var(--ab-orange);
           color: #fff;
           font-size: 10px;
-          letter-spacing: .06em;
-          backdrop-filter: blur(8px);
+          font-weight: 500;
         }
 
         .ab-space-info {
-          position: absolute;
-          z-index: 2;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          padding: 23px 19px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 13px 8px 0;
+          border-top: 1px solid var(--ab-border);
+          margin-top: -1px;
+          text-align: center;
         }
 
         .ab-space-title {
           margin: 0;
           color: #fff;
-          font-family: var(--ab-display);
-          font-size: clamp(22px, 2.1vw, 30px);
+          font-size: 15px;
           font-weight: 500;
-          line-height: 1.12;
+          line-height: 1.45;
         }
 
         .ab-space-text {
-          min-height: 40px;
-          margin: 9px 0 17px;
-          color: rgba(255,255,255,.73);
-          font-size: 11px;
-          font-weight: 300;
-          line-height: 1.8;
+          margin: 6px 0 10px;
+          color: var(--ab-muted);
+          font-size: 13px;
+          font-weight: 400;
+          line-height: 1.75;
         }
 
         .ab-space-link {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-          padding-top: 13px;
-          border-top: 1px solid rgba(255,255,255,.3);
-          color: var(--ab-accent-light);
-          font-size: 9px;
+          justify-content: center;
+          gap: 6px;
+          color: var(--ab-orange-light);
+          font-size: 11px;
           font-weight: 500;
-          letter-spacing: .13em;
+          letter-spacing: .035em;
           text-transform: uppercase;
+          transition: color .2s ease;
         }
 
-        .ab-space-link svg {
-          transition: transform .25s ease;
+        .ab-space-link::after {
+          content: "→";
+          font-size: 15px;
+          transition: transform .2s ease;
         }
 
-        .ab-space:hover .ab-space-link svg {
-          transform: translateX(4px);
+        .ab-space:hover .ab-space-link {
+          color: #fff;
+        }
+
+        .ab-space:hover .ab-space-link::after {
+          transform: translateX(3px);
         }
 
         .ab-page a:focus-visible {
-          outline: 2px solid var(--ab-accent-light);
+          outline: 2px solid var(--ab-orange-light);
           outline-offset: 4px;
         }
 
-        /* RESPONSIVE */
+        /* TABLET */
 
-        @media (max-width: 1100px) {
+        @media (max-width: 1000px) {
           .ab-intro-section,
+          .ab-eco-section,
+          .ab-journey-section,
+          .ab-standards-section,
           .ab-spaces-section {
-            padding-block: 75px;
+            padding-block: 55px;
           }
 
-          .ab-intro {
-            gap: 42px;
-          }
-
-          .ab-spaces-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
-          }
-
-          .ab-space-image {
-            aspect-ratio: 4 / 4.5;
-          }
-
-          .ab-space-title {
-            font-size: 29px;
-          }
-
-          .ab-space-info {
-            padding: 24px;
-          }
-        }
-
-        @media (max-width: 700px) {
-          .ab-wrap {
-            padding-inline: 21px;
-          }
-
-          .ab-hero {
-            min-height: 440px;
-            padding: 105px 0 72px;
-          }
-
-          .ab-title {
-            font-size: clamp(43px, 11vw, 66px);
-            line-height: 1.01;
-          }
-
-          .ab-hero-text {
-            max-width: 440px;
-            margin-top: 20px;
-            font-size: 13px;
-            line-height: 1.85;
-          }
-
-          .ab-hero-bottom {
-            margin-top: 25px;
-            font-size: 8px;
-          }
-
-          .ab-intro-section {
-            padding-block: 62px 70px;
-          }
-
-          .ab-intro {
+          .ab-intro,
+          .ab-eco,
+          .ab-journey-layout {
             grid-template-columns: minmax(0, 1fr);
-            gap: 39px;
-          }
-
-          .ab-h2 {
-            font-size: clamp(37px, 8.7vw, 49px);
-          }
-
-          .ab-body {
-            font-size: 13px;
-          }
-
-          .ab-divider {
-            margin-block: 21px;
           }
 
           .ab-intro-image {
             width: 100%;
-            max-width: 530px;
-            margin-inline: auto;
-            padding-left: 13px;
+            max-width: 620px;
           }
 
-          .ab-intro-image::before {
-            top: -9px;
-            right: -6px;
-            bottom: 27px;
-            left: 24px;
+          .ab-eco-head,
+          .ab-journey-head {
+            position: static;
+            order: 0;
           }
 
-          .ab-image-frame {
-            aspect-ratio: 4 / 4.2;
+          .ab-journey {
+            order: 1;
           }
 
-          .ab-image-caption {
-            width: min(88%, 315px);
-            padding: 16px 17px;
+          .ab-standards {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
-          .ab-caption-title {
-            font-size: 20px;
+          .ab-spaces-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
-          .ab-feature {
-            gap: 13px;
-            padding-block: 17px;
+          .ab-space-image {
+            aspect-ratio: 4 / 4.3;
+          }
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 640px) {
+          .ab-wrap {
+            padding-inline: 17px;
           }
 
-          .ab-feature-icon {
-            width: 39px;
-            height: 39px;
+          .ab-hero {
+            min-height: 370px;
+            padding: 95px 0 35px;
           }
 
-          .ab-feature p {
-            font-size: 11.5px;
+          .ab-hero-shade {
+            background:
+              linear-gradient(90deg, rgba(8,8,8,.9), rgba(8,8,8,.58)),
+              linear-gradient(0deg, #090909, transparent 75%);
           }
 
-          .ab-btn {
-            min-height: 49px;
-            padding-inline: 20px;
+          .ab-title {
+            font-size: clamp(27px, 7vw, 34px);
+            font-weight: 500;
+            line-height: 1.18;
+          }
+
+          .ab-h2 {
+            font-size: clamp(23px, 5.8vw, 29px);
+            font-weight: 500;
+          }
+
+          .ab-hero-text {
+            max-width: 440px;
+            margin-top: 13px;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1.8;
+          }
+
+          .ab-hero-bottom {
+            margin-top: 17px;
             font-size: 9px;
           }
 
@@ -811,11 +933,15 @@ export default function AboutUs() {
           }
 
           .ab-stat {
-            min-height: 115px;
-            padding: 19px 10px;
+            padding: 18px 10px;
+          }
+
+          .ab-stat + .ab-stat {
+            padding-left: 13px;
           }
 
           .ab-stat:nth-child(3) {
+            padding-left: 10px;
             border-left: 0;
           }
 
@@ -824,85 +950,224 @@ export default function AboutUs() {
           }
 
           .ab-stat-value {
-            font-size: clamp(27px, 7vw, 35px);
+            font-size: 22px;
+            font-weight: 500;
           }
 
           .ab-stat-label {
-            max-width: 145px;
-            font-size: 8px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: .025em;
           }
 
+          .ab-intro-section,
+          .ab-eco-section,
+          .ab-journey-section,
+          .ab-standards-section,
           .ab-spaces-section {
-            padding-block: 65px 75px;
+            padding-block: 45px;
+          }
+
+          .ab-intro {
+            gap: 30px;
+          }
+
+          .ab-intro-image {
+            padding: 0 11px 11px 0;
+          }
+
+          .ab-intro-image::before {
+            top: 11px;
+            left: 11px;
+          }
+
+          .ab-image-caption {
+            width: min(94%, 300px);
+            padding: 12px 13px;
+          }
+
+          .ab-caption-title {
+            font-size: 13px;
+            font-weight: 500;
+          }
+
+          .ab-caption-text {
+            font-size: 9px;
+          }
+
+          .ab-body {
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1.8;
+          }
+
+          .ab-divider {
+            margin: 14px 0;
+          }
+
+          .ab-intro-description {
+            gap: 10px;
+          }
+
+          .ab-feature {
+            padding: 13px 0;
+          }
+
+          .ab-feature h3 {
+            font-size: 14px;
+            font-weight: 500;
+          }
+
+          .ab-feature p {
+            font-size: 12px;
+            font-weight: 400;
+          }
+
+          .ab-btn {
+            min-height: 43px;
+            padding-inline: 18px;
+            font-size: 11px;
+            font-weight: 500;
+          }
+
+          .ab-eco {
+            gap: 22px;
+          }
+
+          .ab-eco-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .ab-eco-item {
+            padding: 19px 13px;
+            border-right: 1px solid var(--ab-border);
+            border-bottom: 1px solid var(--ab-border);
+            text-align: center;
+          }
+
+          .ab-eco-item:nth-child(2n) {
+            border-right: 0;
+          }
+
+          .ab-eco-item:nth-child(n+3) {
+            border-bottom: 0;
+          }
+
+          .ab-eco-item h3 {
+            font-size: 14px;
+            font-weight: 500;
+          }
+
+          .ab-eco-item p {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.75;
+          }
+
+          .ab-step {
+            grid-template-columns: 46px minmax(0, 1fr);
+            gap: 7px;
+            padding: 17px 0;
+          }
+
+          .ab-step-number {
+            font-size: 22px;
+            font-weight: 500;
+          }
+
+          .ab-step h3 {
+            font-size: 14px;
+            font-weight: 500;
+          }
+
+          .ab-step p {
+            font-size: 12px;
+            font-weight: 400;
+          }
+
+          .ab-standards-head {
+            margin-bottom: 24px;
+            text-align: center;
+          }
+
+          .ab-standards-head .ab-body {
+            margin: 11px auto 0;
+          }
+
+          .ab-standards {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+          }
+
+          .ab-standard {
+            padding: 18px 11px;
+            text-align: center;
+          }
+
+          .ab-standard-value {
+            font-size: clamp(25px, 6vw, 31px);
+            font-weight: 500;
+          }
+
+          .ab-standard-label {
+            margin-top: 9px;
+            font-size: 12px;
+            font-weight: 500;
+          }
+
+          .ab-standard-text {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.7;
           }
 
           .ab-section-heading {
             display: block;
-            margin-bottom: 27px;
+            margin-bottom: 22px;
+            text-align: center;
           }
 
           .ab-section-description {
-            max-width: 390px;
-            margin-top: 15px;
+            margin: 10px auto 0;
           }
 
           .ab-spaces-grid {
-            gap: 11px;
+            gap: 20px 12px;
           }
 
           .ab-space-image {
-            aspect-ratio: 3 / 4.2;
+            aspect-ratio: 3 / 3.8;
           }
 
           .ab-space-number {
-            top: 9px;
-            left: 9px;
             width: 29px;
             height: 29px;
             font-size: 9px;
+            font-weight: 500;
           }
 
           .ab-space-info {
-            padding: 13px 11px;
+            padding: 11px 5px 0;
+            text-align: center;
           }
 
           .ab-space-title {
-            font-size: clamp(20px, 5.4vw, 26px);
+            font-size: 14px;
+            font-weight: 500;
           }
 
           .ab-space-text {
-            min-height: 54px;
-            margin: 7px 0 12px;
-            font-size: 10px;
+            margin: 5px 0 8px;
+            font-size: 12px;
+            font-weight: 400;
             line-height: 1.65;
           }
 
           .ab-space-link {
-            padding-top: 10px;
-            font-size: 8px;
-            letter-spacing: .07em;
-          }
-        }
-
-        @media (max-width: 360px) {
-          .ab-wrap {
-            padding-inline: 16px;
-          }
-
-          .ab-space-info {
-            padding: 10px 8px;
-          }
-
-          .ab-space-title {
-            font-size: 19px;
-          }
-
-          .ab-space-text {
-            font-size: 9px;
-          }
-
-          .ab-space-link {
-            font-size: 7px;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: .01em;
           }
         }
 
@@ -912,7 +1177,6 @@ export default function AboutUs() {
           .ab-page *::after {
             scroll-behavior: auto !important;
             transition-duration: .01ms !important;
-            animation-duration: .01ms !important;
           }
         }
       `}</style>
@@ -921,26 +1185,25 @@ export default function AboutUs() {
       <section className="ab-hero">
         <Img
           src={IMAGES.kitchen}
-          alt=""
+          alt="Contemporary interior designed by Gohar"
           className="ab-hero-img"
         />
 
         <div className="ab-hero-shade" />
-        <div className="ab-hero-grid" />
 
-        <div className="ab-hero-inner">
+        <div className="ab-wrap">
           <p className="ab-eyebrow">About Gohar</p>
 
-          <h1 className="ab-title">
-            Thoughtful Interiors,
+          <h1 className="ab-title" style={{ marginTop: 14 }}>
+            Make Your Home Better,
             <br />
-            <em>Beautiful Living.</em>
+            <em>One Space at a Time.</em>
           </h1>
 
           <p className="ab-hero-text">
-            We create carefully considered interiors that bring together
-            contemporary design, everyday functionality and quality
-            craftsmanship.
+            We create modern kitchens, wardrobes and complete home
+            interiors with a focus on <strong>quality, functionality</strong>
+            {" "}and timeless design.
           </p>
 
           <div className="ab-hero-bottom">
@@ -949,90 +1212,7 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* WHO WE ARE */}
-      <section className="ab-intro-section">
-        <div className="ab-wrap">
-          <div className="ab-intro">
-            <div className="ab-intro-copy">
-              <p className="ab-eyebrow">Who We Are</p>
-
-              <h2 className="ab-h2">
-                Designed with purpose.
-                <br />
-                <em>Made with care.</em>
-              </h2>
-
-              <div className="ab-divider" />
-
-              <div className="ab-intro-description">
-                <p className="ab-body">
-                  At Gohar, we believe a beautiful interior should do more
-                  than look impressive. It should feel welcoming, work
-                  effortlessly and reflect the people who live in it.
-                </p>
-
-                <p className="ab-body">
-                  From modern kitchens and custom wardrobes to bedroom
-                  furniture and statement media walls, we create interiors
-                  that balance contemporary style with practical living.
-                </p>
-
-                <p className="ab-body">
-                  Every space deserves thoughtful planning, carefully
-                  considered details and a finish that feels right at home.
-                </p>
-              </div>
-
-              <div className="ab-intro-features">
-                {INTRO_POINTS.map(({ icon: Icon, title, text }) => (
-                  <article className="ab-feature" key={title}>
-                    <span className="ab-feature-icon">
-                      <Icon size={19} strokeWidth={1.5} />
-                    </span>
-
-                    <div>
-                      <h3>{title}</h3>
-                      <p>{text}</p>
-                    </div>
-                  </article>
-                ))}
-              </div>
-
-              <div className="ab-intro-action">
-                <Link to="/contact" className="ab-btn ab-btn-primary">
-                  Discuss Your Project
-                  <ArrowRight size={15} strokeWidth={1.7} />
-                </Link>
-              </div>
-            </div>
-
-            <div className="ab-intro-image">
-              <div className="ab-image-frame">
-                <Img
-                  src={IMAGES.kitchen}
-                  alt="Contemporary kitchen interior by Gohar"
-                />
-              </div>
-
-              <div className="ab-image-caption">
-                <span className="ab-caption-line" />
-
-                <div>
-                  <h3 className="ab-caption-title">
-                    Made for the way you live.
-                  </h3>
-
-                  <p className="ab-caption-text">
-                    Thoughtful design, lasting appeal
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* KEY INFORMATION */}
+      {/* STATS */}
       <section className="ab-stats-section">
         <div className="ab-wrap">
           <div className="ab-stats">
@@ -1046,7 +1226,145 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* OUR INTERIOR COLLECTIONS */}
+      {/* WHO WE ARE */}
+      <section className="ab-intro-section">
+        <div className="ab-wrap">
+          <div className="ab-intro">
+            <div className="ab-intro-image">
+              <div className="ab-image-frame">
+                <Img
+                  src={IMAGES.kitchen}
+                  alt="Modern custom kitchen interior"
+                />
+              </div>
+
+              <div className="ab-image-caption">
+                <span className="ab-caption-line" />
+                <div>
+                  <h3 className="ab-caption-title">
+                    Made for the way you live.
+                  </h3>
+                  <p className="ab-caption-text">
+                    Thoughtful design, lasting appeal
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="ab-intro-copy">
+              <p className="ab-eyebrow">Who We Are</p>
+
+              <h2 className="ab-h2">
+                Designed with purpose.
+                <br />
+                <em>Made with care.</em>
+              </h2>
+
+              <div className="ab-divider" />
+
+              <div className="ab-intro-description">
+                <p className="ab-body">
+                  At Gohar, we believe a beautiful interior should do
+                  more than look impressive. It should feel welcoming,
+                  work effortlessly and reflect the people who live in it.
+                </p>
+
+                <p className="ab-body">
+                  We bring kitchens, wardrobes, bedroom furniture and
+                  media walls together through <strong>coordinated design</strong>,
+                  carefully selected materials and consistent finishing.
+                </p>
+
+                <p className="ab-body">
+                  Every project starts with your needs and ends with a
+                  space designed around your everyday life.
+                </p>
+              </div>
+
+              <div className="ab-intro-features">
+                {INTRO_POINTS.map(({ title, text }) => (
+                  <article className="ab-feature" key={title}>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </article>
+                ))}
+              </div>
+
+              <div className="ab-intro-action">
+                <Link to="/contact" className="ab-btn">
+                  Discuss Your Project
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* WHOLE-HOME APPROACH */}
+      <section className="ab-eco-section">
+        <div className="ab-wrap">
+          <div className="ab-eco">
+            <div className="ab-eco-head">
+              <p className="ab-eyebrow">Whole-Home Approach</p>
+
+              <h2 className="ab-h2">
+                One home, one language.
+                <br />
+                <em>Every room matched.</em>
+              </h2>
+
+              <p className="ab-body" style={{ marginTop: 16 }}>
+                We plan your interiors with a unified vision, so your
+                kitchen, wardrobes, bedroom and media wall feel like
+                parts of the same thoughtfully designed home.
+              </p>
+            </div>
+
+            <div className="ab-eco-grid">
+              {ECOSYSTEM.map(({ title, text }) => (
+                <article className="ab-eco-item" key={title}>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+    
+
+      {/* OUR STANDARDS */}
+      <section className="ab-standards-section">
+        <div className="ab-wrap">
+          <div className="ab-standards-head">
+            <p className="ab-eyebrow">Our Standards</p>
+
+            <h2 className="ab-h2">
+              Quality you can
+              <br />
+              <em>see and feel.</em>
+            </h2>
+
+            <p className="ab-body">
+              We focus on careful planning, practical design and
+              consistent workmanship throughout your project.
+            </p>
+          </div>
+
+          <div className="ab-standards">
+            {STANDARDS.map((item) => (
+              <article className="ab-standard" key={item.label}>
+                <p className="ab-standard-value">{item.value}</p>
+                <h3 className="ab-standard-label">{item.label}</h3>
+                <p className="ab-standard-text">{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* OUR COLLECTIONS */}
       <section className="ab-spaces-section">
         <div className="ab-wrap">
           <div className="ab-section-heading">
@@ -1061,8 +1379,8 @@ export default function AboutUs() {
             </div>
 
             <p className="ab-body ab-section-description">
-              Explore our interior collections, created to bring style,
-              functionality and character into your home.
+              Explore our interior collections, designed to bring
+              functionality, character and a refined finish into your home.
             </p>
           </div>
 
@@ -1076,26 +1394,19 @@ export default function AboutUs() {
                 <div className="ab-space-image">
                   <Img
                     src={space.img}
-                    alt={`${space.title} interior by Gohar`}
+                    alt={`${space.title} by Gohar`}
                   />
+
+                  <span className="ab-space-number">
+                    {space.number}
+                  </span>
                 </div>
 
-                <span className="ab-space-number">
-                  {space.number}
-                </span>
-
                 <div className="ab-space-info">
-                  <h3 className="ab-space-title">
-                    {space.title}
-                  </h3>
-
-                  <p className="ab-space-text">
-                    {space.text}
-                  </p>
-
+                  <h3 className="ab-space-title">{space.title}</h3>
+                  <p className="ab-space-text">{space.text}</p>
                   <span className="ab-space-link">
                     Explore Collection
-                    <ArrowRight size={14} strokeWidth={1.6} />
                   </span>
                 </div>
               </Link>

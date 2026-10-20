@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -18,6 +17,7 @@ import {
   CircleOff,
   RefreshCw,
   ContactRound,
+  MoveHorizontal,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
@@ -48,6 +48,11 @@ const navigation = [
         name: "Footer Settings",
         path: "/admin/footer",
         icon: ContactRound,
+      },
+      {
+        name: "Marquee Settings",
+        path: "/admin/marquee",
+        icon: MoveHorizontal,
       },
     ],
   },
@@ -301,7 +306,10 @@ function DashboardHome() {
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-100 text-neutral-700 transition group-hover:bg-orange-50 group-hover:text-orange-600">
                     <Icon size={20} strokeWidth={1.8} />
                   </span>
-                  <ChevronRight size={17} className="text-neutral-400 transition group-hover:translate-x-0.5 group-hover:text-orange-500" />
+                  <ChevronRight
+                    size={17}
+                    className="text-neutral-400 transition group-hover:translate-x-0.5 group-hover:text-orange-500"
+                  />
                 </div>
 
                 <h3 className="mt-4 text-base font-semibold text-neutral-900">
@@ -313,10 +321,18 @@ function DashboardHome() {
 
                 <div className="mt-5 flex items-end justify-between gap-3">
                   <div>
-                    <p className={`text-3xl font-semibold tracking-tight ${isLoading ? "animate-pulse text-neutral-300" : "text-neutral-900"}`}>
+                    <p
+                      className={`text-3xl font-semibold tracking-tight ${
+                        isLoading
+                          ? "animate-pulse text-neutral-300"
+                          : "text-neutral-900"
+                      }`}
+                    >
                       {isLoading ? "—" : data === null ? "!" : total}
                     </p>
-                    <p className="mt-0.5 text-xs text-neutral-400">Total products</p>
+                    <p className="mt-0.5 text-xs text-neutral-400">
+                      Total products
+                    </p>
                   </div>
                   <span className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600">
                     {isLoading || data === null ? "—" : `${percent}% active`}
@@ -629,7 +645,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-{/* User menu */}
+            {/* User menu */}
             <div className="relative" ref={userMenuRef}>
               <button
                 type="button"

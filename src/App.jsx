@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   BrowserRouter,
@@ -28,6 +27,7 @@ import AdminWordrobe from "./pages/admin/Wordrobe";
 import MediaAdmin from "./pages/admin/Media";
 import AdminBed from "./pages/admin/Bed";
 import AdminFooter from "./pages/admin/Footer";
+import AdminMarquee from "./pages/admin/Marquee";
 
 import useSmoothScroll from "./hooks/useSmoothScroll";
 
@@ -165,6 +165,12 @@ const Layout = () => {
               element={<AdminFooter />}
             />
 
+            {/* HOME PAGE MARQUEE MANAGEMENT */}
+            <Route
+              path="marquee"
+              element={<AdminMarquee />}
+            />
+
             {/* SETTINGS */}
             <Route
               path="settings"
@@ -217,6 +223,17 @@ const Layout = () => {
           <Route
             path="/wordrobe"
             element={<Wordrobe />}
+          />
+
+          {/* CORRECT SPELLING -> EXISTING WARDROBE ROUTE */}
+          <Route
+            path="/wardrobe"
+            element={
+              <Navigate
+                to="/wordrobe"
+                replace
+              />
+            }
           />
 
           {/* MEDIA WALLS */}

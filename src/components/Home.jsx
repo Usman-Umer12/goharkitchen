@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 import des1 from "../assets/des1.webp";
 import des2 from "../assets/des2.webp";
@@ -15,6 +16,23 @@ const WHATSAPP_TEXT =
   "Assalam-o-Alaikum Gohar Kitchen Interior Team! I visited your website and would like to discuss a custom kitchen, wardrobe, bed or media wall project. Please share your available designs, material options and pricing. Thank you.";
 
 const SLIDE_MS = 6500;
+
+/* =========================================================
+   MARQUEE (ADMIN PANEL CONTROLLED)
+   ---------------------------------------------------------
+   Words Supabase table "site_marquee" (id = 1, column "items")
+   se aate hain. Admin panel > Marquee Settings se change hote hain.
+   Agar table na mile ya khali ho to neeche ke default words chalte hain.
+========================================================= */
+
+const DEFAULT_MARQUEE_ITEMS = [
+  "Bespoke Kitchens",
+  "Custom Wardrobes",
+  "Luxury Beds",
+  "Media Walls",
+  "Premium Finishes",
+  "Made to Measure",
+];
 
 /* =========================================================
    SLIDER DATA
@@ -79,18 +97,6 @@ const slides = [
 ];
 
 /* =========================================================
-   MARQUEE DATA
-========================================================= */
-const marqueeItems = [
-  "Bespoke Kitchens",
-  "Custom Wardrobes",
-  "Luxury Beds",
-  "Media Walls",
-  "Premium Finishes",
-  "Made to Measure",
-];
-
-/* =========================================================
    COLLECTION DATA
 ========================================================= */
 const collections = [
@@ -123,6 +129,52 @@ const collections = [
     tag: "04",
   },
 ];
+
+/* =========================================================
+   MARQUEE HOOK
+   Words Supabase se leta hai, warna default words.
+========================================================= */
+const useMarqueeItems = () => {
+  const [items, setItems] = useState(DEFAULT_MARQUEE_ITEMS);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("site_marquee")
+          .select("items")
+          .eq("id", 1)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        const list = Array.isArray(data?.items) ? data.items : [];
+
+        const cleaned = list
+          .map((entry) =>
+            typeof entry === "string" ? entry : entry?.text || ""
+          )
+          .map((entry) => entry.trim())
+          .filter(Boolean);
+
+        if (!cancelled && cleaned.length > 0) setItems(cleaned);
+      } catch (error) {
+        console.error("Marquee words load failed:", error);
+        /* Fail hone par default words hi chalte rahenge */
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return items;
+};
 
 /* =========================================================
    REVEAL ANIMATION
@@ -182,7 +234,7 @@ const Eyebrow = ({ children }) => (
   <div className="mb-4 flex items-center gap-3 sm:mb-5 sm:gap-4">
     <span className="h-px w-7 shrink-0 bg-[#C0652B] sm:w-10" />
 
-    <span className="font-[Jost] text-[10px] font-medium uppercase tracking-[0.24em] text-[#E7A477] sm:text-[11px] sm:tracking-[0.3em]">
+    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#E7A477] sm:text-[11px] sm:tracking-[0.24em]">
       {children}
     </span>
   </div>
@@ -190,7 +242,7 @@ const Eyebrow = ({ children }) => (
 
 /* Heading always stays on ONE line (size scales with the screen) */
 const SectionTitle = ({ children }) => (
-  <h2 className="whitespace-nowrap font-[Cormorant_Garamond] text-[clamp(1.15rem,5.6vw,3.25rem)] font-medium leading-[1.12] tracking-[-0.015em] text-white">
+  <h2 className="whitespace-nowrap text-[clamp(1rem,4.7vw,2.6rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-white">
     {children}
   </h2>
 );
@@ -198,7 +250,7 @@ const SectionTitle = ({ children }) => (
 const Diamond = () => (
   <span
     aria-hidden="true"
-    className="block h-[7px] w-[7px] shrink-0 rotate-45 bg-[#C0652B]"
+    className="block h-[5px] w-[5px] shrink-0 rotate-45 bg-white/60"
   />
 );
 
@@ -207,6 +259,7 @@ const Diamond = () => (
 ========================================================= */
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const marqueeItems = useMarqueeItems();
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -218,8 +271,15 @@ const Home = () => {
 
   const slide = slides[currentSlide];
 
+  /* Kam words hon tab bhi marquee screen ko poora bhare:
+     items ko repeat karke kam az kam 8 words bana lete hain. */
+  const repeatCount = Math.max(1, Math.ceil(8 / marqueeItems.length));
+  const marqueeGroup = Array.from({ length: repeatCount }).flatMap(
+    () => marqueeItems
+  );
+
   return (
-    <main className="gk-home min-h-screen overflow-x-clip bg-[#090909] font-[Jost] text-white antialiased">
+    <main className="gk-home min-h-screen overflow-x-clip bg-[#090909] font-[Montserrat] text-white antialiased">
       {/* =====================================================
           HERO SLIDER
       ====================================================== */}
@@ -275,16 +335,16 @@ const Home = () => {
             <div className="mb-5 flex items-center gap-3 sm:mb-6 sm:gap-4">
               <span className="h-px w-8 shrink-0 bg-[#C0652B] sm:w-12" />
 
-              <span className="text-[10px] font-medium uppercase leading-none tracking-[0.23em] text-[#F1B58A] sm:text-xs sm:tracking-[0.28em]">
+              <span className="text-[10px] font-semibold uppercase leading-none tracking-[0.2em] text-[#F1B58A] sm:text-xs sm:tracking-[0.24em]">
                 {slide.category}
               </span>
             </div>
 
-            <h1 className="max-w-[820px] font-[Cormorant_Garamond] text-[clamp(39px,8.6vw,48px)] font-semibold leading-[1.04] tracking-[-0.025em] text-white [text-shadow:0_3px_25px_rgba(0,0,0,0.65)] sm:text-[58px] md:text-[68px] lg:text-[76px] xl:text-[84px]">
+            <h1 className="max-w-[820px] text-[clamp(30px,8vw,40px)] font-semibold leading-[1.12] tracking-[-0.03em] text-white [text-shadow:0_3px_25px_rgba(0,0,0,0.65)] sm:text-[46px] md:text-[54px] lg:text-[60px] xl:text-[66px]">
               {slide.title}
             </h1>
 
-            <p className="mt-5 max-w-[340px] text-[13px] font-normal leading-[1.85] text-white/90 [text-shadow:0_2px_12px_rgba(0,0,0,0.8)] sm:mt-6 sm:max-w-[520px] sm:text-[15px] md:max-w-[590px] lg:text-[16px] lg:leading-[1.9]">
+            <p className="mt-5 max-w-[340px] text-[13px] font-normal leading-[1.85] text-white/90 [text-shadow:0_2px_12px_rgba(0,0,0,0.8)] sm:mt-6 sm:max-w-[520px] sm:text-[14.5px] md:max-w-[590px] lg:text-[15.5px] lg:leading-[1.9]">
               {slide.description}
             </p>
 
@@ -293,7 +353,7 @@ const Home = () => {
             <div className="mt-7 flex w-full max-w-[340px] flex-row items-center gap-2.5 sm:mt-9 sm:max-w-none sm:gap-4">
               <a
                 href={slide.url}
-                className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#C0652B] bg-[#C0652B] px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.1em] text-white transition-colors duration-200 hover:border-[#D77B43] hover:bg-[#D77B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7A477] focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.13em]"
+                className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#C0652B] bg-[#C0652B] px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-white transition-colors duration-200 hover:border-[#D77B43] hover:bg-[#D77B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7A477] focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.1em]"
               >
                 <span className="sm:hidden">Explore</span>
                 <span className="hidden sm:inline">Explore Collection</span>
@@ -306,7 +366,7 @@ const Home = () => {
 
               <a
                 href="/contact"
-                className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/55 bg-black/40 px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.1em] text-white backdrop-blur-md transition-colors duration-200 hover:border-white hover:bg-white hover:text-[#111111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.13em]"
+                className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/55 bg-black/40 px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-md transition-colors duration-200 hover:border-white hover:bg-white hover:text-[#111111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.1em]"
               >
                 <span className="sm:hidden">Get Quote</span>
                 <span className="hidden sm:inline">Discuss Your Project</span>
@@ -363,24 +423,25 @@ const Home = () => {
       </section>
 
       {/* =====================================================
-          MARQUEE (solid, clear text)
+          MARQUEE (short, white text, Montserrat)
+          Words admin panel se control honge (useMarqueeItems)
       ====================================================== */}
       <section
         aria-label="Our interior services"
         className="relative overflow-hidden border-y border-white/10 bg-[#0B0A09]"
       >
         <div
-          className="gk-marquee overflow-hidden py-5 sm:py-6"
+          className="gk-marquee overflow-hidden py-3 sm:py-3.5"
           style={{
             WebkitMaskImage:
-              "linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%)",
+              "linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%)",
             maskImage:
-              "linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%)",
+              "linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%)",
           }}
         >
           <div
             className="gk-marquee-track flex w-max items-center"
-            style={{ animation: "gkMarquee 45s linear infinite" }}
+            style={{ animation: "gkMarquee 40s linear infinite" }}
           >
             {[0, 1].map((group) => (
               <div
@@ -388,12 +449,12 @@ const Home = () => {
                 aria-hidden={group === 1}
                 className="flex shrink-0 items-center"
               >
-                {marqueeItems.map((item) => (
+                {marqueeGroup.map((item, index) => (
                   <div
-                    key={`${group}-${item}`}
-                    className="flex items-center gap-6 pr-6 sm:gap-9 sm:pr-9 lg:gap-12 lg:pr-12"
+                    key={`${group}-${index}-${item}`}
+                    className="flex items-center gap-5 pr-5 sm:gap-7 sm:pr-7 lg:gap-9 lg:pr-9"
                   >
-                    <span className="whitespace-nowrap font-[Jost] text-[13px] font-medium uppercase tracking-[0.22em] text-white/90 sm:text-[14px] lg:text-[15px]">
+                    <span className="whitespace-nowrap text-[11px] font-medium uppercase tracking-[0.18em] text-white sm:text-[12px] lg:text-[13px]">
                       {item}
                     </span>
 
@@ -421,10 +482,12 @@ const Home = () => {
 
               <SectionTitle>
                 Thoughtful Design.{" "}
-                <span className="italic text-[#E2A078]">Beautiful Living.</span>
+                <span className="font-medium text-[#E2A078]">
+                  Beautiful Living.
+                </span>
               </SectionTitle>
 
-              <p className="mt-4 max-w-[560px] text-[13px] font-light leading-[1.85] text-white/65 sm:mt-5 sm:text-[15px]">
+              <p className="mt-4 max-w-[560px] text-[13px] font-normal leading-[1.85] text-white/70 sm:mt-5 sm:text-[14.5px]">
                 From bespoke kitchens to beautifully finished bedroom
                 furniture, explore interior solutions designed around your
                 space, your preferences and the way you live.
@@ -449,20 +512,20 @@ const Home = () => {
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/5 transition-colors duration-500 group-hover:from-black/95" />
 
-                  <div className="absolute left-3 top-3 font-[Cormorant_Garamond] text-[16px] italic text-white/85 sm:left-5 sm:top-5 sm:text-[19px]">
+                  <div className="absolute left-3 top-3 text-[13px] font-medium tracking-[0.08em] text-white/85 sm:left-5 sm:top-5 sm:text-[15px]">
                     {collection.tag}
                   </div>
 
                   <div className="absolute inset-x-0 bottom-0 p-3 sm:p-5">
-                    <h3 className="font-[Cormorant_Garamond] text-[17px] font-semibold leading-tight text-white sm:text-[24px] lg:text-[26px]">
+                    <h3 className="text-[15px] font-semibold leading-tight tracking-[-0.01em] text-white sm:text-[20px] lg:text-[22px]">
                       {collection.title}
                     </h3>
 
-                    <p className="mt-2 hidden text-[12.5px] font-light leading-[1.7] text-white/75 sm:line-clamp-3 sm:block">
+                    <p className="mt-2 hidden text-[12px] font-normal leading-[1.7] text-white/75 sm:line-clamp-3 sm:block">
                       {collection.text}
                     </p>
 
-                    <div className="mt-3 inline-flex items-center gap-2 text-[9.5px] font-semibold uppercase tracking-[0.16em] text-white sm:mt-4 sm:gap-3 sm:text-[11px] sm:tracking-[0.19em]">
+                    <div className="mt-3 inline-flex items-center gap-2 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white sm:mt-4 sm:gap-3 sm:text-[11px] sm:tracking-[0.16em]">
                       <span className="sm:hidden">Explore</span>
                       <span className="hidden sm:inline">Explore Collection</span>
                       <ArrowRight
@@ -508,7 +571,27 @@ const Home = () => {
           FONTS & ANIMATIONS
       ====================================================== */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+          /* FONT FAMILY: logo jaisa Montserrat (heading, description, button sab mein) */
+          --gk-display: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+          --gk-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+          --gk-accent: #C0652B;
+          --gk-accent-soft: #E08A4F;
+
+          /* Video position: 0% = upar, 50% = beech, 100% = neeche */
+          --kt-video-pos-y: 50%;
+        }
+
+        /* Tailwind "font-sans" bhi Montserrat use kare */
+        .font-sans { font-family: var(--gk-sans) !important; }
+
+        /* Is page ke andar sab kuch Montserrat mein */
+        .gk-home,
+        .gk-home * {
+          font-family: var(--gk-sans);
+        }
 
         html {
           scroll-behavior: smooth;

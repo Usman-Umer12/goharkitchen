@@ -1,7 +1,8 @@
 // Media.jsx
 // Install: npm i lucide-react
 // Assets: ../assets/media.mp4, ../assets/media1.webp ...
-// Hero background: ../assets/mob4.webp (mobile) + ../assets/des4.webp (desktop)
+// Hero: ../assets/mob4.webp + ../assets/des4.webp
+// Video: customer manually starts it; audio is always muted.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -11,9 +12,12 @@ import {
   ChevronRight,
   Crop,
   MessageCircle,
+  Pause,
+  Play,
   Truck,
   X,
 } from "lucide-react";
+
 import mediaVideo from "../assets/media.mp4";
 import heroMobile from "../assets/mob4.webp";
 import heroDesktop from "../assets/des4.webp";
@@ -44,16 +48,16 @@ const getImage = (filename) => {
   return key ? localAssets[key] : `/assets/${filename}`;
 };
 
-const marqueeWords = [
-  "Bespoke Media Walls",
-  "Made To Measure",
-  "Premium Finishes",
-  "Integrated Lighting",
-  "Custom Layouts",
-  "Neat Installation",
-];
-
 const pad = (number) => String(number).padStart(2, "0");
+
+const formatTime = (seconds) => {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+
+  const minutes = Math.floor(seconds / 60);
+  const remaining = Math.floor(seconds % 60);
+
+  return `${minutes}:${String(remaining).padStart(2, "0")}`;
+};
 
 const formatPrice = (price) => {
   const value = Number(price);
@@ -93,7 +97,10 @@ const loadMediaProducts = async () => {
       title: item.title || "Media Wall Design",
       description: item.description || "",
       image: item.image_url || getImage(`media${displayNumber}.webp`),
-      price: item.price === null || item.price === "" ? 0 : Number(item.price),
+      price:
+        item.price === null || item.price === ""
+          ? 0
+          : Number(item.price),
       deliveryText: item.delivery_text || DELIVERY_TEXT,
     };
   });
@@ -152,6 +159,7 @@ const Eyebrow = ({ children, align = "center", className = "" }) => (
   >
     <span className="h-px w-7 bg-[#C0652B] sm:w-9" />
     <span className="gk-eyebrow">{children}</span>
+
     {align === "center" && (
       <span className="h-px w-7 bg-[#C0652B] sm:w-9" />
     )}
@@ -159,119 +167,260 @@ const Eyebrow = ({ children, align = "center", className = "" }) => (
 );
 
 /* =========================================================
-   1. HERO + MARQUEE
-   Header ke peeche background image:
-   mobile  -> mob4.webp
-   desktop -> des4.webp
+   1. HERO
 ========================================================= */
-const FirstScreen = ({ onExplore }) => {
-  const items = [
-    ...marqueeWords,
-    ...marqueeWords,
-    ...marqueeWords,
-    ...marqueeWords,
-  ];
+const FirstScreen = ({ onExplore }) => (
+  <section className="kt-first">
+    <header className="kt-hero">
+      <picture>
+        <source media="(min-width: 768px)" srcSet={heroDesktop} />
 
-  return (
-    <section className="kt-first">
-      <header className="kt-hero">
-        {/* BACKGROUND IMAGE (responsive) */}
-        <picture>
-          <source media="(min-width: 768px)" srcSet={heroDesktop} />
-          <img
-            src={heroMobile}
-            alt=""
-            aria-hidden="true"
-            className="kt-hero-img"
-            decoding="async"
-          />
-        </picture>
-        <div className="kt-hero-shade" />
+        <img
+          src={heroMobile}
+          alt=""
+          aria-hidden="true"
+          className="kt-hero-img"
+          decoding="async"
+        />
+      </picture>
 
-        <div className="kt-hero-glow kt-hero-glow-a" />
-        <div className="kt-hero-glow kt-hero-glow-b" />
-        <div className="kt-hero-lines" />
+      <div className="kt-hero-shade" />
+      <div className="kt-hero-glow kt-hero-glow-a" />
+      <div className="kt-hero-glow kt-hero-glow-b" />
+      <div className="kt-hero-lines" />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-[1000px] flex-col items-center px-4 text-center sm:px-8">
-          <Eyebrow>Bespoke Media Walls</Eyebrow>
+      <div className="relative z-10 mx-auto flex w-full max-w-[1000px] flex-col items-center px-5 text-center sm:px-8">
+        <Eyebrow>Bespoke Media Walls</Eyebrow>
 
-          <h1 className="gk-hero-title">
-            Media Walls That Feel
-            <br />
+        <h1 className="gk-hero-title">
+          <span className="gk-line">Media Walls That Feel</span>
+          <span className="gk-line">
             <em>Made For You</em>
-          </h1>
+          </span>
+        </h1>
 
-          <p className="kt-hero-text">
-            Custom TV and media walls, built to measure with premium
-            materials, integrated lighting and refined finishing for every
-            living space.
-          </p>
+        <p className="kt-hero-text">
+          Custom TV and media walls, premium finishes, integrated lighting and
+          thoughtful storage—made for your home.
+        </p>
 
-          <button
-            type="button"
-            onClick={onExplore}
-            className="gk-btn-solid kt-hero-btn group"
-          >
-            Explore Collection
-            <ArrowDown
-              size={15}
-              className="transition-transform duration-300 group-hover:translate-y-0.5"
-            />
-          </button>
-        </div>
-      </header>
-
-      <div className="kt-marquee">
-        <div className="kt-strip-track">
-          {items.map((word, index) => (
-            <span key={index} className="kt-strip-item">
-              <span className="kt-strip-dot" />
-              {word}
-            </span>
-          ))}
-        </div>
+        <button
+          type="button"
+          onClick={onExplore}
+          className="gk-btn-solid kt-hero-btn group"
+        >
+          Explore Collection
+          <ArrowDown
+            size={17}
+            className="transition-transform duration-300 group-hover:translate-y-0.5"
+          />
+        </button>
       </div>
-    </section>
-  );
-};
+    </header>
+  </section>
+);
 
 /* =========================================================
-   2. VIDEO
+   2. VIDEO SECTION
+   No autoplay. Audio is muted.
+   Customer clicks Start to open the video.
 ========================================================= */
-const VideoSection = () => {
+const VideoSection = ({ onOpen }) => (
+  <section className="kt-video">
+    <video
+      className="kt-video-el"
+      src={mediaVideo}
+      poster={getImage("media1.webp")}
+      muted
+      playsInline
+      preload="metadata"
+      aria-label="Gohar media wall designs video"
+    />
+
+    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/55 via-[#0A0A0A]/20 to-[#0A0A0A]/40" />
+
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label="Play media wall video"
+      className="kt-play group"
+    >
+      <span className="kt-play-btn">
+        <Play
+          size={30}
+          strokeWidth={0}
+          fill="currentColor"
+          className="ml-1"
+        />
+      </span>
+
+      <span className="kt-start-label">Start</span>
+      <span className="kt-start-sub">Watch Our Media Walls</span>
+    </button>
+  </section>
+);
+
+/* =========================================================
+   3. VIDEO MODAL
+   Audio stays muted.
+   Video starts only after customer presses Play.
+========================================================= */
+function VideoModal({ onClose }) {
   const videoRef = useRef(null);
 
+  const [playing, setPlaying] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [duration, setDuration] = useState(0);
+
   useEffect(() => {
+    const onKey = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    const previousOverflow = document.body.style.overflow;
+
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
+  const toggle = () => {
     const video = videoRef.current;
     if (!video) return;
 
+    // Always keep audio disabled.
     video.muted = true;
-    const playPromise = video.play();
+    video.volume = 0;
 
-    if (playPromise?.catch) playPromise.catch(() => {});
-  }, []);
+    if (video.paused) {
+      video.play().catch((error) => {
+        console.error("Unable to play media video:", error);
+      });
+    } else {
+      video.pause();
+    }
+  };
+
+  const handleSeek = (event) => {
+    const video = videoRef.current;
+    if (!video || !duration) return;
+
+    const next = (Number(event.target.value) / 1000) * duration;
+
+    video.currentTime = next;
+    setCurrent(next);
+  };
+
+  const progress = duration ? (current / duration) * 100 : 0;
 
   return (
-    <section className="kt-video">
-      <video
-        ref={videoRef}
-        className="kt-video-el"
-        src={mediaVideo}
-        poster={getImage("media1.webp")}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-      />
+    <div
+      className="fixed inset-0 z-[140] flex items-center justify-center bg-black/85 p-3 backdrop-blur-md sm:p-6"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Media wall video"
+    >
+      <div className="kt-vm relative flex max-h-[88dvh] max-w-[94vw] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black shadow-[0_30px_90px_rgba(0,0,0,0.7)]">
+        <video
+          ref={videoRef}
+          src={mediaVideo}
+          poster={getImage("media1.webp")}
+          playsInline
+          muted
+          volume={0}
+          preload="metadata"
+          onClick={toggle}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => setPlaying(false)}
+          onTimeUpdate={(event) =>
+            setCurrent(event.currentTarget.currentTime)
+          }
+          onLoadedMetadata={(event) => {
+            setDuration(
+              Number.isFinite(event.currentTarget.duration)
+                ? event.currentTarget.duration
+                : 0
+            );
+          }}
+          className="block max-h-[88dvh] min-w-[min(92vw,300px)] max-w-[94vw] cursor-pointer object-contain"
+        />
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/25" />
-    </section>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close video"
+          className="kt-ctrl absolute right-3 top-3 z-20"
+        >
+          <X size={18} />
+        </button>
+
+        {!playing && (
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label="Play video"
+            className="kt-vm-center"
+          >
+            <Play
+              size={28}
+              strokeWidth={0}
+              fill="currentColor"
+              className="ml-1"
+            />
+          </button>
+        )}
+
+        <div className="kt-vm-bar">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={playing ? "Pause video" : "Play video"}
+            className="kt-vbtn"
+          >
+            {playing ? (
+              <Pause size={18} strokeWidth={0} fill="currentColor" />
+            ) : (
+              <Play size={18} strokeWidth={0} fill="currentColor" />
+            )}
+          </button>
+
+          <input
+            type="range"
+            min="0"
+            max="1000"
+            step="1"
+            value={
+              duration
+                ? Math.round((current / duration) * 1000)
+                : 0
+            }
+            onChange={handleSeek}
+            aria-label="Seek video"
+            className="kt-range"
+            style={{
+              background: `linear-gradient(to right, var(--gk-accent) ${progress}%, rgba(255,255,255,0.28) ${progress}%)`,
+            }}
+          />
+
+          <span className="kt-vm-time">
+            {formatTime(current)} / {formatTime(duration)}
+          </span>
+        </div>
+      </div>
+    </div>
   );
-};
+}
 
 /* =========================================================
-   3. WHATSAPP INQUIRY MODAL
+   4. WHATSAPP INQUIRY MODAL
 ========================================================= */
 function InquiryModal({ product, onClose }) {
   const [form, setForm] = useState({
@@ -285,9 +434,9 @@ function InquiryModal({ product, onClose }) {
       if (event.key === "Escape") onClose();
     };
 
-    window.addEventListener("keydown", handleKey);
-
     const previousOverflow = document.body.style.overflow;
+
+    window.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
 
     return () => {
@@ -369,6 +518,7 @@ Please share more details and available options.
             <label htmlFor="media-iq-name" className={labelCls}>
               Full Name
             </label>
+
             <input
               id="media-iq-name"
               name="name"
@@ -386,6 +536,7 @@ Please share more details and available options.
             <label htmlFor="media-iq-phone" className={labelCls}>
               Phone Number
             </label>
+
             <input
               id="media-iq-phone"
               name="phone"
@@ -403,6 +554,7 @@ Please share more details and available options.
             <label htmlFor="media-iq-city" className={labelCls}>
               City
             </label>
+
             <input
               id="media-iq-city"
               name="city"
@@ -435,7 +587,7 @@ Please share more details and available options.
 }
 
 /* =========================================================
-   4. FULL-SCREEN PRODUCT PREVIEW
+   5. FULL-SCREEN PRODUCT PREVIEW
 ========================================================= */
 const Preview = ({ product, onClose, onInquiry }) => {
   useEffect(() => {
@@ -443,9 +595,9 @@ const Preview = ({ product, onClose, onInquiry }) => {
       if (event.key === "Escape") onClose();
     };
 
-    window.addEventListener("keydown", handleKey);
-
     const previousOverflow = document.body.style.overflow;
+
+    window.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
 
     return () => {
@@ -484,7 +636,9 @@ const Preview = ({ product, onClose, onInquiry }) => {
         onClick={(event) => event.stopPropagation()}
         className="kt-preview-info"
       >
-        <Eyebrow align="left">Design {pad(product.displayNumber)}</Eyebrow>
+        <Eyebrow align="left">
+          Design {pad(product.displayNumber)}
+        </Eyebrow>
 
         <h3 className="gk-h3">{product.title}</h3>
 
@@ -517,7 +671,7 @@ const Preview = ({ product, onClose, onInquiry }) => {
 };
 
 /* =========================================================
-   5. PRODUCT CARD
+   6. PRODUCT CARD
 ========================================================= */
 const ProductCard = ({ product, index, onPreview, onInquiry }) => (
   <Reveal delay={(index % 4) * 45} className="h-full">
@@ -551,7 +705,6 @@ const ProductCard = ({ product, index, onPreview, onInquiry }) => (
           {product.description}
         </p>
 
-        {/* ADMIN PRICE — ORANGE, BELOW DESCRIPTION */}
         {Number(product.price) > 0 && (
           <p className="mt-2 font-sans text-base font-semibold text-[#F28C28] sm:text-lg">
             {formatPrice(product.price)}
@@ -577,7 +730,7 @@ const ProductCard = ({ product, index, onPreview, onInquiry }) => (
 );
 
 /* =========================================================
-   6. PAGINATION
+   7. PAGINATION
 ========================================================= */
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
@@ -627,14 +780,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 };
 
 /* =========================================================
-   7. PRODUCTS + PAGINATION
+   8. PRODUCTS + PAGINATION
 ========================================================= */
-const Products = ({
-  products,
-  loading,
-  onPreview,
-  onInquiry,
-}) => {
+const Products = ({ products, loading, onPreview, onInquiry }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(products.length / PAGE_SIZE);
@@ -711,7 +859,7 @@ const Products = ({
               <p className="font-sans text-xs font-light tracking-wide text-white/50 sm:text-sm">
                 Showing{" "}
                 <span className="font-medium text-white">
-                  {startIndex + 1}–{endIndex}
+                  {products.length ? startIndex + 1 : 0}–{endIndex}
                 </span>{" "}
                 of{" "}
                 <span className="font-medium text-white">
@@ -734,74 +882,77 @@ const Products = ({
 };
 
 /* =========================================================
-   8. STYLES
+   9. STYLES
 ========================================================= */
 const Styles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 
     .media-page {
-      --gk-display: 'Cormorant Garamond', Georgia, serif;
-      --gk-sans: 'Jost', system-ui, sans-serif;
+      --gk-display: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --gk-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
       --gk-accent: #C0652B;
       --gk-accent-soft: #E08A4F;
+      --kt-video-pos-y: 50%;
       font-family: var(--gk-sans);
-
-      /* Sticky video controls (desktop ke liye adjust karo) */
-      --kt-video-pos-y: 35%;          /* 0% = upar, 50% = beech, 100% = neeche */
-      --kt-video-zoom-desktop: 1.12;  /* zoom zyada/kam karna ho to yahan badlo */
+      background: #0A0A0A;
     }
 
-    @media (min-width: 1920px) {
-      .media-page { --kt-video-zoom-desktop: 1.2; }
-    }
+    .media-page .font-sans { font-family: var(--gk-sans) !important; }
 
     .media-page .gk-eyebrow {
       font-family: var(--gk-sans);
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 500;
-      letter-spacing: .20em;
+      letter-spacing: .32em;
       text-transform: uppercase;
       color: var(--gk-accent-soft);
     }
 
     .media-page .gk-hero-title {
       font-family: var(--gk-display);
-      font-weight: 500;
+      font-weight: 700;
       color: #fff;
-      line-height: 1.04;
-      letter-spacing: -.025em;
-      font-size: clamp(2.25rem, 1rem + 6vw, 5.4rem);
+      line-height: 1.2;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      font-size: clamp(1.35rem, 6vw, 4rem);
     }
+
+    .media-page .gk-line { display: block; white-space: nowrap; }
 
     .media-page .gk-hero-title em,
     .media-page .gk-h2 em {
-      font-style: italic;
-      color: var(--gk-accent-soft);
+      font-style: normal;
+      font-weight: 700;
+      color: var(--gk-accent);
     }
 
     .media-page .gk-h2 {
       font-family: var(--gk-display);
-      font-weight: 500;
+      font-weight: 700;
       color: #fff;
-      line-height: 1.08;
-      letter-spacing: -.015em;
-      font-size: clamp(1.9rem, 1.25rem + 2.6vw, 3.3rem);
+      line-height: 1.25;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      font-size: clamp(1.15rem, 5.4vw, 2.6rem);
     }
 
     .media-page .gk-h3 {
       font-family: var(--gk-display);
-      font-weight: 600;
       color: #fff;
-      line-height: 1.12;
-      font-size: clamp(1.45rem, 1.2rem + .8vw, 1.9rem);
+      line-height: 1.3;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      font-size: clamp(1.2rem, 1rem + .8vw, 1.55rem);
     }
 
     .media-page .gk-body {
       font-family: var(--gk-sans);
-      font-weight: 300;
-      color: rgba(255,255,255,.7);
-      line-height: 1.7;
+      font-weight: 400;
+      color: rgba(255,255,255,.78);
+      line-height: 1.8;
       font-size: 13px;
     }
 
@@ -809,20 +960,21 @@ const Styles = () => (
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
-      min-height: 42px;
-      padding: 0 22px;
+      gap: 8px;
+      height: 50px;
+      padding: 0 30px;
       border: 1px solid var(--gk-accent);
       border-radius: 999px;
       background: var(--gk-accent);
-      color: #fff;
       font-family: var(--gk-sans);
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: .11em;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .12em;
       text-transform: uppercase;
+      color: #fff;
       white-space: nowrap;
-      transition: background-color .25s ease, border-color .25s ease;
+      transition: background-color .3s ease, color .3s ease,
+        border-color .3s ease, transform .3s ease;
     }
 
     .media-page .gk-btn-solid:hover {
@@ -846,15 +998,15 @@ const Styles = () => (
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      min-height: 420px;
-      padding: 7rem 0 2.5rem;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 7rem 0 3rem;
       background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,.25), transparent 60%),
-        radial-gradient(ellipse 60% 50% at 100% 100%, rgba(192,101,43,.14), transparent 65%),
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,.28), transparent 60%),
+        radial-gradient(ellipse 60% 50% at 100% 100%, rgba(192,101,43,.16), transparent 65%),
         linear-gradient(180deg, #14100D 0%, #0D0B0A 55%, #0A0A0A 100%);
     }
 
-    /* ---------- HERO BACKGROUND IMAGE (mobile: mob4 / desktop: des4) ---------- */
     .media-page .kt-hero picture {
       position: absolute;
       inset: 0;
@@ -871,7 +1023,6 @@ const Styles = () => (
       transform: scale(1.04);
     }
 
-    /* dark overlay + copper glow so text stays readable, bottom blends into marquee */
     .media-page .kt-hero-shade {
       position: absolute;
       inset: 0;
@@ -894,16 +1045,16 @@ const Styles = () => (
     .media-page .kt-hero-glow-a {
       left: -160px;
       top: 25%;
-      width: 360px;
-      height: 360px;
+      width: 420px;
+      height: 420px;
       opacity: .12;
     }
 
     .media-page .kt-hero-glow-b {
       right: -180px;
       bottom: 5%;
-      width: 390px;
-      height: 390px;
+      width: 460px;
+      height: 460px;
       opacity: .09;
     }
 
@@ -912,7 +1063,7 @@ const Styles = () => (
       inset: 0;
       z-index: -1;
       pointer-events: none;
-      opacity: .4;
+      opacity: .45;
       background-image: linear-gradient(to right, rgba(255,255,255,.045) 1px, transparent 1px);
       background-size: 25% 100%;
       -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
@@ -920,58 +1071,22 @@ const Styles = () => (
     }
 
     .media-page .kt-hero-text {
-      margin: 1rem auto 0;
-      max-width: 540px;
+      margin: 1.25rem auto 0;
+      max-width: 520px;
       font-family: var(--gk-sans);
-      font-weight: 300;
-      font-size: 13px;
-      line-height: 1.8;
-      color: rgba(255,255,255,.8);
+      font-weight: 400;
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #fff;
+      text-wrap: balance;
     }
 
     .media-page .kt-hero-btn {
-      width: auto;
-      margin-top: 1.5rem;
-      padding: 0 22px;
-    }
-
-    .media-page .kt-marquee {
-      flex: 0 0 auto;
-      overflow: hidden;
-      border-top: 1px solid rgba(255,255,255,.1);
-      border-bottom: 1px solid rgba(255,255,255,.1);
-      background: #0F0E0D;
-      padding: .9rem 0;
-    }
-
-    .media-page .kt-strip-track {
-      display: flex;
-      width: max-content;
-      animation: media-strip 40s linear infinite;
-    }
-
-    .media-page .kt-strip-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 20px;
-      padding-right: 20px;
-      font-family: var(--gk-display);
-      font-style: italic;
-      font-size: clamp(1rem, .9rem + .6vw, 1.45rem);
-      color: rgba(255,255,255,.82);
-      white-space: nowrap;
-    }
-
-    .media-page .kt-strip-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 999px;
-      background: var(--gk-accent);
-    }
-
-    @keyframes media-strip {
-      from { transform: translateX(0); }
-      to { transform: translateX(-50%); }
+      margin-top: 1.75rem;
+      height: 48px;
+      padding: 0 28px;
+      font-size: 11.5px;
+      letter-spacing: .12em;
     }
 
     .media-page .kt-video {
@@ -979,8 +1094,10 @@ const Styles = () => (
       top: 0;
       z-index: 0;
       width: 100%;
-      height: 100vh;
-      height: 100dvh;
+      height: 70vh;
+      height: 70dvh;
+      min-height: 320px;
+      max-height: 900px;
       overflow: hidden;
       background: #0A0A0A;
     }
@@ -994,12 +1111,78 @@ const Styles = () => (
       object-position: center var(--kt-video-pos-y);
     }
 
-    /* Desktop / laptop: portrait video ko poori screen pe cover + zoom */
-    @media (min-width: 1024px) and (orientation: landscape) {
-      .media-page .kt-video-el {
-        transform: scale(var(--kt-video-zoom-desktop));
-        transform-origin: center center;
-      }
+    .media-page .kt-play {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      cursor: pointer;
+      background: transparent;
+      color: #fff;
+    }
+
+    .media-page .kt-play-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 88px;
+      height: 88px;
+      border-radius: 999px;
+      background: var(--gk-accent);
+      color: #fff;
+      box-shadow: 0 10px 44px rgba(192,101,43,.5);
+      transition: transform .3s ease, background-color .3s ease;
+    }
+
+    .media-page .kt-play-btn:before,
+    .media-page .kt-play-btn:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      border: 1.5px solid var(--gk-accent-soft);
+      animation: media-ring 2.2s ease-out infinite;
+    }
+
+    .media-page .kt-play-btn:after { animation-delay: 1.1s; }
+
+    .media-page .kt-play:hover .kt-play-btn {
+      transform: scale(1.08);
+      background: #D2743A;
+    }
+
+    .media-page .kt-start-label {
+      font-family: var(--gk-sans);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .34em;
+      padding-left: .34em;
+      text-transform: uppercase;
+      color: #fff;
+      animation: media-blink 1.3s ease-in-out infinite;
+    }
+
+    .media-page .kt-start-sub {
+      margin-top: -6px;
+      font-family: var(--gk-sans);
+      font-size: 10.5px;
+      letter-spacing: .08em;
+      color: rgba(255,255,255,.8);
+    }
+
+    @keyframes media-ring {
+      0% { transform: scale(1); opacity: .8; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+
+    @keyframes media-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .5; }
     }
 
     .media-page .kt-content {
@@ -1028,10 +1211,12 @@ const Styles = () => (
 
     .media-page .kt-card-title {
       font-family: var(--gk-display);
-      font-weight: 600;
+      font-weight: 700;
       color: #fff;
-      line-height: 1.2;
-      font-size: 1rem;
+      line-height: 1.3;
+      font-size: clamp(.78rem, 1vw, 1rem);
+      text-transform: uppercase;
+      letter-spacing: .015em;
     }
 
     .media-page .kt-crop {
@@ -1042,8 +1227,8 @@ const Styles = () => (
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 31px;
-      height: 31px;
+      width: 34px;
+      height: 34px;
       border-radius: 999px;
       background: rgba(10,10,10,.72);
       border: 1px solid rgba(255,255,255,.25);
@@ -1052,35 +1237,31 @@ const Styles = () => (
       transition: background-color .25s ease;
     }
 
-    .media-page .kt-crop:hover {
-      background: var(--gk-accent);
-    }
+    .media-page .kt-crop:hover { background: var(--gk-accent); }
 
     .media-page .kt-inquiry {
       margin-top: 12px;
       display: flex;
       width: 100%;
-      min-height: 35px;
+      min-height: 38px;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 8px 6px;
+      gap: 7px;
+      padding: 8px 10px;
       border-radius: 999px;
       border: 1px solid var(--gk-accent);
       background: var(--gk-accent);
       font-family: var(--gk-sans);
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: .045em;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .06em;
       text-transform: uppercase;
       color: #fff;
       white-space: nowrap;
       transition: background-color .25s ease;
     }
 
-    .media-page .kt-inquiry:hover {
-      background: #D2743A;
-    }
+    .media-page .kt-inquiry:hover { background: #D2743A; }
 
     .media-page .kt-pagination {
       display: flex;
@@ -1128,12 +1309,13 @@ const Styles = () => (
       opacity: .3;
     }
 
-    .media-page .kt-ctrl {
+    .media-page .kt-ctrl,
+    .media-page .kt-vbtn {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       border-radius: 999px;
       background: rgba(10,10,10,.7);
       border: 1px solid rgba(255,255,255,.25);
@@ -1142,14 +1324,83 @@ const Styles = () => (
       transition: background-color .25s ease, color .25s ease;
     }
 
-    .media-page .kt-ctrl:hover {
+    .media-page .kt-ctrl:hover,
+    .media-page .kt-vbtn:hover {
       background: #fff;
       color: #0A0A0A;
     }
 
-    .media-page .kt-lb-img {
-      animation: media-fade .3s ease;
+    .media-page .kt-vm { width: fit-content; }
+
+    .media-page .kt-vm-center {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      display: flex;
+      width: 64px;
+      height: 64px;
+      transform: translate(-50%, -50%);
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,.45);
+      border-radius: 999px;
+      background: rgba(192,101,43,.9);
+      color: #fff;
     }
+
+    .media-page .kt-vm-bar {
+      position: absolute;
+      inset: auto 0 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: linear-gradient(transparent, rgba(0,0,0,.9));
+    }
+
+    .media-page .kt-vbtn {
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      background: rgba(255,255,255,.12);
+    }
+
+    .media-page .kt-range {
+      min-width: 40px;
+      flex: 1;
+      appearance: none;
+      height: 4px;
+      border-radius: 99px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .media-page .kt-range::-webkit-slider-thumb {
+      appearance: none;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .media-page .kt-range::-moz-range-thumb {
+      width: 11px;
+      height: 11px;
+      border: 0;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .media-page .kt-vm-time {
+      flex: 0 0 auto;
+      font-family: var(--gk-sans);
+      font-size: 10px;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .media-page .kt-lb-img { animation: media-fade .3s ease; }
 
     @keyframes media-fade {
       from { opacity: 0; transform: scale(.985); }
@@ -1166,40 +1417,14 @@ const Styles = () => (
     }
 
     @media (min-width: 640px) {
-      .media-page .gk-eyebrow {
-        font-size: 10px;
-        letter-spacing: .22em;
-      }
-
-      .media-page .kt-hero {
-        min-height: 450px;
-        padding: 7rem 0 2.5rem;
-      }
-
-      .media-page .kt-hero-text {
-        font-size: 14px;
-      }
-
-      .media-page .kt-card-title {
-        font-size: 1.2rem;
-      }
-
-      .media-page .kt-inquiry {
-        font-size: 10px;
-        min-height: 38px;
-      }
-
-      .media-page .kt-preview-info {
-        padding: 1.75rem 2rem;
-      }
+      .media-page .gk-eyebrow { font-size: 11px; letter-spacing: .32em; }
+      .media-page .gk-body { font-size: 14px; }
+      .media-page .kt-card-title { font-size: 1rem; }
+      .media-page .kt-inquiry { font-size: 10px; }
+      .media-page .kt-preview-info { padding: 1.75rem 2rem; }
     }
 
     @media (min-width: 1024px) {
-      .media-page .kt-hero {
-        min-height: 480px;
-        padding: 7.5rem 0 3rem;
-      }
-
       .media-page .kt-preview-info {
         width: 390px;
         max-height: none;
@@ -1213,47 +1438,35 @@ const Styles = () => (
     }
 
     @media (max-width: 640px) {
-      .media-page .kt-hero {
-        min-height: 390px;
-        padding: 6rem 0 2rem;
-      }
-
-      .media-page .kt-hero-lines {
-        background-size: 50% 100%;
-      }
+      .media-page .gk-eyebrow { font-size: 10px; letter-spacing: .24em; }
+      .media-page .kt-hero { padding: 6.5rem 0 2.5rem; }
+      .media-page .kt-hero-lines { background-size: 50% 100%; }
 
       .media-page .kt-hero-text {
+        font-size: .82rem;
+        line-height: 1.65;
+        margin-top: 1rem;
+        padding: 0 6px;
         max-width: 340px;
-        margin-top: .85rem;
-        padding: 0 3px;
-        font-size: 12px;
-        line-height: 1.7;
       }
 
       .media-page .kt-hero-btn {
-        min-height: 39px;
-        margin-top: 1.2rem;
-        padding: 0 18px;
-        font-size: 9px;
+        width: auto;
+        max-width: 100%;
+        height: 44px;
+        margin-top: 1.5rem;
+        padding: 0 22px;
+        font-size: 10px;
       }
 
-      .media-page .kt-marquee {
-        padding: .7rem 0;
+      .media-page .kt-video {
+        height: 70vh;
+        height: 70dvh;
+        min-height: 280px;
       }
 
-      .media-page .kt-strip-item {
-        gap: 15px;
-        padding-right: 15px;
-        font-size: 1rem;
-      }
-
-      .media-page .kt-content {
-        border-radius: 17px 17px 0 0;
-      }
-
-      .media-page .kt-card-title {
-        font-size: .94rem;
-      }
+      .media-page .kt-content { border-radius: 17px 17px 0 0; }
+      .media-page .kt-card-title { font-size: .76rem; }
 
       .media-page .kt-inquiry {
         font-size: 8px;
@@ -1262,12 +1475,18 @@ const Styles = () => (
         padding: 7px 3px;
       }
 
-      .media-page .kt-preview-info {
-        max-height: 45dvh;
-      }
+      .media-page .kt-preview-info { max-height: 45dvh; }
+      .media-page .kt-play-btn { width: 72px; height: 72px; }
+      .media-page .kt-start-sub { font-size: 9px; }
+      .media-page .kt-vm-bar { gap: 7px; padding: 8px; }
+      .media-page .kt-vm-time { font-size: 9px; }
     }
 
-    @media (max-width: 400px) {
+    @media (max-width: 380px) {
+      .media-page .gk-hero-title {
+        font-size: clamp(1.15rem, 5.7vw, 1.5rem);
+      }
+
       .media-page .kt-page-number,
       .media-page .kt-page-arrow {
         min-width: 36px;
@@ -1279,13 +1498,15 @@ const Styles = () => (
 
     @media (max-height: 640px) {
       .media-page .kt-hero {
-        padding-top: 5.5rem;
-        padding-bottom: 1.5rem;
+        padding-top: 6rem;
+        padding-bottom: 2rem;
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .media-page .kt-strip-track {
+      .media-page .kt-play-btn:before,
+      .media-page .kt-play-btn:after,
+      .media-page .kt-start-label {
         animation: none;
       }
 
@@ -1299,7 +1520,7 @@ const Styles = () => (
 );
 
 /* =========================================================
-   9. MAIN PAGE
+   10. MAIN PAGE
 ========================================================= */
 const Media = () => {
   const [products, setProducts] = useState([]);
@@ -1308,6 +1529,7 @@ const Media = () => {
 
   const [previewProduct, setPreviewProduct] = useState(null);
   const [inquiryProduct, setInquiryProduct] = useState(null);
+  const [videoOpen, setVideoOpen] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -1318,7 +1540,9 @@ const Media = () => {
       setProducts(data);
     } catch (error) {
       console.error("Public media products loading error:", error);
-      setLoadError("Unable to load media designs. Please try again later.");
+      setLoadError(
+        "Unable to load media designs. Please try again later."
+      );
       setProducts([]);
     } finally {
       setLoading(false);
@@ -1331,6 +1555,7 @@ const Media = () => {
 
   const closePreview = useCallback(() => setPreviewProduct(null), []);
   const closeInquiry = useCallback(() => setInquiryProduct(null), []);
+  const closeVideo = useCallback(() => setVideoOpen(false), []);
 
   const scrollToProducts = () => {
     document.getElementById("media-products")?.scrollIntoView({
@@ -1350,12 +1575,13 @@ const Media = () => {
 
       <FirstScreen onExplore={scrollToProducts} />
 
-      <VideoSection />
+      <VideoSection onOpen={() => setVideoOpen(true)} />
 
       <div className="kt-content">
         {loadError && (
           <div className="px-4 pt-8 text-center font-sans text-sm text-red-300">
             {loadError}
+
             <button
               type="button"
               onClick={fetchProducts}
@@ -1373,6 +1599,8 @@ const Media = () => {
           onInquiry={setInquiryProduct}
         />
       </div>
+
+      {videoOpen && <VideoModal onClose={closeVideo} />}
 
       {previewProduct && (
         <Preview
