@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   BrowserRouter,
@@ -71,6 +72,11 @@ const Layout = () => {
   const location = useLocation();
 
   const isAdminRoute = location.pathname.startsWith("/admin");
+
+  // Footer sirf Home aur About page par show hoga.
+  const showFooter =
+    location.pathname === "/" ||
+    location.pathname === "/about";
 
   useSmoothScroll();
 
@@ -268,7 +274,10 @@ const Layout = () => {
         </Routes>
       </main>
 
-      <Footer key={location.pathname} />
+      {/* FOOTER: ONLY HOME AND ABOUT */}
+      {showFooter && (
+        <Footer key={location.pathname} />
+      )}
     </div>
   );
 };

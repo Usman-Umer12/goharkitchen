@@ -1,7 +1,7 @@
 // Kitchen.jsx
 // Install: npm i lucide-react
-// Needs: Tailwind CSS, ../assets/kitchen.mp4, ../assets/kitchen1.webp ... kitchen50.webp
-// Hero background: ../assets/mob2.webp (mobile) + ../assets/des2.webp (desktop)
+// Needs: Tailwind CSS, ../assets/kitchen.mp4 (sirf hero background), ../assets/kitchen1.webp ... kitchen50.webp
+// Hero background: ab image nahi, kitchen.mp4 video (muted, loop, autoplay) heading ke peeche chalti hai
 // Font: Montserrat (logo jaisa) -> Styles ke andar auto import hai
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,16 +12,10 @@ import {
   ChevronRight,
   Crop,
   MessageCircle,
-  Pause,
-  Play,
   Truck,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react";
 import kitchenVideo from "../assets/kitchen.mp4";
-import heroMobile from "../assets/mob2.webp";
-import heroDesktop from "../assets/des2.webp";
 import { supabase } from "../lib/supabase";
 
 /* =========================================================
@@ -85,13 +79,6 @@ const localProducts = Array.from({ length: TOTAL_PRODUCTS }, (_, i) => ({
 ========================================================= */
 const pad = (n) => String(n).padStart(2, "0");
 
-const formatTime = (s) => {
-  if (!Number.isFinite(s) || s < 0) return "0:00";
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${String(sec).padStart(2, "0")}`;
-};
-
 function openWhatsApp(text) {
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
   const w = window.open(url, "_blank", "noopener,noreferrer");
@@ -153,25 +140,78 @@ const Eyebrow = ({ children, align = "center", className = "" }) => (
 );
 
 /* =========================================================
-  1. FIRST SCREEN = HERO (marquee remove kar diya)
-  Header ke peeche background image:
-  mobile  -> mob2.webp
-  desktop -> des2.webp
+  HERO BACKGROUND VIDEO
+  - muted + loop + playsInline (mobile par autoplay ke liye zaroori)
+  - screen se bahar jaye to pause (battery / data bachta hai)
+  - "reduce motion" wale users ke liye sirf poster image
+========================================================= */
+const HeroVideo = ({ src, poster }) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+
+    video.muted = true;
+    video.defaultMuted = true;
+
+    const reduceMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduceMotion) {
+      video.pause();
+      return;
+    }
+
+    const tryPlay = () => {
+      const p = video.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    };
+
+    tryPlay();
+
+    if (!("IntersectionObserver" in window)) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) tryPlay();
+        else video.pause();
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <video
+      ref={ref}
+      className="kt-hero-video"
+      src={src}
+      poster={poster}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      aria-hidden="true"
+      tabIndex={-1}
+      disablePictureInPicture
+    />
+  );
+};
+
+/* =========================================================
+  1. FIRST SCREEN = HERO
+  Heading ke peeche background mein kitchen.mp4 video chalti hai
 ========================================================= */
 const FirstScreen = ({ onExplore }) => (
   <section className="kt-first">
     <header className="kt-hero">
-      {/* BACKGROUND IMAGE (responsive) */}
-      <picture>
-        <source media="(min-width: 768px)" srcSet={heroDesktop} />
-        <img
-          src={heroMobile}
-          alt=""
-          aria-hidden="true"
-          className="kt-hero-img"
-          decoding="async"
-        />
-      </picture>
+      {/* BACKGROUND VIDEO */}
+      <HeroVideo src={kitchenVideo} poster={getImage("kitchen1.webp")} />
       <div className="kt-hero-shade" />
 
       <div className="kt-hero-glow kt-hero-glow-a" />
@@ -209,184 +249,6 @@ const FirstScreen = ({ onExplore }) => (
     </header>
   </section>
 );
-
-/* =========================================================
-  2. VIDEO SECTION (full width + full height, center)
-  Beech mein blinking "Start" button -> popup video open hota hai
-========================================================= */
-const VideoSection = ({ onOpen }) => {
-  return (
-    <section className="kt-video">
-      <video
-        className="kt-video-el"
-        src={kitchenVideo}
-        poster={getImage("kitchen1.webp")}
-        muted
-        playsInline
-        preload="metadata"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/55 via-[#0A0A0A]/20 to-[#0A0A0A]/40" />
-
-      <button
-        type="button"
-        onClick={onOpen}
-        aria-label="Play kitchen video"
-        className="kt-play group"
-      >
-        <span className="kt-play-btn">
-          <Play size={30} strokeWidth={0} fill="currentColor" className="ml-1" />
-        </span>
-        <span className="kt-start-label">Start</span>
-        <span className="kt-start-sub">Watch Our Kitchens</span>
-      </button>
-    </section>
-  );
-};
-
-/* =========================================================
-  3. VIDEO POPUP (professional player: play / pause / mute / seek / close)
-========================================================= */
-function VideoModal({ onClose }) {
-  const videoRef = useRef(null);
-  const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(true);
-  const [current, setCurrent] = useState(0);
-  const [duration, setDuration] = useState(0);
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [onClose]);
-
-  const toggle = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) v.play().catch(() => {});
-    else v.pause();
-  };
-
-  const toggleMute = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = !v.muted;
-    setMuted(v.muted);
-  };
-
-  const handleSeek = (e) => {
-    const v = videoRef.current;
-    if (!v || !duration) return;
-    const next = (Number(e.target.value) / 1000) * duration;
-    v.currentTime = next;
-    setCurrent(next);
-  };
-
-  const progress = duration ? (current / duration) * 100 : 0;
-
-  return (
-    <div
-      className="fixed inset-0 z-[140] flex items-center justify-center bg-black/85 p-3 backdrop-blur-md sm:p-6"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Kitchen video"
-    >
-      <div className="kt-vm relative flex max-h-[88dvh] max-w-[94vw] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black shadow-[0_30px_90px_rgba(0,0,0,0.7)]">
-        <video
-          ref={videoRef}
-          src={kitchenVideo}
-          poster={getImage("kitchen1.webp")}
-          playsInline
-          muted={muted}
-          preload="metadata"
-          onClick={toggle}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
-          onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
-          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-          className="block max-h-[88dvh] min-w-[min(92vw,300px)] max-w-[94vw] cursor-pointer object-contain"
-        />
-
-        {/* CLOSE (cross) */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close video"
-          className="kt-ctrl absolute right-3 top-3 z-20"
-        >
-          <X size={18} />
-        </button>
-
-        {/* CENTER PLAY (jab video paused ho) */}
-        {!playing && (
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label="Play"
-            className="kt-vm-center"
-          >
-            <Play size={28} strokeWidth={0} fill="currentColor" className="ml-1" />
-          </button>
-        )}
-
-        {/* CONTROLS BAR */}
-        <div className="kt-vm-bar">
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={playing ? "Pause" : "Play"}
-            className="kt-vbtn"
-          >
-            {playing ? (
-              <Pause size={18} strokeWidth={0} fill="currentColor" />
-            ) : (
-              <Play size={18} strokeWidth={0} fill="currentColor" />
-            )}
-          </button>
-
-          <input
-            type="range"
-            min="0"
-            max="1000"
-            step="1"
-            value={duration ? Math.round((current / duration) * 1000) : 0}
-            onChange={handleSeek}
-            aria-label="Seek"
-            className="kt-range"
-            style={{
-              background: `linear-gradient(to right, var(--gk-accent) ${progress}%, rgba(255,255,255,0.28) ${progress}%)`,
-            }}
-          />
-
-          <span className="kt-vm-time">
-            {formatTime(current)} / {formatTime(duration)}
-          </span>
-
-          <button
-            type="button"
-            onClick={toggleMute}
-            aria-label={muted ? "Unmute" : "Mute"}
-            className="kt-vbtn"
-          >
-            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* =========================================================
   4. INQUIRY MODAL
@@ -823,7 +685,6 @@ const Styles = () => (
       --gk-accent-soft: #E08A4F;
 
       /* Video position: 0% = upar, 50% = beech, 100% = neeche */
-      --kt-video-pos-y: 50%;
     }
 
     /* Tailwind "font-sans" bhi Montserrat use kare */
@@ -970,32 +831,30 @@ const Styles = () => (
         linear-gradient(180deg, #14100D 0%, #0D0B0A 55%, #0A0A0A 100%);
     }
 
-    /* ---------- HERO BACKGROUND IMAGE (mobile: mob2 / desktop: des2) ---------- */
-    .kt-hero picture {
+    /* ---------- HERO BACKGROUND VIDEO ---------- */
+    .kt-hero-video {
       position: absolute;
       inset: 0;
       z-index: -3;
-      display: block;
-    }
-
-    .kt-hero-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: center;
-      opacity: 0.45;
-      transform: scale(1.04);
+      opacity: 0.85;
+      pointer-events: none;
+      background: #0A0A0A;
     }
 
-    /* dark overlay + copper glow so text stays readable */
+    /* dark overlay: video ke upar, text ke neeche -> heading hamesha saaf nazar aaye */
     .kt-hero-shade {
       position: absolute;
       inset: 0;
       z-index: -2;
       pointer-events: none;
       background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,0.30), transparent 60%),
-        linear-gradient(180deg, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0.5) 45%, #0A0A0A 100%);
+        radial-gradient(ellipse 70% 55% at 50% 50%, rgba(10,10,10,0.55), transparent 80%),
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,0.22), transparent 60%),
+        linear-gradient(180deg, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.50) 40%, rgba(10,10,10,0.62) 75%, #0A0A0A 100%);
     }
 
     .kt-hero-glow {
@@ -1015,12 +874,16 @@ const Styles = () => (
       inset: 0;
       z-index: -1;
       pointer-events: none;
-      opacity: 0.45;
+      opacity: 0.35;
       background-image: linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px);
       background-size: 25% 100%;
       -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
       mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
     }
+
+    /* video ke upar text ko soft shadow taake sharp dikhe */
+    .kt-hero .gk-hero-title { text-shadow: 0 2px 24px rgba(0,0,0,0.55); }
+    .kt-hero .gk-eyebrow { text-shadow: 0 1px 12px rgba(0,0,0,0.6); }
 
     /* HERO DESCRIPTION - pure WHITE */
     .kt-hero-text {
@@ -1033,6 +896,7 @@ const Styles = () => (
       color: #ffffff;
       opacity: 1;
       text-wrap: balance;
+      text-shadow: 0 1px 14px rgba(0,0,0,0.65);
     }
 
     .kt-hero-btn { margin-top: 1.75rem; height: 48px; padding: 0 28px; font-size: 11.5px; letter-spacing: .12em; }
@@ -1047,229 +911,6 @@ const Styles = () => (
     /* chhoti height wali screens (landscape phones) */
     @media (max-height: 640px) {
       .kt-hero { padding-top: 6rem; padding-bottom: 2rem; }
-    }
-
-    /* ---------- VIDEO SECTION (100% width x 100% height, center) ---------- */
-    .kt-video {
-      position: sticky;
-      top: 0;
-      z-index: 0;
-      width: 100%;
-      height: 70vh;
-      height: 70dvh;
-      min-height: 320px;
-      max-height: 900px;
-      overflow: hidden;
-      background: #0A0A0A;
-    }
-
-    @media (max-width: 640px) {
-      .kt-video {
-        height: 70vh;
-        height: 70dvh;
-        min-height: 280px;
-      }
-    }
-
-    .kt-video-el {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center var(--kt-video-pos-y);
-    }
-
-    /* ---------- BLINKING START BUTTON ---------- */
-    .kt-play {
-      position: absolute;
-      inset: 0;
-      z-index: 5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      cursor: pointer;
-      background: transparent;
-      color: #fff;
-    }
-
-    .kt-play-btn {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 88px;
-      height: 88px;
-      border-radius: 999px;
-      background: var(--gk-accent);
-      color: #fff;
-      box-shadow: 0 10px 44px rgba(192,101,43,0.5);
-      transition: transform .3s ease, background-color .3s ease;
-    }
-
-    .kt-play-btn::before,
-    .kt-play-btn::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 999px;
-      border: 1.5px solid var(--gk-accent-soft);
-      animation: kt-ring 2.2s ease-out infinite;
-    }
-
-    .kt-play-btn::after { animation-delay: 1.1s; }
-
-    .kt-play:hover .kt-play-btn { transform: scale(1.08); background: #D2743A; }
-
-    .kt-start-label {
-      font-family: var(--gk-sans);
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.34em;
-      padding-left: 0.34em;
-      text-transform: uppercase;
-      color: #fff;
-      animation: kt-blink 1.3s ease-in-out infinite;
-    }
-
-    .kt-start-sub {
-      margin-top: -6px;
-      font-family: var(--gk-sans);
-      font-size: 10.5px;
-      font-weight: 500;
-      letter-spacing: 0.22em;
-      padding-left: 0.22em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.7);
-    }
-
-    @media (max-width: 640px) {
-      .kt-play-btn { width: 72px; height: 72px; }
-      .kt-play-btn svg { width: 26px; height: 26px; }
-      .kt-start-label { font-size: 12px; }
-      .kt-start-sub { font-size: 9.5px; }
-    }
-
-    @keyframes kt-ring {
-      0%   { transform: scale(1);   opacity: 0.85; }
-      100% { transform: scale(2.1); opacity: 0; }
-    }
-
-    @keyframes kt-blink {
-      0%, 100% { opacity: 1; }
-      50%      { opacity: 0.2; }
-    }
-
-    /* products slide over the sticky video */
-    .kt-content {
-      position: relative;
-      z-index: 10;
-      background: #0A0A0A;
-      border-radius: 28px 28px 0 0;
-      box-shadow: 0 -30px 60px rgba(0,0,0,0.6);
-    }
-
-    @media (max-width: 640px) {
-      .kt-content { border-radius: 20px 20px 0 0; }
-    }
-
-    /* ---------- VIDEO POPUP ---------- */
-    .kt-vm { animation: kt-modal-in .35s cubic-bezier(.2,.8,.2,1); }
-
-    @keyframes kt-modal-in {
-      from { opacity: 0; transform: translateY(14px) scale(0.97); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .kt-vm-center {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 68px;
-      height: 68px;
-      transform: translate(-50%, -50%);
-      border-radius: 999px;
-      background: var(--gk-accent);
-      color: #fff;
-      box-shadow: 0 10px 40px rgba(192,101,43,0.5);
-      transition: transform .3s ease, background-color .3s ease;
-    }
-
-    .kt-vm-center:hover { background: #D2743A; transform: translate(-50%, -50%) scale(1.08); }
-
-    .kt-vm-bar {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 15;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 28px 14px 12px;
-      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
-    }
-
-    .kt-vbtn {
-      display: flex;
-      flex: 0 0 auto;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 999px;
-      color: #fff;
-      transition: background-color .25s ease;
-    }
-
-    .kt-vbtn:hover { background: rgba(255,255,255,0.15); }
-
-    .kt-vm-time {
-      flex: 0 0 auto;
-      font-family: var(--gk-sans);
-      font-size: 11px;
-      font-weight: 500;
-      color: rgba(255,255,255,0.8);
-      font-variant-numeric: tabular-nums;
-    }
-
-    @media (max-width: 400px) {
-      .kt-vm-time { display: none; }
-    }
-
-    .kt-range {
-      -webkit-appearance: none;
-      appearance: none;
-      flex: 1 1 auto;
-      min-width: 0;
-      height: 4px;
-      border-radius: 999px;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .kt-range::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 13px;
-      height: 13px;
-      border-radius: 999px;
-      background: #fff;
-      border: 2px solid var(--gk-accent);
-    }
-
-    .kt-range::-moz-range-thumb {
-      width: 11px;
-      height: 11px;
-      border-radius: 999px;
-      background: #fff;
-      border: 2px solid var(--gk-accent);
     }
 
     /* ---------- Product card ---------- */
@@ -1454,10 +1095,11 @@ const Styles = () => (
       }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .kt-play-btn::before,
-      .kt-play-btn::after,
-      .kt-start-label { animation: none; }
+    /* products hero ke foran baad, scroll karne par show hote hain */
+    .kt-content {
+      position: relative;
+      z-index: 10;
+      background: #0A0A0A;
     }
   `}</style>
 );
@@ -1468,7 +1110,6 @@ const Styles = () => (
 export default function Kitchen() {
   const [previewProduct, setPreviewProduct] = useState(null);
   const [inquiryProduct, setInquiryProduct] = useState(null);
-  const [videoOpen, setVideoOpen] = useState(false);
   const [products, setProducts] = useState(localProducts);
 
   useEffect(() => {
@@ -1511,7 +1152,6 @@ export default function Kitchen() {
 
   const closePreview = useCallback(() => setPreviewProduct(null), []);
   const closeInquiry = useCallback(() => setInquiryProduct(null), []);
-  const closeVideo = useCallback(() => setVideoOpen(false), []);
 
   const scrollToProducts = () => {
     document.getElementById("kitchen-products")?.scrollIntoView({
@@ -1525,8 +1165,6 @@ export default function Kitchen() {
       <Styles />
 
       <FirstScreen onExplore={scrollToProducts} />
-      <VideoSection onOpen={() => setVideoOpen(true)} />
-
       <div className="kt-content">
         <Products products={products} onPreview={setPreviewProduct} onInquiry={setInquiryProduct} />
       </div>
@@ -1545,8 +1183,6 @@ export default function Kitchen() {
       {inquiryProduct && (
         <InquiryModal product={inquiryProduct} onClose={closeInquiry} />
       )}
-
-      {videoOpen && <VideoModal onClose={closeVideo} />}
     </main>
   );
 }

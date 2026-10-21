@@ -1,3 +1,6 @@
+// Wordrobe.jsx
+// Assets: ../assets/word.mp4, word1.webp ... word18.webp
+// Hero: ab image nahi, word.mp4 video (muted, loop, autoplay) heading ke peeche chalti hai
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -7,17 +10,11 @@ import {
   ChevronRight,
   Crop,
   MessageCircle,
-  Pause,
-  Play,
   Truck,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react";
 
 import wardrobeVideo from "../assets/word.mp4";
-import heroMobile from "../assets/mob3.webp";
-import heroDesktop from "../assets/des3.webp";
 import { supabase } from "../lib/supabase";
 
 /* =========================================================
@@ -90,15 +87,6 @@ const formatPrice = (price) => {
   return `PKR ${new Intl.NumberFormat("en-PK", {
     maximumFractionDigits: 0,
   }).format(value)}`;
-};
-
-const formatTime = (seconds) => {
-  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
-
-  const minutes = Math.floor(seconds / 60);
-  const remaining = Math.floor(seconds % 60);
-
-  return `${minutes}:${String(remaining).padStart(2, "0")}`;
 };
 
 function openWhatsApp(message) {
@@ -179,6 +167,71 @@ function Eyebrow({ children, align = "center" }) {
 }
 
 /* =========================================================
+   HERO BACKGROUND VIDEO
+   - muted + loop + playsInline (mobile par autoplay ke liye zaroori)
+   - screen se bahar jaye to pause (battery / data bachta hai)
+   - "reduce motion" wale users ke liye sirf poster image
+========================================================= */
+
+function HeroVideo({ src, poster }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+
+    video.muted = true;
+    video.defaultMuted = true;
+
+    const reduceMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduceMotion) {
+      video.pause();
+      return;
+    }
+
+    const tryPlay = () => {
+      const p = video.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    };
+
+    tryPlay();
+
+    if (!("IntersectionObserver" in window)) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) tryPlay();
+        else video.pause();
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <video
+      ref={ref}
+      className="kt-hero-video"
+      src={src}
+      poster={poster}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      aria-hidden="true"
+      tabIndex={-1}
+      disablePictureInPicture
+    />
+  );
+}
+
+/* =========================================================
    HERO SECTION
 ========================================================= */
 
@@ -186,16 +239,7 @@ function FirstScreen({ onExplore }) {
   return (
     <section className="kt-first">
       <header className="kt-hero">
-        <picture>
-          <source media="(min-width: 768px)" srcSet={heroDesktop} />
-
-          <img
-            src={heroMobile}
-            alt="Gohar custom wardrobe designs"
-            className="kt-hero-img"
-            fetchPriority="high"
-          />
-        </picture>
+        <HeroVideo src={wardrobeVideo} poster={getImage("word1.webp")} />
 
         <div className="kt-hero-shade" />
         <div className="kt-hero-glow kt-hero-glow-a" />
@@ -233,269 +277,6 @@ function FirstScreen({ onExplore }) {
     </section>
   );
 }
-
-/* =========================================================
-   VIDEO SECTION
-   IMPORTANT:
-   No autoplay.
-   No background video playback.
-   Customer clicks Start to open the video player.
-========================================================= */
-
-function VideoSection({ onOpen }) {
-  return (
-    <section className="kt-video">
-      {/* Static poster only: the actual video does not play here. */}
-      <img
-        src={getImage("word1.webp")}
-        alt="Explore Gohar wardrobe designs"
-        className="kt-video-poster"
-        loading="lazy"
-      />
-
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/40" />
-
-      <button
-        type="button"
-        onClick={onOpen}
-        aria-label="Open wardrobe video player"
-        className="kt-play group"
-      >
-        <span className="kt-play-btn">
-          <Play
-            size={30}
-            strokeWidth={0}
-            fill="currentColor"
-            className="ml-1"
-          />
-        </span>
-
-        <span className="kt-start-label">Start</span>
-
-        <span className="kt-start-sub">Watch Our Wardrobes</span>
-      </button>
-    </section>
-  );
-}
-/* =========================================================
-   VIDEO MODAL
-   - Video opens paused
-   - Sound always stays muted
-   - Clicking the video starts/pauses playback
-   - No autoplay
-========================================================= */
-
-function VideoModal({ onClose }) {
-  const videoRef = useRef(null);
-
-  const [playing, setPlaying] = useState(false);
-  const [current, setCurrent] = useState(0);
-  const [duration, setDuration] = useState(0);
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-
-    document.body.style.overflow = "hidden";
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    const video = videoRef.current;
-
-    if (video) {
-      video.pause();
-      video.muted = true;
-      video.volume = 0;
-    }
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.muted = true;
-        videoRef.current.volume = 0;
-      }
-    };
-  }, [onClose]);
-
-  const togglePlayback = async (event) => {
-    if (event) event.stopPropagation();
-
-    const video = videoRef.current;
-
-    if (!video) return;
-
-    // Always keep sound off, even when playback starts.
-    video.muted = true;
-    video.volume = 0;
-
-    if (video.paused) {
-      try {
-        await video.play();
-      } catch (error) {
-        console.error("Could not play wardrobe video:", error);
-        setPlaying(false);
-      }
-    } else {
-      video.pause();
-    }
-  };
-
-  const handleSeek = (event) => {
-    const video = videoRef.current;
-
-    if (!video || !Number.isFinite(video.duration)) return;
-
-    const percentage = Number(event.target.value);
-
-    video.currentTime = (percentage / 1000) * video.duration;
-    setCurrent(video.currentTime);
-  };
-
-  const progress = duration
-    ? (current / duration) * 100
-    : 0;
-
-  return (
-    <div
-      className="fixed inset-0 z-[140] flex items-center justify-center bg-black/90 p-3 backdrop-blur-md sm:p-6"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Wardrobe video player"
-    >
-      <div className="kt-vm relative flex max-h-[88dvh] max-w-[94vw] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl">
-
-        <video
-          ref={videoRef}
-          src={wardrobeVideo}
-          poster={getImage("word1.webp")}
-          playsInline
-          preload="metadata"
-          autoPlay={false}
-          muted
-          controls={false}
-          onClick={togglePlayback}
-          onPlay={(event) => {
-            event.currentTarget.muted = true;
-            event.currentTarget.volume = 0;
-            setPlaying(true);
-          }}
-          onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
-          onTimeUpdate={(event) => {
-            setCurrent(event.currentTarget.currentTime);
-          }}
-          onLoadedMetadata={(event) => {
-            const videoDuration = event.currentTarget.duration;
-            setDuration(
-              Number.isFinite(videoDuration) ? videoDuration : 0
-            );
-          }}
-          onDurationChange={(event) => {
-            const videoDuration = event.currentTarget.duration;
-            setDuration(
-              Number.isFinite(videoDuration) ? videoDuration : 0
-            );
-          }}
-          className="block max-h-[88dvh] min-w-[min(92vw,300px)] max-w-[94vw] cursor-pointer object-contain"
-        />
-
-        {/* Close button */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close video"
-          className="kt-ctrl absolute right-3 top-3 z-20"
-        >
-          <X size={18} />
-        </button>
-
-        {/* Center play button */}
-        {!playing && (
-          <button
-            type="button"
-            onClick={togglePlayback}
-            aria-label="Play wardrobe video without sound"
-            className="kt-vm-center"
-          >
-            <Play
-              size={28}
-              strokeWidth={0}
-              fill="currentColor"
-              className="ml-1"
-            />
-          </button>
-        )}
-
-        {/* Video controls */}
-        <div className="kt-vm-bar">
-          <button
-            type="button"
-            onClick={togglePlayback}
-            aria-label={playing ? "Pause video" : "Play video"}
-            className="kt-vbtn"
-          >
-            {playing ? (
-              <Pause
-                size={18}
-                fill="currentColor"
-                strokeWidth={0}
-              />
-            ) : (
-              <Play
-                size={18}
-                fill="currentColor"
-                strokeWidth={0}
-              />
-            )}
-          </button>
-
-          <input
-            type="range"
-            min="0"
-            max="1000"
-            step="1"
-            value={
-              duration
-                ? Math.round((current / duration) * 1000)
-                : 0
-            }
-            onChange={handleSeek}
-            aria-label="Video progress"
-            className="kt-range"
-            style={{
-              background: `linear-gradient(to right, var(--gk-accent) ${progress}%, rgba(255,255,255,0.28) ${progress}%)`,
-            }}
-          />
-
-          <span className="kt-vm-time">
-            {formatTime(current)} / {formatTime(duration)}
-          </span>
-
-          {/* Sound remains disabled */}
-          <button
-            type="button"
-            disabled
-            aria-label="Video sound is disabled"
-            title="Sound is disabled"
-            className="kt-vbtn cursor-not-allowed opacity-60"
-          >
-            <VolumeX size={18} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 
 /* =========================================================
    INQUIRY MODAL
@@ -1089,30 +870,30 @@ function Styles() {
         background: linear-gradient(180deg,#14100D,#0A0A0A);
       }
 
-      .kt-hero picture {
+      /* ---------- HERO BACKGROUND VIDEO ---------- */
+      .kt-hero-video {
         position: absolute;
         inset: 0;
         z-index: -3;
-        display: block;
-      }
-
-      .kt-hero-img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         object-position: center;
-        opacity: .55;
-        transform: scale(1.02);
+        opacity: .85;
+        pointer-events: none;
+        background: #0A0A0A;
       }
 
+      /* dark overlay: video ke upar, text ke neeche -> heading hamesha saaf nazar aaye */
       .kt-hero-shade {
         position: absolute;
         inset: 0;
         z-index: -2;
         pointer-events: none;
         background:
-          radial-gradient(ellipse at 50% 0%,rgba(192,101,43,.25),transparent 60%),
-          linear-gradient(180deg,rgba(10,10,10,.45),rgba(10,10,10,.55) 45%,#0A0A0A);
+          radial-gradient(ellipse 70% 55% at 50% 50%, rgba(10,10,10,.55), transparent 80%),
+          radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,.22), transparent 60%),
+          linear-gradient(180deg, rgba(10,10,10,.78) 0%, rgba(10,10,10,.50) 40%, rgba(10,10,10,.62) 75%, #0A0A0A 100%);
       }
 
       .kt-hero-glow {
@@ -1146,6 +927,10 @@ function Styles() {
         mask-image: radial-gradient(ellipse at center,#000 20%,transparent 75%);
       }
 
+      /* video ke upar text ko soft shadow taake sharp dikhe */
+      .kt-hero .gk-hero-title { text-shadow: 0 2px 24px rgba(0,0,0,.55); }
+      .kt-hero .gk-eyebrow { text-shadow: 0 1px 12px rgba(0,0,0,.6); }
+
       .kt-hero-text {
         max-width: 520px;
         margin: 1.25rem auto 0;
@@ -1154,190 +939,10 @@ function Styles() {
         line-height: 1.75;
         color: #fff;
         text-wrap: balance;
+        text-shadow: 0 1px 14px rgba(0,0,0,.65);
       }
 
       .kt-hero-btn { margin-top: 1.75rem; }
-
-      /* Static video-section poster: never plays automatically. */
-      .kt-video {
-        position: relative;
-        z-index: 0;
-        width: 100%;
-        height: 100vh;
-        height: 100dvh;
-        overflow: hidden;
-        background: #0A0A0A;
-      }
-
-      .kt-video-poster {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-      }
-
-      .kt-play {
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
-        cursor: pointer;
-        background: transparent;
-        color: #fff;
-      }
-
-      .kt-play-btn {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 88px;
-        height: 88px;
-        border-radius: 999px;
-        background: var(--gk-accent);
-        color: #fff;
-        box-shadow: 0 10px 44px rgba(192,101,43,.45);
-        transition: transform .3s ease, background .3s ease;
-      }
-
-      .kt-play-btn::before, .kt-play-btn::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border: 1.5px solid var(--gk-accent-soft);
-        border-radius: 999px;
-        animation: kt-ring 2.2s ease-out infinite;
-        pointer-events: none;
-      }
-
-      .kt-play-btn::after { animation-delay: 1.1s; }
-
-      .kt-play:hover .kt-play-btn {
-        transform: scale(1.08);
-        background: #D2743A;
-      }
-
-      .kt-start-label {
-        font-family: var(--gk-sans);
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: .34em;
-        text-transform: uppercase;
-        animation: kt-blink 1.3s ease-in-out infinite;
-      }
-
-      .kt-start-sub {
-        margin-top: -6px;
-        font-family: var(--gk-sans);
-        font-size: 10.5px;
-        letter-spacing: .2em;
-        text-transform: uppercase;
-        color: rgba(255,255,255,.75);
-      }
-
-      @keyframes kt-ring {
-        0% { transform: scale(1); opacity: .85; }
-        100% { transform: scale(2.1); opacity: 0; }
-      }
-
-      @keyframes kt-blink {
-        0%,100% { opacity: 1; }
-        50% { opacity: .45; }
-      }
-
-      .kt-content {
-        position: relative;
-        z-index: 10;
-        background: #0A0A0A;
-        border-radius: 28px 28px 0 0;
-        box-shadow: 0 -30px 60px rgba(0,0,0,.6);
-      }
-
-      .kt-vm { animation: kt-modal-in .3s ease-out; }
-
-      @keyframes kt-modal-in {
-        from { opacity: 0; transform: translateY(12px) scale(.98); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-      }
-
-      .kt-vm-center {
-        position: absolute;
-        left: 50%; top: 50%;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 68px; height: 68px;
-        transform: translate(-50%,-50%);
-        border-radius: 999px;
-        background: var(--gk-accent);
-        color: #fff;
-        box-shadow: 0 10px 40px rgba(192,101,43,.5);
-      }
-
-      .kt-vm-center:hover { background: #D2743A; }
-
-      .kt-vm-bar {
-        position: absolute;
-        left: 0; right: 0; bottom: 0;
-        z-index: 15;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 28px 14px 12px;
-        background: linear-gradient(to top,rgba(0,0,0,.9),transparent);
-      }
-
-      .kt-vbtn {
-        display: flex;
-        flex: 0 0 auto;
-        align-items: center;
-        justify-content: center;
-        width: 36px; height: 36px;
-        border-radius: 999px;
-        color: #fff;
-      }
-
-      .kt-vbtn:hover { background: rgba(255,255,255,.15); }
-
-      .kt-vm-time {
-        flex: 0 0 auto;
-        font-family: var(--gk-sans);
-        font-size: 11px;
-        color: rgba(255,255,255,.8);
-        font-variant-numeric: tabular-nums;
-      }
-
-      .kt-range {
-        flex: 1;
-        min-width: 0;
-        height: 4px;
-        appearance: none;
-        border-radius: 999px;
-        outline: none;
-        cursor: pointer;
-      }
-
-      .kt-range::-webkit-slider-thumb {
-        appearance: none;
-        width: 13px; height: 13px;
-        border: 2px solid var(--gk-accent);
-        border-radius: 999px;
-        background: #fff;
-      }
-
-      .kt-range::-moz-range-thumb {
-        width: 11px; height: 11px;
-        border: 2px solid var(--gk-accent);
-        border-radius: 999px;
-        background: #fff;
-      }
 
       .kt-product {
         display: flex;
@@ -1513,14 +1118,9 @@ function Styles() {
           line-height: 1.65;
         }
         .kt-hero-btn { margin-top: 1.5rem; min-height: 44px; padding: 0 20px; }
-        .kt-play-btn { width: 72px; height: 72px; }
-        .kt-start-label { font-size: 12px; }
-        .kt-start-sub { font-size: 9px; }
-        .kt-content { border-radius: 20px 20px 0 0; }
       }
 
       @media (max-width: 400px) {
-        .kt-vm-time { display: none; }
         .kt-page-number, .kt-page-arrow {
           min-width: 36px;
           height: 38px;
@@ -1529,12 +1129,17 @@ function Styles() {
         }
       }
 
-      @media (prefers-reduced-motion: reduce) {
-        .kt-play-btn::before,
-        .kt-play-btn::after,
-        .kt-start-label { animation: none; }
+      @media (max-height: 640px) {
+        .kt-hero { padding-top: 6rem; padding-bottom: 2rem; }
       }
-    `}</style>
+
+    /* products hero ke foran baad, scroll karne par show hote hain */
+    .kt-content {
+      position: relative;
+      z-index: 10;
+      background: #0A0A0A;
+    }
+  `}</style>
   );
 }
 
@@ -1545,7 +1150,6 @@ function Styles() {
 export default function Wordrobe() {
   const [previewProduct, setPreviewProduct] = useState(null);
   const [inquiryProduct, setInquiryProduct] = useState(null);
-  const [videoOpen, setVideoOpen] = useState(false);
   const [products, setProducts] = useState(localProducts);
 
   useEffect(() => {
@@ -1604,10 +1208,6 @@ export default function Wordrobe() {
     setInquiryProduct(null);
   }, []);
 
-  const closeVideo = useCallback(() => {
-    setVideoOpen(false);
-  }, []);
-
   const scrollToProducts = () => {
     document.getElementById("wardrobe-products")?.scrollIntoView({
       behavior: "smooth",
@@ -1620,9 +1220,6 @@ export default function Wordrobe() {
       <Styles />
 
       <FirstScreen onExplore={scrollToProducts} />
-
-      <VideoSection onOpen={() => setVideoOpen(true)} />
-
       <div className="kt-content">
         <Products
           products={products}
@@ -1648,8 +1245,6 @@ export default function Wordrobe() {
           onClose={closeInquiry}
         />
       )}
-
-      {videoOpen && <VideoModal onClose={closeVideo} />}
     </main>
   );
 }

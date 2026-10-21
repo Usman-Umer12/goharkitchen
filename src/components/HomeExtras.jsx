@@ -1,16 +1,47 @@
 import React, { useEffect, useRef, useState } from "react";
+
 /* =========================================================
-   DATA
+   SERVICES DATA
 ========================================================= */
 
-const ABOUT_IMAGE = "kitchen3.webp";
-
-const aboutPoints = [
-  "Kitchens, wardrobes, beds and media walls made to measure",
-  "2D / 3D design so you can preview your space before production",
-  "Carefully selected laminates, veneers, Corian and hardware",
-  "Design, manufacturing and installation coordinated by one team",
+const services = [
+  {
+    number: "01",
+    title: "Custom Kitchens",
+    description:
+      "Thoughtfully designed kitchens combining practical layouts, refined finishes and smart storage for everyday living.",
+    image: "kitchen3.webp",
+    link: "/kitchen",
+  },
+  {
+    number: "02",
+    title: "Luxury Wardrobes",
+    description:
+      "Made-to-measure wardrobes designed to maximize storage while complementing your bedroom's style.",
+    image: "word1.webp",
+    link: "/wordrobe",
+  },
+  {
+    number: "03",
+    title: "Media Walls",
+    description:
+      "Contemporary media walls that bring together entertainment, storage and sophisticated interior design.",
+    image: "media1.webp",
+    link: "/media-walls",
+  },
+  {
+    number: "04",
+    title: "Bedroom Furniture",
+    description:
+      "Beautifully considered bedroom furniture tailored to your space, preferences and everyday comfort.",
+    image: "bed1.webp",
+    link: "/bedroom-walls",
+  },
 ];
+
+/* =========================================================
+   BRAND PARTNERS
+========================================================= */
 
 const brands = [
   { name: "Brand Partner 1", image: "brand1.webp" },
@@ -19,80 +50,60 @@ const brands = [
   { name: "Brand Partner 4", image: "brand4.webp" },
 ];
 
-const processSteps = [
-  {
-    number: "01",
-    title: "Consultation & Planning",
-    description:
-      "We understand your requirements, preferred style, available space and budget before planning your project.",
-  },
-  {
-    number: "02",
-    title: "Design & Visualization",
-    description:
-      "Layouts and 2D or 3D concepts help you understand the proposed design before production begins.",
-  },
-  {
-    number: "03",
-    title: "Materials & Manufacturing",
-    description:
-      "We finalize suitable materials, dimensions, finishes and details before moving into production.",
-  },
-  {
-    number: "04",
-    title: "Installation & Handover",
-    description:
-      "Our team coordinates fitting, finishing and a final review to bring the planned interior together.",
-  },
-];
+/* =========================================================
+   WHY CHOOSE US DATA
+========================================================= */
 
 const benefits = [
   {
     number: "01",
     title: "Made to Measure",
     description:
-      "Interior solutions planned around your space, layout, storage needs and project requirements.",
+      "Every design is planned around your available space, storage needs and lifestyle.",
   },
   {
     number: "02",
-    title: "Thoughtful Material Selection",
+    title: "Material Selection",
     description:
-      "Guidance on materials, colors and finishes suited to your preferred design and budget.",
+      "Explore suitable materials, finishes and fittings according to your design and budget.",
   },
   {
     number: "03",
     title: "Attention to Detail",
     description:
-      "Careful consideration of measurements, alignment, fittings and finishing throughout the project.",
+      "Careful consideration of measurements, alignment, hardware and finishing.",
   },
   {
     number: "04",
-    title: "Coordinated Execution",
+    title: "Complete Coordination",
     description:
-      "Design, manufacturing and installation coordinated according to your project's agreed scope.",
+      "A coordinated approach to design, manufacturing and installation.",
   },
 ];
 
 /* =========================================================
-   ASSETS
+   IMAGE ASSETS
 ========================================================= */
 
-const localAssets = import.meta.glob("../assets/*.{webp,png,jpg,jpeg,avif}", {
-  eager: true,
-  query: "?url",
-  import: "default",
-});
+const localAssets = import.meta.glob(
+  "../assets/*.{webp,png,jpg,jpeg,avif}",
+  {
+    eager: true,
+    query: "?url",
+    import: "default",
+  }
+);
 
 const getImage = (filename) => {
-  const key = Object.keys(localAssets).find((path) =>
+  const match = Object.keys(localAssets).find((path) =>
     path.endsWith(`/${filename}`)
   );
 
-  return key ? localAssets[key] : `/assets/${filename}`;
+  return match ? localAssets[match] : `/assets/${filename}`;
 };
 
 /* =========================================================
-   REVEAL ANIMATION
+   SCROLL REVEAL
 ========================================================= */
 
 const useReveal = () => {
@@ -101,11 +112,15 @@ const useReveal = () => {
 
   useEffect(() => {
     const element = ref.current;
+
     if (!element) return undefined;
 
+    const reducedMotion =
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     if (
-      typeof IntersectionObserver === "undefined" ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      reducedMotion ||
+      typeof IntersectionObserver === "undefined"
     ) {
       setVisible(true);
       return undefined;
@@ -115,202 +130,159 @@ const useReveal = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           setVisible(true);
-          observer.unobserve(element);
+          observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.08, rootMargin: "0px 0px -30px 0px" }
+      {
+        threshold: 0.08,
+        rootMargin: "0px 0px -25px 0px",
+      }
     );
 
     observer.observe(element);
+
     return () => observer.disconnect();
   }, []);
 
   return [ref, visible];
 };
 
-const Reveal = ({ children, delay = 0, className = "" }) => {
+const Reveal = ({
+  children,
+  delay = 0,
+  className = "",
+}) => {
   const [ref, visible] = useReveal();
 
   return (
     <div
       ref={ref}
-      style={{ "--gk-reveal-delay": `${delay}ms` }}
-      className={`gk-reveal ${visible ? "gk-reveal-visible" : ""} ${className}`}
+      style={{ "--gk-delay": `${delay}ms` }}
+      className={[
+        "gk-reveal",
+        visible ? "gk-reveal-visible" : "",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       {children}
     </div>
   );
 };
 
-const Eyebrow = ({ children, centered = false }) => (
-  <div className={`gk-eyebrow-row ${centered ? "is-centered" : ""}`}>
-    <span className="gk-eyebrow-line" />
-    <span className="gk-eyebrow">{children}</span>
-    {centered && <span className="gk-eyebrow-line" />}
-  </div>
+/* =========================================================
+   SECTION HEADING
+   Home.jsx ki "Discover Our Collections" heading jaisi:
+   same size, same weight, left aligned, uppercase
+========================================================= */
+
+const SectionHeading = ({ id, children }) => (
+  <h2 className="gk-heading" id={id}>
+    {children}
+  </h2>
 );
 
 /* =========================================================
-   ABOUT GOHAR
+   OUR SERVICES
 ========================================================= */
 
-const AboutSection = () => (
-  <section className="gk-section gk-about" id="about">
+const OurServices = () => (
+  <section
+    className="gk-section gk-services"
+    id="our-services"
+    aria-labelledby="gk-services-title"
+  >
     <div className="gk-container">
-      <div className="gk-about-grid">
-        <Reveal className="gk-about-content">
-          <Eyebrow>About Gohar</Eyebrow>
-
-          <h2 className="gk-h2">
-            Thoughtful Interiors, <em>Life.</em>
-          </h2>
-
-          <p className="gk-body gk-about-lead">
-            At Gohar, we believe a beautiful interior should do more than look
-            impressive. It should feel welcoming, work effortlessly and reflect
-            the people who live in it. We create thoughtfully designed interior
-            solutions that combine contemporary style, functionality and
-            carefully considered details.
-          </p>
-
-          <p className="gk-body gk-about-description">
-            From modern kitchens and custom wardrobes to elegant bedroom
-            furniture, statement media walls and bespoke interior features, we
-            bring ideas to life through considered design and skilled
-            manufacturing. Every project starts with understanding your
-            requirements, preferences, available space and everyday lifestyle.
-          </p>
-
-          <p className="gk-body gk-about-description">
-            Our team helps coordinate the process from the initial consultation
-            and 2D or 3D design planning to material selection, production and
-            final installation. Our aim is to create a cohesive result with
-            attention to proportions, finishing and practical everyday use.
-          </p>
-
-          <ul className="gk-about-list">
-            {aboutPoints.map((point) => (
-              <li key={point}>
-                <span className="gk-bullet" aria-hidden="true" />
-                <span>{point}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="gk-about-actions">
-            <a href="/about" className="gk-btn-solid">
-              More About-Us
-            </a>
-
-            <a href="#brand-partnerships" className="gk-btn-outline">
-              Meet Our Partners
-            </a>
-          </div>
-        </Reveal>
-
-        <Reveal delay={120} className="gk-about-media">
-          <div className="gk-about-image">
-            <img
-              src={getImage(ABOUT_IMAGE)}
-              alt="Interior design and furniture by Gohar"
-              loading="lazy"
-              decoding="async"
-            />
-            <div className="gk-about-image-overlay" />
-            <div className="gk-about-image-caption">
-              <span>DESIGNED WITH PURPOSE</span>
-              <p>Beautiful spaces. Better living.</p>
-            </div>
-          </div>
-
-          <div className="gk-about-image-note">
-            <span className="gk-about-note-line" />
-            <p>
-              Every detail matters — from the first sketch to the finished
-              space.
-            </p>
-          </div>
-        </Reveal>
-      </div>
-    </div>
-  </section>
-);
-
-/* =========================================================
-   OUR DESIGN PROCESS
-========================================================= */
-
-const DesignProcess = () => (
-  <section className="gk-section gk-process" id="design-process">
-    <div className="gk-container">
-      <Reveal className="gk-process-heading">
-        <Eyebrow>Our Design Process</Eyebrow>
-
-        <h2 className="gk-h2">
-          From First Ideas to <em>Finishing Touches.</em>
-        </h2>
-
-        <p className="gk-body">
-          A considered process that brings your ideas to life through thoughtful
-          design, <span className="gk-inline-accent">suitable materials</span> and careful execution.
-        </p>
+      <Reveal className="gk-heading-wrap">
+        <SectionHeading id="gk-services-title">
+          Our Services
+        </SectionHeading>
       </Reveal>
 
-      <div className="gk-process-grid">
-        {processSteps.map((step, index) => (
+      <div className="gk-services-grid">
+        {services.map((service, index) => (
           <Reveal
-            key={step.number}
-            delay={index * 80}
-            className="gk-process-item"
+            key={service.number}
+            delay={index * 60}
+            className="gk-service-card"
           >
-            <div className="gk-process-number">
-              <span>{step.number}</span>
-              <span className="gk-process-number-line" />
-            </div>
-            <h3>{step.title}</h3>
-            <p>{step.description}</p>
+            <a
+              href={service.link}
+              className="gk-service-link"
+              aria-label={`Explore ${service.title}`}
+            >
+              <div className="gk-service-image">
+                <img
+                  src={getImage(service.image)}
+                  alt={service.title}
+                  loading="lazy"
+                  decoding="async"
+                />
+
+                <span className="gk-service-number">
+                  {service.number}
+                </span>
+
+                <span
+                  className="gk-service-arrow"
+                  aria-hidden="true"
+                >
+                  ↗
+                </span>
+              </div>
+
+              <div className="gk-service-content">
+                <h3>{service.title}</h3>
+                <p>{service.description}</p>
+
+                <span className="gk-service-discover">
+                  Explore Service
+                  <span aria-hidden="true"> ↗</span>
+                </span>
+              </div>
+            </a>
           </Reveal>
         ))}
       </div>
-
-      <Reveal className="gk-process-footer">
-        <span>Have a project in mind?</span>
-        <a href="/contact" className="gk-text-link">
-          Let's discuss it
-        </a>
-      </Reveal>
     </div>
   </section>
 );
 
 /* =========================================================
-   WHY CHOOSE GOHAR
+   WHY CHOOSE US
 ========================================================= */
 
 const WhyChooseGohar = () => (
-  <section className="gk-section gk-why" id="why-gohar">
+  <section
+    className="gk-section gk-why"
+    id="why-choose-us"
+    aria-labelledby="gk-why-title"
+  >
     <div className="gk-container">
       <div className="gk-why-layout">
         <Reveal className="gk-why-intro">
-          <Eyebrow>Why Choose Gohar</Eyebrow>
-
-          <h2 className="gk-h2">
-            Designed Around You. <em>Made with Care.</em>
-          </h2>
+          <SectionHeading id="gk-why-title">
+            Why Choose Us
+          </SectionHeading>
 
           <p className="gk-body gk-why-lead">
-            Every project deserves thoughtful planning, suitable materials and
-            attention to the details that make a space feel complete.
+            Your interior should reflect the way you live.
+            That is why every project deserves thoughtful
+            planning, appropriate materials and attention
+            to the smallest details.
           </p>
 
           <p className="gk-body gk-why-secondary">
-            We focus on understanding your needs and coordinating each stage of
-            the project around the intended design, practical use and agreed
-            requirements.
+            From the first conversation to the final
+            installation, we focus on practical solutions,
+            considered design and a finish that complements
+            your space.
           </p>
 
           <a href="/contact" className="gk-btn-solid gk-why-button">
             Start Your Project
+            <span aria-hidden="true">↗</span>
           </a>
         </Reveal>
 
@@ -322,7 +294,16 @@ const WhyChooseGohar = () => (
               className="gk-benefit-card"
             >
               <div className="gk-benefit-top">
-                <span className="gk-benefit-number">{benefit.number}</span>
+                <span className="gk-benefit-number">
+                  {benefit.number}
+                </span>
+
+                <span
+                  className="gk-benefit-mark"
+                  aria-hidden="true"
+                >
+                  ↗
+                </span>
               </div>
 
               <h3>{benefit.title}</h3>
@@ -340,19 +321,21 @@ const WhyChooseGohar = () => (
 ========================================================= */
 
 const BrandPartnerships = () => (
-  <section className="gk-section gk-partnerships" id="brand-partnerships">
+  <section
+    className="gk-section gk-partnerships"
+    id="brand-partnerships"
+    aria-labelledby="gk-partnerships-title"
+  >
     <div className="gk-container">
-      <Reveal className="gk-partnerships-heading">
-        <Eyebrow centered>Our Brand Partners</Eyebrow>
-
-        <h2 className="gk-h2">
-          Trusted Brands. <em>Timeless Interiors.</em>
-        </h2>
+      <Reveal className="gk-heading-wrap gk-partnerships-heading">
+        <SectionHeading id="gk-partnerships-title">
+          Our Brand Partners
+        </SectionHeading>
 
         <p className="gk-body gk-partnerships-description">
-          We work with carefully selected brands to bring quality materials,
-          refined finishes and lasting value to interior projects. Together, we
-          turn thoughtful design into beautifully finished spaces.
+          Thoughtful interiors begin with the right choices.
+          We consider materials, finishes and fittings to
+          complement each project's design and requirements.
         </p>
       </Reveal>
 
@@ -360,7 +343,7 @@ const BrandPartnerships = () => (
         {brands.map((brand, index) => (
           <Reveal
             key={brand.image}
-            delay={index * 80}
+            delay={index * 70}
             className="gk-brand-item"
           >
             <img
@@ -378,492 +361,683 @@ const BrandPartnerships = () => (
 );
 
 /* =========================================================
-   STYLES
-   Font: Cormorant Garamond + Jost (About page jaisa) | Orange accent: 10%
+   GLOBAL SECTION STYLES
 ========================================================= */
 
 const Styles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-      /* Same typography as About page */
-      --gk-display: 'Cormorant Garamond', Georgia, serif;
-      --gk-sans: 'Jost', Arial, sans-serif;
+      --gk-display: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --gk-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
       --gk-bg: #0A0A0A;
-      --gk-bg-alt: #0F0E0D;
       --gk-bg-warm: #100F0E;
-
-      /* Orange is a restrained 10% accent */
       --gk-accent: #C0652B;
       --gk-accent-hover: #E08A4F;
-      --gk-accent-soft: rgba(192,101,43,.12);
 
-      --gk-muted: rgba(255,255,255,.72);
-      --gk-border: rgba(255,255,255,.14);
-      --gk-container: 1200px;
-      --gk-ease: cubic-bezier(.2,.65,.3,1);
+      --gk-white: #FFFFFF;
+      --gk-muted: rgba(255, 255, 255, 0.72);
+      --gk-muted-strong: rgba(255, 255, 255, 0.88);
+      --gk-border: rgba(255, 255, 255, 0.13);
+
+      --gk-ease: cubic-bezier(0.2, 0.65, 0.3, 1);
     }
 
     .gk-section {
       position: relative;
-      padding: clamp(56px, 8vw, 96px) 0;
-      color: #fff;
-      font-family: var(--gk-sans);
+      padding-block: 56px;
       overflow: clip;
+      isolation: isolate;
+      color: var(--gk-white);
+      font-family: var(--gk-sans);
     }
 
+    @media (min-width: 640px) {
+      .gk-section { padding-block: 72px; }
+    }
+
+    @media (min-width: 1024px) {
+      .gk-section { padding-block: 96px; }
+    }
+
+    .gk-section,
     .gk-section *,
     .gk-section *::before,
-    .gk-section *::after { box-sizing: border-box; }
-
-    /* Body/UI uses Jost; display headings use Cormorant Garamond */
-    .gk-section,
-    .gk-section * { font-family: var(--gk-sans); }
-    .gk-section .gk-h2,
-    .gk-section .gk-about-image-caption p,
-    .gk-section .gk-process-item h3,
-    .gk-section .gk-benefit-card h3 {
-      font-family: var(--gk-display);
+    .gk-section *::after {
+      box-sizing: border-box;
     }
 
-    .gk-about { background: var(--gk-bg-alt); }
-    .gk-process, .gk-partnerships { background: var(--gk-bg); }
-    .gk-why { background: var(--gk-bg-warm); }
+    .gk-section * {
+      font-family: var(--gk-sans);
+    }
 
+    .gk-services,
+    .gk-partnerships {
+      background: var(--gk-bg);
+    }
+
+    .gk-why {
+      background: var(--gk-bg-warm);
+    }
+
+    /* Home.jsx ki collections section jitni hi width + padding:
+       px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-20 */
     .gk-container {
-      width: min(100% - 48px, var(--gk-container));
-      margin-inline: auto;
+      width: 100%;
+      padding-inline: 16px;
     }
 
-    /* REVEAL */
+    @media (min-width: 640px) {
+      .gk-container { padding-inline: 32px; }
+    }
+
+    @media (min-width: 1024px) {
+      .gk-container { padding-inline: 40px; }
+    }
+
+    @media (min-width: 1280px) {
+      .gk-container { padding-inline: 56px; }
+    }
+
+    @media (min-width: 1536px) {
+      .gk-container { padding-inline: 80px; }
+    }
+
+    .gk-section a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .gk-section a:focus-visible {
+      outline: 2px solid var(--gk-accent-hover);
+      outline-offset: 5px;
+    }
+
+    /* SCROLL REVEAL */
+
     .gk-reveal {
       min-width: 0;
       opacity: 0;
-      transform: translate3d(0, 16px, 0);
-      transition: opacity .65s ease, transform .65s var(--gk-ease);
-      transition-delay: var(--gk-reveal-delay, 0ms);
-    }
-    .gk-reveal-visible { opacity: 1; transform: none; }
-
-    /* TYPOGRAPHY */
-    .gk-eyebrow-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .gk-eyebrow-row.is-centered { justify-content: center; }
-
-    .gk-eyebrow-line {
-      flex: 0 0 32px;
-      width: 32px;
-      height: 1px;
-      background: var(--gk-accent);
+      transform: translate3d(0, 18px, 0);
+      transition:
+        opacity 600ms ease,
+        transform 600ms var(--gk-ease);
+      transition-delay: var(--gk-delay, 0ms);
     }
 
-    .gk-eyebrow {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      color: var(--gk-accent);
+    .gk-reveal-visible {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
     }
 
-    .gk-h2 {
+    /* SECTION HEADING = Home.jsx "Discover Our Collections"
+       20px / 24px / 28px / 30px, semibold, uppercase, left aligned */
+
+    .gk-heading {
       margin: 0;
+      color: var(--gk-white);
+      font-family: var(--gk-display);
+      font-size: 20px;
       font-weight: 600;
-      font-size: clamp(26px, 3vw, 44px);
-      line-height: 1.18;
-      letter-spacing: -.025em;
-      color: #fff;
-      text-wrap: balance;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
       overflow-wrap: break-word;
     }
 
-    /* Small orange highlight in headings — keep most text white */
-    .gk-h2 em {
-      font-style: normal;
-      font-weight: 500;
-      color: var(--gk-accent);
+    @media (min-width: 640px) {
+      .gk-heading { font-size: 24px; }
+    }
+
+    @media (min-width: 768px) {
+      .gk-heading { font-size: 28px; }
+    }
+
+    @media (min-width: 1024px) {
+      .gk-heading { font-size: 30px; }
+    }
+
+    /* heading ke neeche gap (Home: mb-8 sm:mb-10 lg:mb-12) */
+    .gk-heading-wrap {
+      margin-bottom: 32px;
+    }
+
+    @media (min-width: 640px) {
+      .gk-heading-wrap { margin-bottom: 40px; }
+    }
+
+    @media (min-width: 1024px) {
+      .gk-heading-wrap { margin-bottom: 48px; }
     }
 
     .gk-body {
       margin: 0;
-      font-size: 14.5px;
-      font-weight: 400;
-      line-height: 1.85;
       color: var(--gk-muted);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.9;
+      overflow-wrap: break-word;
     }
 
-    .gk-inline-accent {
-      color: var(--gk-accent-hover);
-      font-weight: 500;
+    @media (min-width: 640px) {
+      .gk-body { font-size: 14px; }
     }
 
-    /* BUTTONS & LINKS */
-    .gk-btn-outline,
+    /* BUTTON */
+
     .gk-btn-solid {
       display: inline-flex;
+      min-height: 49px;
       align-items: center;
       justify-content: center;
-      gap: 9px;
-      min-height: 48px;
-      padding: 0 26px;
-      border-radius: 999px;
-      font-size: 11px;
+      gap: 13px;
+      padding: 12px 23px;
+      border: 1px solid var(--gk-white);
+      border-radius: 2px;
+      color: #111111;
+      background: var(--gk-white);
+      font-size: 10px;
       font-weight: 600;
-      letter-spacing: .1em;
+      line-height: 1.4;
+      letter-spacing: 0.12em;
       text-align: center;
       text-transform: uppercase;
       text-decoration: none;
-      transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+      transition:
+        color 220ms ease,
+        background-color 220ms ease,
+        border-color 220ms ease;
     }
 
-    .gk-btn-outline { border: 1px solid rgba(255,255,255,.4); color: #fff; }
-    .gk-btn-outline:hover { background: var(--gk-accent); border-color: var(--gk-accent); color: #fff; }
-
-    .gk-btn-solid { border: 1px solid #fff; background: #fff; color: #111; }
-    .gk-btn-solid:hover { background: var(--gk-accent); border-color: var(--gk-accent); color: #fff; }
-
-    .gk-btn-solid:focus-visible,
-    .gk-btn-outline:focus-visible,
-    .gk-text-link:focus-visible {
-      outline: 2px solid #fff;
-      outline-offset: 3px;
-    }
-
-    .gk-text-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--gk-accent);
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: .04em;
-      text-decoration: none;
-      transition: color .2s ease;
-    }
-    .gk-text-link:hover { color: var(--gk-accent-hover); }
-
-    /* ABOUT */
-    .gk-about-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
-      align-items: center;
-      gap: clamp(32px, 5vw, 76px);
-    }
-
-    .gk-about-content,
-    .gk-about-media { min-width: 0; }
-
-    .gk-about-lead { margin-top: 22px; color: rgba(255,255,255,.88); }
-    .gk-about-description { margin-top: 16px; }
-
-    .gk-about-list {
-      display: grid;
-      gap: 13px;
-      margin: 26px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .gk-about-list li {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      font-size: 13.5px;
-      font-weight: 400;
-      line-height: 1.7;
-      color: rgba(255,255,255,.82);
-    }
-
-    .gk-bullet {
-      flex: 0 0 6px;
-      width: 6px;
-      height: 6px;
-      margin-top: 9px;
-      border-radius: 50%;
+    .gk-btn-solid:hover {
+      color: var(--gk-white);
       background: var(--gk-accent);
+      border-color: var(--gk-accent);
     }
 
-    .gk-about-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    /* OUR SERVICES */
 
-    .gk-about-image {
+    .gk-services-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .gk-service-card {
+      min-width: 0;
+      border: 1px solid var(--gk-border);
+      background: rgba(255, 255, 255, 0.015);
+      transition: none;
+    }
+
+    .gk-service-link {
+      display: block;
+      height: 100%;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .gk-service-image {
       position: relative;
-      isolation: isolate;
-      width: 100%;
-      aspect-ratio: 4 / 4.5;
+      aspect-ratio: 4 / 3;
       overflow: hidden;
       background: #171513;
     }
 
-    .gk-about-image img {
+    .gk-service-image img {
       display: block;
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center;
+      transform: none !important;
+      transition: none !important;
     }
 
-    .gk-about-image-overlay {
+    .gk-service-number {
       position: absolute;
-      z-index: 1;
-      inset: 35% 0 0;
-      background: linear-gradient(to bottom, transparent, rgba(0,0,0,.65));
-      pointer-events: none;
-    }
-
-    .gk-about-image-caption {
-      position: absolute;
-      z-index: 2;
-      right: 24px;
-      bottom: 25px;
-      left: 24px;
-    }
-
-    .gk-about-image-caption span {
-      display: block;
-      margin-bottom: 9px;
+      top: 12px;
+      left: 12px;
+      display: inline-flex;
+      min-width: 34px;
+      min-height: 30px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: var(--gk-white);
+      background: rgba(0, 0, 0, 0.48);
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: .18em;
-      color: var(--gk-accent-hover);
+      letter-spacing: 0.1em;
+      backdrop-filter: blur(8px);
     }
 
-    .gk-about-image-caption p {
-      margin: 0;
-      font-size: clamp(19px, 2.2vw, 28px);
+    .gk-service-arrow {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      width: 35px;
+      height: 35px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 50%;
+      color: var(--gk-white);
+      background: rgba(0, 0, 0, 0.38);
+      font-size: 18px;
+      transition: none !important;
+    }
+
+    .gk-service-content {
+      padding: 18px 15px 20px;
+    }
+
+    .gk-service-content h3 {
+      margin: 0 0 9px;
+      color: var(--gk-white);
+      font-family: var(--gk-display);
+      font-size: clamp(16px, 1.4vw, 20px);
       font-weight: 600;
       line-height: 1.25;
-      letter-spacing: -.015em;
+      letter-spacing: -0.01em;
+      overflow-wrap: break-word;
     }
 
-    .gk-about-image-note { display: flex; align-items: flex-start; gap: 13px; margin-top: 17px; }
-    .gk-about-note-line { flex: 0 0 30px; height: 1px; margin-top: 11px; background: rgba(255,255,255,.7); }
-    .gk-about-image-note p { max-width: 360px; margin: 0; font-size: 12px; line-height: 1.8; color: var(--gk-muted); }
-
-    /* DESIGN PROCESS */
-    .gk-process-heading { max-width: 720px; margin-bottom: 54px; }
-    .gk-process-heading > .gk-body { max-width: 610px; margin-top: 18px; }
-
-    .gk-process-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      border-top: 1px solid var(--gk-border);
+    .gk-service-content p {
+      margin: 0;
+      color: var(--gk-muted);
+      font-size: 12px;
+      line-height: 1.8;
     }
 
-    .gk-process-item { min-width: 0; padding: 26px 23px 12px 0; }
-    .gk-process-item + .gk-process-item { padding-left: 23px; border-left: 1px solid var(--gk-border); }
-
-    .gk-process-number {
-      display: flex;
+    .gk-service-discover {
+      display: inline-flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 28px;
-      color: var(--gk-accent);
-      font-size: 13px;
+      gap: 7px;
+      margin-top: 16px;
+      color: var(--gk-accent-hover);
+      font-size: 10px;
       font-weight: 600;
-      letter-spacing: .08em;
-    }
-    .gk-process-number-line { width: 35px; height: 1px; background: var(--gk-accent); }
-
-    .gk-process-item h3 {
-      margin: 0 0 13px;
-      font-size: clamp(17px, 1.5vw, 21px);
-      font-weight: 600;
-      line-height: 1.3;
-      letter-spacing: -.01em;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    .gk-process-item p { margin: 0; color: var(--gk-muted); font-size: 12.5px; font-weight: 400; line-height: 1.9; }
+    /* WHY CHOOSE US */
 
-    .gk-process-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      margin-top: 40px;
-      padding-top: 22px;
-      border-top: 1px solid var(--gk-border);
-      color: rgba(255,255,255,.8);
-      font-size: 13px;
-    }
-
-    /* WHY GOHAR */
     .gk-why-layout {
       display: grid;
-      grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
       align-items: start;
-      gap: clamp(40px, 6vw, 88px);
+      gap: clamp(38px, 6vw, 82px);
     }
 
-    .gk-why-intro { position: sticky; top: 40px; }
-    .gk-why-lead { margin-top: 20px; color: rgba(255,255,255,.88); }
-    .gk-why-secondary { margin-top: 14px; }
-    .gk-why-button { margin-top: 28px; }
+    .gk-why-intro {
+      min-width: 0;
+    }
 
-    /* 2 x 2 grid on every screen size */
+    .gk-why-lead {
+      margin-top: 22px;
+      color: var(--gk-muted-strong);
+    }
+
+    .gk-why-secondary {
+      margin-top: 14px;
+    }
+
+    .gk-why-button {
+      margin-top: 27px;
+    }
+
     .gk-benefits-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: 14px;
     }
 
     .gk-benefit-card {
       display: flex;
+      min-width: 0;
+      min-height: 215px;
       flex-direction: column;
-      padding: 28px 26px 30px;
-      background: rgba(255,255,255,.03);
+      padding: 24px 22px;
       border: 1px solid var(--gk-border);
+      background: rgba(255, 255, 255, 0.025);
+      transition:
+        border-color 250ms ease,
+        background-color 250ms ease;
+    }
+
+    .gk-benefit-card:hover {
+      border-color: rgba(192, 101, 43, 0.6);
+      background: rgba(192, 101, 43, 0.045);
     }
 
     .gk-benefit-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       margin-bottom: 28px;
     }
 
     .gk-benefit-number {
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: .14em;
-      color: var(--gk-accent);
+      color: var(--gk-accent-hover);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+    }
+
+    .gk-benefit-mark {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 17px;
     }
 
     .gk-benefit-card h3 {
       margin: 0 0 10px;
-      font-size: clamp(16px, 1.45vw, 20px);
+      color: var(--gk-white);
+      font-family: var(--gk-display);
+      font-size: clamp(16px, 1.5vw, 20px);
       font-weight: 600;
-      line-height: 1.3;
-      letter-spacing: -.01em;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      overflow-wrap: break-word;
     }
 
     .gk-benefit-card p {
       margin: 0;
       color: var(--gk-muted);
-      font-size: 12.5px;
-      font-weight: 400;
+      font-size: 12px;
       line-height: 1.85;
     }
 
     /* BRAND PARTNERSHIPS */
-    .gk-partnerships-heading { max-width: 780px; margin: 0 auto 48px; text-align: center; }
-    .gk-partnerships-heading .gk-h2 { font-size: clamp(26px, 3vw, 40px); }
-    .gk-partnerships-description { max-width: 650px; margin: 18px auto 0; font-size: 13.5px; line-height: 1.9; }
+
+    .gk-partnerships-heading .gk-body {
+      max-width: 620px;
+    }
+
+    .gk-partnerships-description {
+      margin-top: 14px;
+      font-size: 13px;
+      line-height: 1.9;
+    }
 
     .gk-brands-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       align-items: center;
-      gap: 38px;
+      gap: 30px;
     }
 
-    .gk-brand-item { display: flex; align-items: center; justify-content: center; min-width: 0; }
+    .gk-brand-item {
+      display: flex;
+      min-width: 0;
+      min-height: 115px;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      border: 1px solid transparent;
+      transition:
+        border-color 250ms ease,
+        background-color 250ms ease;
+    }
+
+    .gk-brand-item:hover {
+      border-color: var(--gk-border);
+      background: rgba(255, 255, 255, 0.02);
+    }
 
     .gk-brand-logo {
       display: block;
       width: 100%;
-      max-width: 210px;
-      height: 110px;
-      padding: 0;
+      max-width: 205px;
+      height: 88px;
       object-fit: contain;
       object-position: center;
-      background: none;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    /* LARGE DESKTOP */
-    @media (min-width: 1280px) {
-      .gk-container { width: calc(100% - 100px); max-width: 1440px; }
-      .gk-about-image { aspect-ratio: 4 / 4.3; }
-
-      .gk-about-list { gap: 0; border-bottom: 1px solid var(--gk-border); }
-      .gk-about-list li { align-items: center; padding: 13px 0; border-top: 1px solid var(--gk-border); }
-      .gk-bullet { margin-top: 0; }
-
-      .gk-brand-logo { height: 130px; }
     }
 
     /* TABLET */
+
     @media (max-width: 1023px) {
-      .gk-about-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
-      .gk-about-image { aspect-ratio: 16 / 9; }
+      .gk-services-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
 
-      .gk-process-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: none; }
-      .gk-process-item { padding: 23px 20px 25px 0; border-top: 1px solid var(--gk-border); }
-      .gk-process-item + .gk-process-item { padding-left: 20px; border-left: none; }
-      .gk-process-item:nth-child(even) { padding-right: 0; padding-left: 20px; border-left: 1px solid var(--gk-border); }
+      .gk-service-image {
+        aspect-ratio: 16 / 10;
+      }
 
-      .gk-why-layout { grid-template-columns: minmax(0, 1fr); gap: 36px; }
-      .gk-why-intro { position: static; max-width: 650px; }
+      .gk-service-content {
+        padding: 20px 18px 22px;
+      }
 
-      .gk-partnerships-heading { margin-bottom: 34px; }
-      .gk-brands-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 30px; }
-      .gk-brand-logo { height: 100px; }
+      .gk-why-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 34px;
+      }
+
+      .gk-why-intro {
+        max-width: 650px;
+      }
+
+      .gk-benefit-card {
+        min-height: 195px;
+      }
+
+      .gk-brands-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .gk-brand-item {
+        min-height: 110px;
+      }
+
+      .gk-brand-logo {
+        max-width: 190px;
+        height: 82px;
+      }
     }
 
     /* MOBILE */
+
     @media (max-width: 640px) {
-      .gk-container { width: calc(100% - 32px); }
-      .gk-h2 { font-size: clamp(24px, 6.6vw, 32px); line-height: 1.2; }
-      .gk-body { font-size: 13.5px; line-height: 1.8; }
-      .gk-eyebrow { font-size: 10px; letter-spacing: .17em; }
-      .gk-eyebrow-line { flex-basis: 24px; width: 24px; }
+      .gk-body {
+        font-size: 13px;
+        line-height: 1.85;
+      }
 
-      .gk-about-lead { margin-top: 18px; }
-      .gk-about-description { margin-top: 13px; }
-      .gk-about-list { gap: 12px; margin-top: 22px; }
-      .gk-about-list li { gap: 10px; font-size: 12.5px; }
-      .gk-about-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 25px; }
-      .gk-about-actions a { width: 100%; }
-      .gk-about-image { aspect-ratio: 4 / 4.3; }
-      .gk-about-image-caption { right: 17px; bottom: 19px; left: 17px; }
-      .gk-about-image-caption p { font-size: 20px; }
+      /* SERVICES (Home.jsx jaisa 2 columns, gap-3) */
 
-      .gk-process-heading { margin-bottom: 30px; }
-      .gk-process-heading > .gk-body { margin-top: 14px; }
-      .gk-process-grid { grid-template-columns: minmax(0, 1fr); }
-      .gk-process-item,
-      .gk-process-item + .gk-process-item,
-      .gk-process-item:nth-child(even) { padding: 21px 0 23px; border-top: 1px solid var(--gk-border); border-left: none; }
-      .gk-process-number { margin-bottom: 15px; }
-      .gk-process-item h3 { margin-bottom: 8px; font-size: 18px; }
-      .gk-process-footer { align-items: flex-start; flex-direction: column; gap: 12px; margin-top: 24px; padding-top: 20px; }
+      .gk-services-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
 
-      .gk-why-layout { gap: 28px; }
-      .gk-why-lead { margin-top: 15px; }
-      .gk-why-button { width: 100%; margin-top: 22px; }
+      .gk-service-image {
+        aspect-ratio: 4 / 3;
+      }
 
-      /* 2 x 2 on mobile (1 2 / 3 4) */
-      .gk-benefits-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .gk-benefit-card { padding: 16px 14px 18px; }
-      .gk-benefit-top { margin-bottom: 16px; }
-      .gk-benefit-number { font-size: 10px; letter-spacing: .1em; }
-      .gk-benefit-card h3 { margin-bottom: 7px; font-size: 14.5px; line-height: 1.3; }
-      .gk-benefit-card p { font-size: 11.5px; line-height: 1.7; }
+      .gk-service-number {
+        top: 8px;
+        left: 8px;
+        min-width: 29px;
+        min-height: 26px;
+        font-size: 9px;
+      }
 
-      .gk-partnerships-heading { margin-bottom: 26px; }
-      .gk-partnerships-description { margin-top: 13px; font-size: 12.5px; line-height: 1.8; }
-      .gk-brands-grid { column-gap: 14px; row-gap: 18px; }
-      .gk-brand-logo { max-width: 160px; height: 80px; }
+      .gk-service-arrow {
+        right: 8px;
+        bottom: 8px;
+        width: 29px;
+        height: 29px;
+        font-size: 15px;
+      }
+
+      .gk-service-content {
+        padding: 13px 11px 15px;
+      }
+
+      .gk-service-content h3 {
+        margin-bottom: 7px;
+        font-size: 15px;
+        line-height: 1.25;
+      }
+
+      .gk-service-content p {
+        font-size: 11px;
+        line-height: 1.7;
+      }
+
+      .gk-service-discover {
+        gap: 4px;
+        margin-top: 12px;
+        font-size: 9px;
+        letter-spacing: 0.04em;
+      }
+
+      /* WHY CHOOSE US */
+
+      .gk-why-layout {
+        gap: 26px;
+      }
+
+      .gk-why-lead {
+        margin-top: 17px;
+      }
+
+      .gk-why-secondary {
+        margin-top: 12px;
+      }
+
+      .gk-why-button {
+        width: 100%;
+        margin-top: 22px;
+      }
+
+      .gk-benefits-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+      }
+
+      .gk-benefit-card {
+        min-height: 0;
+        padding: 16px 13px 18px;
+      }
+
+      .gk-benefit-top {
+        margin-bottom: 22px;
+      }
+
+      .gk-benefit-number {
+        font-size: 10px;
+      }
+
+      .gk-benefit-mark {
+        font-size: 14px;
+      }
+
+      .gk-benefit-card h3 {
+        margin-bottom: 8px;
+        font-size: 15px;
+        line-height: 1.25;
+      }
+
+      .gk-benefit-card p {
+        font-size: 11px;
+        line-height: 1.75;
+      }
+
+      /* BRAND PARTNERS */
+
+      .gk-partnerships-description {
+        margin-top: 12px;
+        font-size: 12px;
+        line-height: 1.85;
+      }
+
+      .gk-brands-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+      }
+
+      .gk-brand-item {
+        min-height: 100px;
+        padding: 10px;
+      }
+
+      .gk-brand-logo {
+        max-width: 150px;
+        height: 75px;
+      }
     }
+
+    /* SMALL MOBILE */
 
     @media (max-width: 360px) {
-      .gk-container { width: calc(100% - 26px); }
-      .gk-h2 { font-size: 23px; }
-      .gk-benefits-grid { gap: 8px; }
-      .gk-benefit-card { padding: 14px 11px 16px; }
-      .gk-benefit-card h3 { font-size: 13.5px; }
-      .gk-benefit-card p { font-size: 11px; }
-      .gk-brand-logo { height: 70px; }
+      .gk-services-grid {
+        gap: 9px;
+      }
+
+      .gk-service-content {
+        padding: 11px 9px 13px;
+      }
+
+      .gk-service-content h3 {
+        font-size: 14px;
+      }
+
+      .gk-service-content p {
+        font-size: 10px;
+      }
+
+      .gk-service-discover {
+        font-size: 8px;
+      }
+
+      .gk-benefits-grid {
+        gap: 7px;
+      }
+
+      .gk-benefit-card {
+        padding: 14px 10px 15px;
+      }
+
+      .gk-benefit-card h3 {
+        font-size: 14px;
+      }
+
+      .gk-benefit-card p {
+        font-size: 10.5px;
+      }
+
+      .gk-brand-item {
+        min-height: 85px;
+      }
+
+      .gk-brand-logo {
+        height: 65px;
+      }
     }
 
+    /* ACCESSIBILITY */
+
     @media (prefers-reduced-motion: reduce) {
-      .gk-reveal { opacity: 1; transform: none; transition: none; }
+      .gk-reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+
+      .gk-service-image img,
+      .gk-service-arrow,
+      .gk-service-card,
+      .gk-benefit-card,
+      .gk-brand-item {
+        transition: none !important;
+      }
     }
   `}</style>
 );
@@ -875,8 +1049,7 @@ const Styles = () => (
 const HomeExtras = () => (
   <>
     <Styles />
-    <AboutSection />
-    <DesignProcess />
+    <OurServices />
     <WhyChooseGohar />
     <BrandPartnerships />
   </>

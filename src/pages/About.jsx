@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 
 import kitchenImg from "../assets/kitchen1.webp";
@@ -12,44 +13,51 @@ const IMAGES = {
   bed: bedImg,
 };
 
-const INTRO_POINTS = [
-  {
-    title: "Understanding Your Space",
-    text: "Every project starts with your requirements, preferences and everyday lifestyle.",
-  },
-  {
-    title: "Considered Design",
-    text: "Modern style, practical functionality and carefully selected details.",
-  },
-  {
-    title: "Skilled Manufacturing",
-    text: "Custom kitchens, wardrobes, bedroom furniture and media walls.",
-  },
-];
-
 const STATS = [
   { value: "04", label: "Interior Categories" },
   { value: "2D / 3D", label: "Design Visualisation" },
-  { value: "01", label: "Coordinated Team" },
+  { value: "Custom", label: "Made for Your Space" },
   { value: "Pakistan", label: "Service Coverage" },
+];
+
+const INTRO_POINTS = [
+  {
+    number: "01",
+    title: "Understanding Your Space",
+    text: "Every project begins with your requirements, lifestyle, preferences and available space.",
+  },
+  {
+    number: "02",
+    title: "Thoughtful Design",
+    text: "We balance modern aesthetics, practical functionality and carefully considered details.",
+  },
+  {
+    number: "03",
+    title: "Attention to Craft",
+    text: "We focus on material selection, finishing and the details that bring a design together.",
+  },
 ];
 
 const ECOSYSTEM = [
   {
-    title: "Same Style",
-    text: "A consistent modern look connects every room in your home.",
+    number: "01",
+    title: "Coordinated Design",
+    text: "A consistent design direction connects your kitchen, wardrobes and living spaces.",
   },
   {
-    title: "Same Colour",
-    text: "Coordinated colours, finishes and materials create a balanced interior.",
+    number: "02",
+    title: "Considered Materials",
+    text: "Colours, textures and finishes are selected to complement your interior.",
   },
   {
-    title: "Same Quality",
-    text: "Every cabinet, panel and fitting receives careful attention.",
+    number: "03",
+    title: "Practical Functionality",
+    text: "Layouts and storage are planned around the way you use your home every day.",
   },
   {
-    title: "Same Team",
-    text: "One coordinated team manages design, manufacturing and installation.",
+    number: "04",
+    title: "Careful Execution",
+    text: "Each stage receives attention, from the initial plan to the finishing details.",
   },
 ];
 
@@ -57,93 +65,107 @@ const JOURNEY = [
   {
     step: "01",
     title: "Consultation",
-    text: "We discuss your requirements, ideas and budget.",
+    text: "We discuss your ideas, requirements, preferred style and budget.",
   },
   {
     step: "02",
     title: "Site Measurement",
-    text: "Accurate measurements help create a precise layout.",
+    text: "Measurements help us plan a layout around your available space.",
   },
   {
     step: "03",
-    title: "2D / 3D Design",
-    text: "Review your layout, colours and finishes before production.",
+    title: "Design & Visualisation",
+    text: "Review the proposed layout, colours and finishes before production.",
   },
   {
     step: "04",
     title: "Manufacturing",
-    text: "Your furniture is crafted with attention to detail.",
+    text: "Your custom interior is prepared with attention to detail and finishing.",
   },
   {
     step: "05",
     title: "Installation",
-    text: "Our team installs your interior for a neat finish.",
+    text: "The planned components are installed and aligned within your space.",
   },
   {
     step: "06",
-    title: "Final Handover",
-    text: "We review the completed project with you.",
+    title: "Final Review",
+    text: "We review the completed work and address the final project details.",
   },
 ];
 
 const STANDARDS = [
   {
-    value: "06",
-    label: "Clear Project Stages",
-    text: "A structured process from consultation to handover.",
+    value: "01",
+    label: "Personalised Design",
+    text: "Solutions shaped around your space, taste and requirements.",
   },
   {
     value: "04",
     label: "Interior Categories",
-    text: "Kitchens, wardrobes, bedrooms and media walls.",
+    text: "Kitchens, wardrobes, bedroom interiors and media walls.",
   },
   {
-    value: "100%",
-    label: "Custom Design",
-    text: "Solutions tailored to your space and preferences.",
+    value: "06",
+    label: "Structured Stages",
+    text: "A clear project journey from consultation to final review.",
   },
- 
 ];
 
 const SPACES = [
   {
     number: "01",
     title: "Kitchens",
-    text: "Modern kitchens designed around your space.",
+    text: "Functional layouts with a refined, modern finish.",
     img: IMAGES.kitchen,
     to: "/kitchen",
   },
   {
     number: "02",
     title: "Wardrobes",
-    text: "Custom storage with a refined finish.",
+    text: "Thoughtful storage designed for everyday living.",
     img: IMAGES.wardrobe,
     to: "/wordrobe",
   },
   {
     number: "03",
     title: "Media Walls",
-    text: "Contemporary designs for modern living.",
+    text: "Contemporary focal points for modern living spaces.",
     img: IMAGES.media,
     to: "/media-walls",
   },
   {
     number: "04",
     title: "Bedroom Interiors",
-    text: "Comfortable spaces with thoughtful details.",
+    text: "Comfortable spaces with coordinated details.",
     img: IMAGES.bed,
     to: "/bedroom-walls",
   },
 ];
 
-function Img({ src, alt, className = "" }) {
+function Img({ src, alt, className = "", priority = false }) {
   return (
     <img
       src={src}
       alt={alt}
-      loading="lazy"
       className={className}
+      loading={priority ? "eager" : "lazy"}
+      decoding="async"
     />
+  );
+}
+
+function Eyebrow({ children }) {
+  return <p className="ab-eyebrow">{children}</p>;
+}
+
+function SectionTitle({ eyebrow, children, description, centered = false }) {
+  return (
+    <div className={`ab-section-title${centered ? " is-centered" : ""}`}>
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h2 className="ab-h2">{children}</h2>
+      {description && <p className="ab-body">{description}</p>}
+    </div>
   );
 }
 
@@ -151,27 +173,29 @@ export default function AboutUs() {
   return (
     <main className="ab-page">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@400;500;600;700&display=swap');
 
         .ab-page {
-          --ab-bg: #090909;
-          --ab-surface: #10100f;
-          --ab-card: #151311;
-          --ab-orange: #c0652b;
-          --ab-orange-light: #e08a4f;
-          --ab-white: #fff;
-          --ab-muted: #b9b4ad;
+          --ab-bg: #0a0a09;
+          --ab-surface: #11100f;
+          --ab-card: #171513;
+          --ab-accent: #c0652b;
+          --ab-accent-light: #e08a4f;
+          --ab-white: #f8f6f3;
+          --ab-muted: #b8b1a9;
           --ab-border: rgba(255,255,255,.11);
+          --ab-display: 'Cormorant Garamond', Georgia, serif;
+          --ab-sans: 'Jost', Arial, sans-serif;
 
           width: 100%;
-          max-width: none;
           margin: 0;
-          overflow-x: clip;
+          overflow: clip;
           color: var(--ab-white);
           background: var(--ab-bg);
-          font-family: 'Open Sans', Arial, sans-serif;
+          font-family: var(--ab-sans);
           font-size: 14px;
           font-weight: 400;
+          line-height: 1.7;
         }
 
         .ab-page *,
@@ -191,59 +215,65 @@ export default function AboutUs() {
           text-decoration: none;
         }
 
+        .ab-page h1,
+        .ab-page h2,
+        .ab-page h3,
+        .ab-page p {
+          overflow-wrap: anywhere;
+        }
+
         .ab-wrap {
           width: 100%;
-          max-width: none;
-          margin: 0 auto;
-          padding-inline: clamp(18px, 4vw, 64px);
+          max-width: 1440px;
+          margin-inline: auto;
+          padding-inline: clamp(20px, 5vw, 76px);
         }
 
         .ab-eyebrow {
           display: inline-flex;
           align-items: center;
-          gap: 9px;
+          gap: 10px;
           margin: 0;
-          color: var(--ab-orange-light);
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: .13em;
-          line-height: 1.5;
+          color: var(--ab-accent-light);
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: .17em;
+          line-height: 1.6;
           text-transform: uppercase;
         }
 
         .ab-eyebrow::before {
-          width: 22px;
-          height: 2px;
-          flex-shrink: 0;
-          background: var(--ab-orange);
+          width: 24px;
+          height: 1px;
+          flex: 0 0 auto;
+          background: var(--ab-accent);
           content: "";
         }
-
-        /* HEADINGS */
 
         .ab-title,
         .ab-h2 {
           margin: 0;
-          color: #fff;
+          color: var(--ab-white);
+          font-family: var(--ab-display);
           font-weight: 500;
           letter-spacing: -.025em;
-          line-height: 1.2;
+          line-height: 1.04;
         }
 
         .ab-title {
-          font-size: clamp(30px, 3.2vw, 44px);
+          max-width: 760px;
+          font-size: clamp(44px, 6.1vw, 82px);
         }
 
         .ab-h2 {
-          margin-top: 10px;
-          font-size: clamp(25px, 2.4vw, 34px);
+          margin-top: 14px;
+          font-size: clamp(34px, 4vw, 53px);
         }
 
         .ab-title em,
         .ab-h2 em {
-          color: var(--ab-orange-light);
+          color: var(--ab-accent-light);
           font-style: normal;
-          font-weight: 500;
         }
 
         .ab-body {
@@ -251,34 +281,68 @@ export default function AboutUs() {
           color: var(--ab-muted);
           font-size: 14px;
           font-weight: 400;
-          line-height: 1.8;
+          line-height: 1.9;
         }
 
         .ab-body strong {
-          color: #fff;
+          color: var(--ab-white);
           font-weight: 500;
+        }
+
+        .ab-section-title {
+          max-width: 700px;
+        }
+
+        .ab-section-title .ab-body {
+          max-width: 520px;
+          margin-top: 18px;
+        }
+
+        .ab-section-title.is-centered {
+          margin-inline: auto;
+          text-align: center;
+        }
+
+        .ab-section-title.is-centered .ab-eyebrow {
+          justify-content: center;
+        }
+
+        .ab-section-title.is-centered .ab-body {
+          margin-inline: auto;
         }
 
         .ab-btn {
           display: inline-flex;
-          min-height: 45px;
+          min-height: 48px;
           align-items: center;
           justify-content: center;
-          padding: 0 23px;
-          border: 1px solid #fff;
-          border-radius: 2px;
-          background: #fff;
-          color: #090909 !important;
-          font-family: inherit;
+          gap: 14px;
+          padding: 0 24px;
+          border: 1px solid var(--ab-accent);
+          border-radius: 0;
+          background: var(--ab-accent);
+          color: #fff !important;
+          font-family: var(--ab-sans);
           font-size: 12px;
-          font-weight: 500;
-          transition: background .2s ease, border-color .2s ease, color .2s ease;
+          font-weight: 600;
+          letter-spacing: .04em;
+          transition: background .2s ease, border-color .2s ease;
+        }
+
+        .ab-btn::after {
+          content: "↗";
+          font-size: 16px;
+          line-height: 1;
         }
 
         .ab-btn:hover {
-          border-color: var(--ab-orange);
-          background: var(--ab-orange);
-          color: #fff !important;
+          border-color: var(--ab-accent-light);
+          background: #a95320;
+        }
+
+        .ab-page a:focus-visible {
+          outline: 2px solid var(--ab-accent-light);
+          outline-offset: 4px;
         }
 
         /* HERO */
@@ -287,10 +351,9 @@ export default function AboutUs() {
           position: relative;
           isolation: isolate;
           display: flex;
-          min-height: 440px;
-          align-items: flex-end;
-          overflow: hidden;
-          padding: 105px 0 48px;
+          min-height: 590px;
+          align-items: center;
+          padding-block: 130px 85px;
           background: #100e0c;
         }
 
@@ -300,8 +363,8 @@ export default function AboutUs() {
           inset: 0;
           height: 100%;
           object-fit: cover;
-          object-position: center 55%;
-          opacity: .58;
+          object-position: center 53%;
+          opacity: .68;
         }
 
         .ab-hero-shade {
@@ -309,48 +372,51 @@ export default function AboutUs() {
           z-index: -2;
           inset: 0;
           background:
-            linear-gradient(90deg, rgba(8,8,8,.91), rgba(8,8,8,.62) 48%, rgba(8,8,8,.2)),
-            linear-gradient(0deg, #090909 0%, transparent 65%);
+            linear-gradient(90deg, rgba(8,8,8,.94) 0%, rgba(8,8,8,.78) 42%, rgba(8,8,8,.2) 100%),
+            linear-gradient(0deg, var(--ab-bg) 0%, transparent 32%);
+        }
+
+        .ab-hero-content {
+          width: 100%;
+        }
+
+        .ab-hero .ab-title {
+          margin-top: 22px;
         }
 
         .ab-hero-text {
-          max-width: 540px;
-          margin: 16px 0 0;
-          color: #f0ede9;
-          font-size: 14px;
-          font-weight: 400;
-          line-height: 1.85;
-        }
-
-        .ab-hero-text strong {
-          color: #fff;
-          font-weight: 500;
+          max-width: 520px;
+          margin: 23px 0 0;
+          color: #e0d9d1;
+          font-size: 15px;
+          line-height: 1.9;
         }
 
         .ab-hero-bottom {
           display: flex;
           align-items: center;
-          gap: 10px;
-          margin-top: 22px;
+          gap: 11px;
+          margin-top: 27px;
           color: #fff;
           font-size: 10px;
-          font-weight: 500;
-          letter-spacing: .13em;
+          font-weight: 600;
+          letter-spacing: .16em;
           text-transform: uppercase;
         }
 
         .ab-hero-bottom::before {
-          width: 26px;
-          height: 2px;
-          background: var(--ab-orange);
+          width: 28px;
+          height: 1px;
+          background: var(--ab-accent-light);
           content: "";
         }
 
         /* STATS */
 
         .ab-stats-section {
+          border-top: 1px solid var(--ab-border);
           border-bottom: 1px solid var(--ab-border);
-          background: #10100f;
+          background: #11100f;
         }
 
         .ab-stats {
@@ -360,172 +426,181 @@ export default function AboutUs() {
 
         .ab-stat {
           min-width: 0;
-          padding: 24px 20px 24px 0;
+          padding: 27px 20px;
           text-align: center;
         }
 
         .ab-stat + .ab-stat {
-          padding-left: 22px;
           border-left: 1px solid var(--ab-border);
         }
 
         .ab-stat-value {
           margin: 0;
-          color: var(--ab-orange-light);
-          font-size: clamp(22px, 2.2vw, 30px);
-          font-weight: 500;
-          line-height: 1.2;
-          overflow-wrap: anywhere;
+          color: var(--ab-accent-light);
+          font-family: var(--ab-display);
+          font-size: clamp(27px, 3vw, 39px);
+          font-weight: 600;
+          line-height: 1.15;
         }
 
         .ab-stat-label {
-          margin: 7px 0 0;
-          color: #fff;
-          font-size: 11px;
+          margin: 8px 0 0;
+          color: #d3ccc4;
+          font-size: 10px;
           font-weight: 500;
-          letter-spacing: .04em;
+          letter-spacing: .09em;
+          line-height: 1.6;
           text-transform: uppercase;
         }
 
         /* INTRO */
 
         .ab-intro-section {
-          padding-block: 70px;
+          padding-block: 100px;
         }
 
         .ab-intro {
           display: grid;
-          grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+          grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
           align-items: center;
-          gap: clamp(28px, 5vw, 70px);
+          gap: clamp(38px, 7vw, 100px);
         }
 
-        .ab-intro-copy,
-        .ab-intro-image {
+        .ab-intro-image,
+        .ab-intro-copy {
           min-width: 0;
-        }
-
-        .ab-divider {
-          width: 43px;
-          height: 2px;
-          margin: 18px 0;
-          background: var(--ab-orange);
-        }
-
-        .ab-intro-description {
-          display: grid;
-          gap: 12px;
-          max-width: 650px;
-        }
-
-        .ab-intro-description .ab-body:first-child {
-          color: #fff;
         }
 
         .ab-intro-image {
           position: relative;
-          padding: 0 15px 15px 0;
+          padding: 0 18px 18px 0;
         }
 
         .ab-intro-image::before {
           position: absolute;
-          top: 15px;
+          top: 18px;
           right: 0;
           bottom: 0;
-          left: 15px;
-          border: 1px solid rgba(192,101,43,.55);
+          left: 18px;
+          border: 1px solid rgba(192,101,43,.6);
           content: "";
         }
 
         .ab-image-frame {
           position: relative;
           overflow: hidden;
-          aspect-ratio: 4 / 4.1;
-          background: #191614;
+          aspect-ratio: 4 / 4.5;
+          background: #1a1714;
         }
 
         .ab-image-frame img {
           height: 100%;
           object-fit: cover;
-          transition: transform .5s ease;
-        }
-
-        .ab-intro-image:hover .ab-image-frame img {
-          transform: scale(1.025);
+          object-position: center;
         }
 
         .ab-image-caption {
           position: absolute;
-          bottom: 15px;
+          right: 0;
+          bottom: 35px;
           left: -1px;
           display: flex;
-          width: min(88%, 350px);
+          width: min(92%, 360px);
           align-items: center;
-          gap: 12px;
-          padding: 15px 18px;
+          gap: 15px;
+          padding: 17px 20px;
           border: 1px solid rgba(255,255,255,.08);
-          background: rgba(17,16,15,.97);
+          background: #151310;
         }
 
         .ab-caption-line {
           width: 2px;
-          height: 36px;
-          flex-shrink: 0;
-          background: var(--ab-orange);
+          height: 43px;
+          flex: 0 0 auto;
+          background: var(--ab-accent);
         }
 
         .ab-caption-title {
           margin: 0;
           color: #fff;
-          font-size: 14px;
-          font-weight: 500;
-          line-height: 1.5;
+          font-family: var(--ab-display);
+          font-size: 22px;
+          font-weight: 600;
+          line-height: 1.2;
         }
 
         .ab-caption-text {
           margin: 5px 0 0;
-          color: var(--ab-orange-light);
-          font-size: 10px;
-          font-weight: 500;
-          letter-spacing: .06em;
+          color: var(--ab-accent-light);
+          font-size: 9px;
+          font-weight: 600;
+          letter-spacing: .1em;
           text-transform: uppercase;
+        }
+
+        .ab-intro-copy .ab-h2 {
+          margin-top: 17px;
+        }
+
+        .ab-divider {
+          width: 44px;
+          height: 2px;
+          margin: 22px 0;
+          background: var(--ab-accent);
+        }
+
+        .ab-intro-description {
+          display: grid;
+          gap: 12px;
+        }
+
+        .ab-intro-description .ab-body:first-child {
+          color: #eee8e1;
         }
 
         .ab-intro-features {
           display: grid;
-          margin-top: 22px;
+          margin-top: 26px;
           border-top: 1px solid var(--ab-border);
         }
 
         .ab-feature {
-          padding: 15px 0;
+          display: grid;
+          grid-template-columns: 35px minmax(0, 1fr);
+          gap: 12px;
+          padding: 18px 0;
           border-bottom: 1px solid var(--ab-border);
         }
 
+        .ab-feature-number {
+          padding-top: 2px;
+          color: var(--ab-accent-light);
+          font-size: 11px;
+          font-weight: 600;
+        }
+
         .ab-feature h3 {
-          margin: 0 0 6px;
+          margin: 0 0 5px;
           color: #fff;
-          font-size: 15px;
-          font-weight: 500;
+          font-size: 14px;
+          font-weight: 600;
         }
 
         .ab-feature p {
-          max-width: 560px;
           margin: 0;
           color: var(--ab-muted);
           font-size: 13px;
-          font-weight: 400;
           line-height: 1.8;
         }
 
         .ab-intro-action {
-          margin-top: 22px;
+          margin-top: 25px;
         }
 
-        /* WHOLE HOME */
+        /* WHOLE-HOME APPROACH */
 
         .ab-eco-section {
-          padding-block: 70px;
+          padding-block: 90px;
           border-top: 1px solid var(--ab-border);
           border-bottom: 1px solid var(--ab-border);
           background: var(--ab-surface);
@@ -533,235 +608,195 @@ export default function AboutUs() {
 
         .ab-eco {
           display: grid;
-          grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+          grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
           align-items: start;
-          gap: clamp(28px, 5vw, 70px);
-        }
-
-        .ab-eco-head {
-          position: sticky;
-          top: 100px;
-        }
-
-        .ab-eco-head .ab-body {
-          max-width: 430px;
-          margin-top: 16px;
+          gap: clamp(35px, 7vw, 100px);
         }
 
         .ab-eco-grid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          border: 1px solid var(--ab-border);
+          border-top: 1px solid var(--ab-border);
+          border-left: 1px solid var(--ab-border);
         }
 
         .ab-eco-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 27px 23px;
+          min-width: 0;
+          padding: 26px 24px;
           border-right: 1px solid var(--ab-border);
           border-bottom: 1px solid var(--ab-border);
           background: var(--ab-card);
-          text-align: center;
         }
 
-        .ab-eco-item:nth-child(2n) {
-          border-right: 0;
-        }
-
-        .ab-eco-item:nth-child(n+3) {
-          border-bottom: 0;
+        .ab-eco-number {
+          display: block;
+          margin-bottom: 20px;
+          color: var(--ab-accent-light);
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: .1em;
         }
 
         .ab-eco-item h3 {
-          margin: 0 0 9px;
+          margin: 0 0 8px;
           color: #fff;
-          font-size: 16px;
-          font-weight: 500;
-          line-height: 1.45;
+          font-family: var(--ab-display);
+          font-size: 24px;
+          font-weight: 600;
+          line-height: 1.2;
         }
 
         .ab-eco-item p {
           margin: 0;
           color: var(--ab-muted);
           font-size: 13px;
-          font-weight: 400;
           line-height: 1.8;
         }
 
         /* PROCESS */
 
         .ab-journey-section {
-          padding-block: 70px;
+          padding-block: 100px;
         }
 
         .ab-journey-layout {
           display: grid;
-          grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+          grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
           align-items: start;
-          gap: clamp(28px, 5vw, 70px);
+          gap: clamp(40px, 8vw, 110px);
         }
 
         .ab-journey-head {
           position: sticky;
           top: 100px;
-          order: 2;
-        }
-
-        .ab-journey-head .ab-body {
-          max-width: 420px;
-          margin-top: 16px;
         }
 
         .ab-journey {
-          order: 1;
           border-top: 1px solid var(--ab-border);
         }
 
         .ab-step {
           display: grid;
-          grid-template-columns: 58px minmax(0, 1fr);
+          grid-template-columns: 55px minmax(0, 1fr);
           align-items: start;
-          gap: 8px;
-          padding: 20px 0;
+          gap: 12px;
+          padding: 22px 0;
           border-bottom: 1px solid var(--ab-border);
         }
 
         .ab-step-number {
-          color: var(--ab-orange-light);
-          font-size: 25px;
-          font-weight: 500;
-          line-height: 1.2;
+          color: var(--ab-accent-light);
+          font-family: var(--ab-display);
+          font-size: 31px;
+          font-weight: 600;
+          line-height: 1;
         }
 
         .ab-step h3 {
           margin: 0 0 7px;
           color: #fff;
           font-size: 15px;
-          font-weight: 500;
+          font-weight: 600;
         }
 
         .ab-step p {
-          max-width: 480px;
           margin: 0;
           color: var(--ab-muted);
           font-size: 13px;
-          font-weight: 400;
           line-height: 1.8;
         }
 
         /* STANDARDS */
 
         .ab-standards-section {
-          padding-block: 70px;
+          padding-block: 90px;
           border-top: 1px solid var(--ab-border);
-          background: #0d0c0b;
+          background: #0e0d0c;
         }
 
         .ab-standards-head {
-          max-width: 620px;
-          margin: 0 auto 35px;
-          text-align: center;
-        }
-
-        .ab-standards-head .ab-body {
-          max-width: 480px;
-          margin: 14px auto 0;
+          margin-bottom: 38px;
         }
 
         .ab-standards {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 13px;
+          border-top: 1px solid var(--ab-border);
+          border-left: 1px solid var(--ab-border);
         }
 
         .ab-standard {
-          display: flex;
           min-width: 0;
-          flex-direction: column;
-          align-items: center;
-          padding: 25px 22px 27px;
-          border: 1px solid var(--ab-border);
+          padding: 30px 25px;
+          border-right: 1px solid var(--ab-border);
+          border-bottom: 1px solid var(--ab-border);
           background: var(--ab-card);
-          text-align: center;
-          transition: border-color .2s ease;
-        }
-
-        .ab-standard:hover {
-          border-color: rgba(192,101,43,.6);
         }
 
         .ab-standard-value {
           margin: 0;
-          color: var(--ab-orange-light);
-          font-size: clamp(28px, 2.8vw, 37px);
-          font-weight: 500;
-          line-height: 1.15;
-          overflow-wrap: anywhere;
+          color: var(--ab-accent-light);
+          font-family: var(--ab-display);
+          font-size: 43px;
+          font-weight: 600;
+          line-height: 1.1;
         }
 
         .ab-standard-label {
-          margin: 10px 0 7px;
+          margin: 13px 0 7px;
           color: #fff;
-          font-size: 13px;
-          font-weight: 500;
+          font-size: 14px;
+          font-weight: 600;
         }
 
         .ab-standard-text {
           margin: 0;
           color: var(--ab-muted);
           font-size: 13px;
-          font-weight: 400;
           line-height: 1.8;
         }
 
         /* COLLECTIONS */
 
         .ab-spaces-section {
-          padding-block: 70px 80px;
+          padding-block: 100px;
         }
 
         .ab-section-heading {
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
-          gap: 24px;
-          margin-bottom: 30px;
-        }
-
-        .ab-section-heading .ab-h2 {
-          max-width: 600px;
+          gap: 30px;
+          margin-bottom: 36px;
         }
 
         .ab-section-description {
-          max-width: 360px;
-          padding-bottom: 4px;
+          max-width: 390px;
+          padding-bottom: 5px;
         }
 
         .ab-spaces-grid {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 16px;
+          gap: 18px;
         }
 
         .ab-space {
           display: block;
           min-width: 0;
-          text-align: center;
         }
 
         .ab-space-image {
           position: relative;
           overflow: hidden;
-          aspect-ratio: 3 / 3.7;
+          aspect-ratio: 3 / 3.8;
           background: #1b1714;
         }
 
         .ab-space-image img {
           height: 100%;
           object-fit: cover;
-          transition: transform .5s ease;
+          transition: transform .45s ease;
         }
 
         .ab-space:hover .ab-space-image img {
@@ -772,58 +807,51 @@ export default function AboutUs() {
           position: absolute;
           top: 0;
           left: 0;
-          display: flex;
-          width: 34px;
-          height: 34px;
-          align-items: center;
-          justify-content: center;
-          background: var(--ab-orange);
+          display: grid;
+          width: 37px;
+          height: 37px;
+          place-items: center;
+          background: var(--ab-accent);
           color: #fff;
           font-size: 10px;
-          font-weight: 500;
+          font-weight: 600;
         }
 
         .ab-space-info {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 13px 8px 0;
+          padding-top: 16px;
           border-top: 1px solid var(--ab-border);
-          margin-top: -1px;
-          text-align: center;
         }
 
         .ab-space-title {
           margin: 0;
           color: #fff;
-          font-size: 15px;
-          font-weight: 500;
-          line-height: 1.45;
+          font-family: var(--ab-display);
+          font-size: 25px;
+          font-weight: 600;
+          line-height: 1.2;
         }
 
         .ab-space-text {
-          margin: 6px 0 10px;
+          min-height: 46px;
+          margin: 8px 0 13px;
           color: var(--ab-muted);
           font-size: 13px;
-          font-weight: 400;
-          line-height: 1.75;
+          line-height: 1.8;
         }
 
         .ab-space-link {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
-          gap: 6px;
-          color: var(--ab-orange-light);
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: .035em;
+          gap: 9px;
+          color: var(--ab-accent-light);
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: .09em;
           text-transform: uppercase;
-          transition: color .2s ease;
         }
 
         .ab-space-link::after {
-          content: "→";
+          content: "↗";
           font-size: 15px;
           transition: transform .2s ease;
         }
@@ -833,56 +861,50 @@ export default function AboutUs() {
         }
 
         .ab-space:hover .ab-space-link::after {
-          transform: translateX(3px);
-        }
-
-        .ab-page a:focus-visible {
-          outline: 2px solid var(--ab-orange-light);
-          outline-offset: 4px;
+          transform: translate(2px, -2px);
         }
 
         /* TABLET */
 
         @media (max-width: 1000px) {
+          .ab-hero {
+            min-height: 520px;
+          }
+
           .ab-intro-section,
           .ab-eco-section,
           .ab-journey-section,
           .ab-standards-section,
           .ab-spaces-section {
-            padding-block: 55px;
+            padding-block: 70px;
           }
 
-          .ab-intro,
+          .ab-intro {
+            grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+            gap: 34px;
+          }
+
           .ab-eco,
           .ab-journey-layout {
             grid-template-columns: minmax(0, 1fr);
+            gap: 30px;
           }
 
-          .ab-intro-image {
-            width: 100%;
-            max-width: 620px;
-          }
-
-          .ab-eco-head,
           .ab-journey-head {
             position: static;
-            order: 0;
-          }
-
-          .ab-journey {
-            order: 1;
-          }
-
-          .ab-standards {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
           .ab-spaces-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 30px 18px;
           }
 
           .ab-space-image {
             aspect-ratio: 4 / 4.3;
+          }
+
+          .ab-space-text {
+            min-height: 0;
           }
         }
 
@@ -890,42 +912,50 @@ export default function AboutUs() {
 
         @media (max-width: 640px) {
           .ab-wrap {
-            padding-inline: 17px;
+            padding-inline: 18px;
           }
 
           .ab-hero {
-            min-height: 370px;
-            padding: 95px 0 35px;
+            min-height: 440px;
+            padding-block: 110px 60px;
+          }
+
+          .ab-hero-img {
+            object-position: 57% center;
           }
 
           .ab-hero-shade {
             background:
-              linear-gradient(90deg, rgba(8,8,8,.9), rgba(8,8,8,.58)),
-              linear-gradient(0deg, #090909, transparent 75%);
+              linear-gradient(90deg, rgba(8,8,8,.91), rgba(8,8,8,.63)),
+              linear-gradient(0deg, var(--ab-bg) 0%, transparent 45%);
           }
 
           .ab-title {
-            font-size: clamp(27px, 7vw, 34px);
-            font-weight: 500;
-            line-height: 1.18;
+            font-size: clamp(41px, 11vw, 60px);
+            line-height: 1.02;
           }
 
           .ab-h2 {
-            font-size: clamp(23px, 5.8vw, 29px);
-            font-weight: 500;
+            margin-top: 12px;
+            font-size: clamp(32px, 8.4vw, 43px);
+            line-height: 1.05;
+          }
+
+          .ab-hero .ab-title {
+            margin-top: 18px;
           }
 
           .ab-hero-text {
             max-width: 440px;
-            margin-top: 13px;
+            margin-top: 17px;
             font-size: 13px;
-            font-weight: 400;
-            line-height: 1.8;
+            line-height: 1.85;
           }
 
           .ab-hero-bottom {
-            margin-top: 17px;
+            margin-top: 22px;
             font-size: 9px;
+            letter-spacing: .12em;
           }
 
           .ab-stats {
@@ -933,31 +963,35 @@ export default function AboutUs() {
           }
 
           .ab-stat {
-            padding: 18px 10px;
+            display: flex;
+            min-height: 100px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 10px;
           }
 
           .ab-stat + .ab-stat {
-            padding-left: 13px;
+            border-left: 1px solid var(--ab-border);
           }
 
           .ab-stat:nth-child(3) {
-            padding-left: 10px;
+            border-top: 1px solid var(--ab-border);
             border-left: 0;
           }
 
-          .ab-stat:nth-child(n+3) {
+          .ab-stat:nth-child(4) {
             border-top: 1px solid var(--ab-border);
           }
 
           .ab-stat-value {
-            font-size: 22px;
-            font-weight: 500;
+            font-size: 29px;
           }
 
           .ab-stat-label {
-            font-size: 10px;
-            font-weight: 500;
-            letter-spacing: .025em;
+            margin-top: 5px;
+            font-size: 9px;
+            letter-spacing: .045em;
           }
 
           .ab-intro-section,
@@ -965,73 +999,85 @@ export default function AboutUs() {
           .ab-journey-section,
           .ab-standards-section,
           .ab-spaces-section {
-            padding-block: 45px;
+            padding-block: 52px;
           }
 
           .ab-intro {
-            gap: 30px;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 35px;
           }
 
           .ab-intro-image {
-            padding: 0 11px 11px 0;
+            width: 100%;
+            padding: 0 12px 12px 0;
           }
 
           .ab-intro-image::before {
-            top: 11px;
-            left: 11px;
+            top: 12px;
+            left: 12px;
+          }
+
+          .ab-image-frame {
+            aspect-ratio: 4 / 3.7;
           }
 
           .ab-image-caption {
-            width: min(94%, 300px);
-            padding: 12px 13px;
+            bottom: 23px;
+            width: min(93%, 320px);
+            padding: 13px 14px;
           }
 
           .ab-caption-title {
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 20px;
           }
 
           .ab-caption-text {
-            font-size: 9px;
+            font-size: 8px;
           }
 
           .ab-body {
             font-size: 13px;
-            font-weight: 400;
-            line-height: 1.8;
+            line-height: 1.85;
           }
 
           .ab-divider {
-            margin: 14px 0;
+            margin: 17px 0;
           }
 
           .ab-intro-description {
             gap: 10px;
           }
 
+          .ab-intro-features {
+            margin-top: 20px;
+          }
+
           .ab-feature {
-            padding: 13px 0;
+            grid-template-columns: 27px minmax(0, 1fr);
+            gap: 9px;
+            padding: 15px 0;
           }
 
           .ab-feature h3 {
             font-size: 14px;
-            font-weight: 500;
           }
 
           .ab-feature p {
             font-size: 12px;
-            font-weight: 400;
+          }
+
+          .ab-intro-action {
+            margin-top: 22px;
           }
 
           .ab-btn {
-            min-height: 43px;
+            min-height: 46px;
             padding-inline: 18px;
             font-size: 11px;
-            font-weight: 500;
           }
 
           .ab-eco {
-            gap: 22px;
+            gap: 24px;
           }
 
           .ab-eco-grid {
@@ -1040,134 +1086,129 @@ export default function AboutUs() {
 
           .ab-eco-item {
             padding: 19px 13px;
-            border-right: 1px solid var(--ab-border);
-            border-bottom: 1px solid var(--ab-border);
-            text-align: center;
           }
 
-          .ab-eco-item:nth-child(2n) {
-            border-right: 0;
-          }
-
-          .ab-eco-item:nth-child(n+3) {
-            border-bottom: 0;
+          .ab-eco-number {
+            margin-bottom: 13px;
+            font-size: 9px;
           }
 
           .ab-eco-item h3 {
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 21px;
           }
 
           .ab-eco-item p {
             font-size: 12px;
-            font-weight: 400;
             line-height: 1.75;
           }
 
+          .ab-journey-layout {
+            gap: 25px;
+          }
+
           .ab-step {
-            grid-template-columns: 46px minmax(0, 1fr);
-            gap: 7px;
-            padding: 17px 0;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 8px;
+            padding: 18px 0;
           }
 
           .ab-step-number {
-            font-size: 22px;
-            font-weight: 500;
+            font-size: 27px;
           }
 
           .ab-step h3 {
             font-size: 14px;
-            font-weight: 500;
           }
 
           .ab-step p {
             font-size: 12px;
-            font-weight: 400;
           }
 
           .ab-standards-head {
-            margin-bottom: 24px;
-            text-align: center;
-          }
-
-          .ab-standards-head .ab-body {
-            margin: 11px auto 0;
+            margin-bottom: 25px;
           }
 
           .ab-standards {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
           }
 
           .ab-standard {
-            padding: 18px 11px;
-            text-align: center;
+            padding: 21px 13px;
           }
 
           .ab-standard-value {
-            font-size: clamp(25px, 6vw, 31px);
-            font-weight: 500;
+            font-size: 35px;
           }
 
           .ab-standard-label {
-            margin-top: 9px;
+            margin-top: 10px;
             font-size: 12px;
-            font-weight: 500;
           }
 
           .ab-standard-text {
             font-size: 12px;
-            font-weight: 400;
-            line-height: 1.7;
+            line-height: 1.75;
           }
 
           .ab-section-heading {
             display: block;
-            margin-bottom: 22px;
-            text-align: center;
+            margin-bottom: 25px;
           }
 
           .ab-section-description {
-            margin: 10px auto 0;
+            margin-top: 14px;
           }
 
           .ab-spaces-grid {
-            gap: 20px 12px;
+            gap: 25px 13px;
           }
 
           .ab-space-image {
-            aspect-ratio: 3 / 3.8;
+            aspect-ratio: 3 / 3.9;
           }
 
           .ab-space-number {
-            width: 29px;
-            height: 29px;
+            width: 30px;
+            height: 30px;
             font-size: 9px;
-            font-weight: 500;
           }
 
           .ab-space-info {
-            padding: 11px 5px 0;
-            text-align: center;
+            padding-top: 12px;
           }
 
           .ab-space-title {
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 22px;
           }
 
           .ab-space-text {
-            margin: 5px 0 8px;
+            margin: 7px 0 10px;
             font-size: 12px;
-            font-weight: 400;
-            line-height: 1.65;
+            line-height: 1.7;
           }
 
           .ab-space-link {
-            gap: 4px;
-            font-size: 10px;
-            font-weight: 500;
-            letter-spacing: .01em;
+            gap: 5px;
+            font-size: 9px;
+            letter-spacing: .055em;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .ab-wrap {
+            padding-inline: 14px;
+          }
+
+          .ab-eco-item {
+            padding: 16px 10px;
+          }
+
+          .ab-space-title {
+            font-size: 20px;
+          }
+
+          .ab-space-link {
+            font-size: 8px;
           }
         }
 
@@ -1176,34 +1217,36 @@ export default function AboutUs() {
           .ab-page *::before,
           .ab-page *::after {
             scroll-behavior: auto !important;
+            animation-duration: .01ms !important;
             transition-duration: .01ms !important;
           }
         }
       `}</style>
 
       {/* HERO */}
-      <section className="ab-hero">
+      <section className="ab-hero" aria-labelledby="ab-hero-title">
         <Img
           src={IMAGES.kitchen}
-          alt="Contemporary interior designed by Gohar"
+          alt="Modern kitchen interior"
           className="ab-hero-img"
+          priority
         />
 
-        <div className="ab-hero-shade" />
+        <div className="ab-hero-shade" aria-hidden="true" />
 
-        <div className="ab-wrap">
-          <p className="ab-eyebrow">About Gohar</p>
+        <div className="ab-wrap ab-hero-content">
+          <Eyebrow>About Gohar</Eyebrow>
 
-          <h1 className="ab-title" style={{ marginTop: 14 }}>
-            Make Your Home Better,
+          <h1 className="ab-title" id="ab-hero-title">
+            Thoughtful Interiors.
             <br />
-            <em>One Space at a Time.</em>
+            <em>Made for Living.</em>
           </h1>
 
           <p className="ab-hero-text">
-            We create modern kitchens, wardrobes and complete home
-            interiors with a focus on <strong>quality, functionality</strong>
-            {" "}and timeless design.
+            We create modern kitchens, wardrobes, bedroom interiors and
+            media walls that bring together practical functionality,
+            considered details and a refined sense of style.
           </p>
 
           <div className="ab-hero-bottom">
@@ -1213,7 +1256,7 @@ export default function AboutUs() {
       </section>
 
       {/* STATS */}
-      <section className="ab-stats-section">
+      <section className="ab-stats-section" aria-label="Gohar at a glance">
         <div className="ab-wrap">
           <div className="ab-stats">
             {STATS.map((item) => (
@@ -1226,66 +1269,72 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* WHO WE ARE */}
-      <section className="ab-intro-section">
+      {/* ABOUT GOHAR */}
+      <section className="ab-intro-section" aria-labelledby="ab-intro-title">
         <div className="ab-wrap">
           <div className="ab-intro">
             <div className="ab-intro-image">
               <div className="ab-image-frame">
                 <Img
                   src={IMAGES.kitchen}
-                  alt="Modern custom kitchen interior"
+                  alt="Contemporary custom kitchen with considered finishes"
                 />
               </div>
 
               <div className="ab-image-caption">
-                <span className="ab-caption-line" />
+                <span className="ab-caption-line" aria-hidden="true" />
                 <div>
                   <h3 className="ab-caption-title">
                     Made for the way you live.
                   </h3>
                   <p className="ab-caption-text">
-                    Thoughtful design, lasting appeal
+                    Design with purpose
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="ab-intro-copy">
-              <p className="ab-eyebrow">Who We Are</p>
+              <Eyebrow>Who We Are</Eyebrow>
 
-              <h2 className="ab-h2">
+              <h2 className="ab-h2" id="ab-intro-title">
                 Designed with purpose.
                 <br />
                 <em>Made with care.</em>
               </h2>
 
-              <div className="ab-divider" />
+              <div className="ab-divider" aria-hidden="true" />
 
               <div className="ab-intro-description">
                 <p className="ab-body">
-                  At Gohar, we believe a beautiful interior should do
-                  more than look impressive. It should feel welcoming,
-                  work effortlessly and reflect the people who live in it.
+                  At Gohar, we believe a beautiful interior should do more
+                  than look impressive. It should feel welcoming, work
+                  effortlessly and reflect the people who live in it.
                 </p>
 
                 <p className="ab-body">
-                  We bring kitchens, wardrobes, bedroom furniture and
-                  media walls together through <strong>coordinated design</strong>,
-                  carefully selected materials and consistent finishing.
+                  From kitchens and wardrobes to bedroom interiors and
+                  media walls, we approach every space with a focus on
+                  <strong> design, functionality and finishing.</strong>
                 </p>
 
                 <p className="ab-body">
-                  Every project starts with your needs and ends with a
-                  space designed around your everyday life.
+                  Our aim is to help you make better use of your space
+                  through considered layouts, coordinated finishes and
+                  solutions tailored to your requirements.
                 </p>
               </div>
 
               <div className="ab-intro-features">
-                {INTRO_POINTS.map(({ title, text }) => (
-                  <article className="ab-feature" key={title}>
-                    <h3>{title}</h3>
-                    <p>{text}</p>
+                {INTRO_POINTS.map((item) => (
+                  <article className="ab-feature" key={item.number}>
+                    <span className="ab-feature-number">
+                      {item.number}
+                    </span>
+                    <div>
+                      <h3>{item.title}</h3>
+                      <p>{item.text}</p>
+                    </div>
                   </article>
                 ))}
               </div>
@@ -1301,30 +1350,26 @@ export default function AboutUs() {
       </section>
 
       {/* WHOLE-HOME APPROACH */}
-      <section className="ab-eco-section">
+      <section className="ab-eco-section" aria-labelledby="ab-eco-title">
         <div className="ab-wrap">
           <div className="ab-eco">
-            <div className="ab-eco-head">
-              <p className="ab-eyebrow">Whole-Home Approach</p>
-
-              <h2 className="ab-h2">
-                One home, one language.
+            <div>
+              <SectionTitle
+                eyebrow="Our Approach"
+                description="We look at the bigger picture, helping different areas of your home feel connected through thoughtful planning and complementary design choices."
+              >
+                One home.
                 <br />
-                <em>Every room matched.</em>
-              </h2>
-
-              <p className="ab-body" style={{ marginTop: 16 }}>
-                We plan your interiors with a unified vision, so your
-                kitchen, wardrobes, bedroom and media wall feel like
-                parts of the same thoughtfully designed home.
-              </p>
+                <em>A cohesive design.</em>
+              </SectionTitle>
             </div>
 
             <div className="ab-eco-grid">
-              {ECOSYSTEM.map(({ title, text }) => (
-                <article className="ab-eco-item" key={title}>
-                  <h3>{title}</h3>
-                  <p>{text}</p>
+              {ECOSYSTEM.map((item) => (
+                <article className="ab-eco-item" key={item.number}>
+                  <span className="ab-eco-number">{item.number}</span>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
                 </article>
               ))}
             </div>
@@ -1332,24 +1377,61 @@ export default function AboutUs() {
         </div>
       </section>
 
-    
+      {/* PROJECT JOURNEY */}
+      <section
+        className="ab-journey-section"
+        aria-labelledby="ab-journey-title"
+      >
+        <div className="ab-wrap">
+          <div className="ab-journey-layout">
+            <div className="ab-journey-head">
+              <SectionTitle
+                eyebrow="How We Work"
+                description="A clear, considered process helps you understand what comes next, from the first conversation through installation and final review."
+              >
+                From first idea
+                <br />
+                <em>to finished space.</em>
+              </SectionTitle>
 
-      {/* OUR STANDARDS */}
-      <section className="ab-standards-section">
+              <div className="ab-intro-action">
+                <Link to="/contact" className="ab-btn">
+                  Start a Conversation
+                </Link>
+              </div>
+            </div>
+
+            <div className="ab-journey">
+              {JOURNEY.map((item) => (
+                <article className="ab-step" key={item.step}>
+                  <span className="ab-step-number">{item.step}</span>
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.text}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* STANDARDS */}
+      <section
+        className="ab-standards-section"
+        aria-labelledby="ab-standards-title"
+      >
         <div className="ab-wrap">
           <div className="ab-standards-head">
-            <p className="ab-eyebrow">Our Standards</p>
-
-            <h2 className="ab-h2">
-              Quality you can
+            <SectionTitle
+              eyebrow="Our Standards"
+              centered
+              description="Good interiors start with careful planning. We focus on practical design decisions, clear project stages and attention to the details that matter."
+            >
+              Quality in the details.
               <br />
-              <em>see and feel.</em>
-            </h2>
-
-            <p className="ab-body">
-              We focus on careful planning, practical design and
-              consistent workmanship throughout your project.
-            </p>
+              <em>Thought in every space.</em>
+            </SectionTitle>
           </div>
 
           <div className="ab-standards">
@@ -1364,23 +1446,22 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* OUR COLLECTIONS */}
-      <section className="ab-spaces-section">
+      {/* INTERIOR CATEGORIES */}
+      <section className="ab-spaces-section" aria-labelledby="ab-spaces-title">
         <div className="ab-wrap">
           <div className="ab-section-heading">
             <div>
-              <p className="ab-eyebrow">What We Create</p>
-
-              <h2 className="ab-h2">
-                Spaces that feel
+              <Eyebrow>Explore Our Work</Eyebrow>
+              <h2 className="ab-h2" id="ab-spaces-title">
+                Interiors for
                 <br />
-                <em>uniquely yours.</em>
+                <em>everyday living.</em>
               </h2>
             </div>
 
             <p className="ab-body ab-section-description">
-              Explore our interior collections, designed to bring
-              functionality, character and a refined finish into your home.
+              Discover our interior categories and find ideas for spaces
+              that reflect your lifestyle, preferences and practical needs.
             </p>
           </div>
 
@@ -1389,15 +1470,15 @@ export default function AboutUs() {
               <Link
                 to={space.to}
                 className="ab-space"
-                key={space.title}
+                key={space.number}
+                aria-label={`Explore ${space.title}`}
               >
                 <div className="ab-space-image">
                   <Img
                     src={space.img}
-                    alt={`${space.title} by Gohar`}
+                    alt={space.title}
                   />
-
-                  <span className="ab-space-number">
+                  <span className="ab-space-number" aria-hidden="true">
                     {space.number}
                   </span>
                 </div>

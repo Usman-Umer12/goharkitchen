@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { supabase } from "../lib/supabase";
 
 import des1 from "../assets/des1.webp";
 import des2 from "../assets/des2.webp";
@@ -10,6 +9,7 @@ import des4 from "../assets/des4.webp";
 /* =========================================================
    CONTACT
 ========================================================= */
+
 const WHATSAPP_NUMBER = "923007023202";
 
 const WHATSAPP_TEXT =
@@ -18,25 +18,9 @@ const WHATSAPP_TEXT =
 const SLIDE_MS = 6500;
 
 /* =========================================================
-   MARQUEE (ADMIN PANEL CONTROLLED)
-   ---------------------------------------------------------
-   Words Supabase table "site_marquee" (id = 1, column "items")
-   se aate hain. Admin panel > Marquee Settings se change hote hain.
-   Agar table na mile ya khali ho to neeche ke default words chalte hain.
-========================================================= */
-
-const DEFAULT_MARQUEE_ITEMS = [
-  "Bespoke Kitchens",
-  "Custom Wardrobes",
-  "Luxury Beds",
-  "Media Walls",
-  "Premium Finishes",
-  "Made to Measure",
-];
-
-/* =========================================================
    SLIDER DATA
 ========================================================= */
+
 const slides = [
   {
     image: des2,
@@ -99,6 +83,7 @@ const slides = [
 /* =========================================================
    COLLECTION DATA
 ========================================================= */
+
 const collections = [
   {
     title: "Bespoke Kitchens",
@@ -111,7 +96,7 @@ const collections = [
     title: "Custom Wardrobes",
     text: "Personalised wardrobe designs with considered storage, elegant finishes and functional detailing.",
     image: des3,
-    url: "/wardrobe",
+    url: "/wordrobe",
     tag: "02",
   },
   {
@@ -131,54 +116,9 @@ const collections = [
 ];
 
 /* =========================================================
-   MARQUEE HOOK
-   Words Supabase se leta hai, warna default words.
-========================================================= */
-const useMarqueeItems = () => {
-  const [items, setItems] = useState(DEFAULT_MARQUEE_ITEMS);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("site_marquee")
-          .select("items")
-          .eq("id", 1)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        const list = Array.isArray(data?.items) ? data.items : [];
-
-        const cleaned = list
-          .map((entry) =>
-            typeof entry === "string" ? entry : entry?.text || ""
-          )
-          .map((entry) => entry.trim())
-          .filter(Boolean);
-
-        if (!cancelled && cleaned.length > 0) setItems(cleaned);
-      } catch (error) {
-        console.error("Marquee words load failed:", error);
-        /* Fail hone par default words hi chalte rahenge */
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return items;
-};
-
-/* =========================================================
    REVEAL ANIMATION
 ========================================================= */
+
 const useReveal = () => {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -188,7 +128,10 @@ const useReveal = () => {
 
     if (!element) return;
 
-    if (typeof window !== "undefined" && !("IntersectionObserver" in window)) {
+    if (
+      typeof window !== "undefined" &&
+      !("IntersectionObserver" in window)
+    ) {
       setVisible(true);
       return;
     }
@@ -219,7 +162,9 @@ const Reveal = ({ children, delay = 0, className = "" }) => {
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
       className={`transition-[opacity,transform] duration-700 ease-out ${
-        visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
+        visible
+          ? "translate-y-0 opacity-100"
+          : "translate-y-5 opacity-0"
       } ${className}`}
     >
       {children}
@@ -228,38 +173,22 @@ const Reveal = ({ children, delay = 0, className = "" }) => {
 };
 
 /* =========================================================
-   SECTION COMPONENTS
+   SECTION HEADING
 ========================================================= */
-const Eyebrow = ({ children }) => (
-  <div className="mb-4 flex items-center gap-3 sm:mb-5 sm:gap-4">
-    <span className="h-px w-7 shrink-0 bg-[#C0652B] sm:w-10" />
 
-    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#E7A477] sm:text-[11px] sm:tracking-[0.24em]">
+const Eyebrow = ({ children }) => (
+  <div className="mb-4 sm:mb-6">
+    <h2 className="text-[20px] font-semibold uppercase tracking-[0.02em] text-white sm:text-[24px] md:text-[28px] lg:text-[30px]">
       {children}
-    </span>
+    </h2>
   </div>
 );
-
-/* Heading always stays on ONE line (size scales with the screen) */
-const SectionTitle = ({ children }) => (
-  <h2 className="whitespace-nowrap text-[clamp(1rem,4.7vw,2.6rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-white">
-    {children}
-  </h2>
-);
-
-const Diamond = () => (
-  <span
-    aria-hidden="true"
-    className="block h-[5px] w-[5px] shrink-0 rotate-45 bg-white/60"
-  />
-);
-
 /* =========================================================
    MAIN COMPONENT
 ========================================================= */
+
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const marqueeItems = useMarqueeItems();
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -271,30 +200,28 @@ const Home = () => {
 
   const slide = slides[currentSlide];
 
-  /* Kam words hon tab bhi marquee screen ko poora bhare:
-     items ko repeat karke kam az kam 8 words bana lete hain. */
-  const repeatCount = Math.max(1, Math.ceil(8 / marqueeItems.length));
-  const marqueeGroup = Array.from({ length: repeatCount }).flatMap(
-    () => marqueeItems
-  );
-
   return (
-    <main className="gk-home min-h-screen overflow-x-clip bg-[#090909] font-[Montserrat] text-white antialiased">
+    <main className="gk-home min-h-screen overflow-x-clip bg-[#090909] text-white antialiased">
+
       {/* =====================================================
           HERO SLIDER
       ====================================================== */}
+
       <section
         id="home"
         aria-label="Featured interior collections"
         className="relative isolate flex h-[75svh] min-h-[680px] max-h-[820px] w-full overflow-hidden bg-[#080808] max-sm:h-[88svh] max-sm:min-h-[660px] max-sm:max-h-[800px]"
       >
         {/* Slider images */}
+
         {slides.map((item, index) => (
           <div
             key={item.category}
             aria-hidden={currentSlide !== index}
             className={`absolute inset-0 transition-opacity duration-[1300ms] ease-in-out ${
-              currentSlide === index ? "z-10 opacity-100" : "z-0 opacity-0"
+              currentSlide === index
+                ? "z-10 opacity-100"
+                : "z-0 opacity-0"
             }`}
           >
             <img
@@ -314,18 +241,23 @@ const Home = () => {
         ))}
 
         {/* Image contrast */}
+
         <div className="absolute inset-0 z-20 bg-black/20" />
 
-        {/* Top overlay keeps the navbar/logo clearly visible */}
+        {/* Navbar and logo contrast */}
+
         <div className="absolute inset-x-0 top-0 z-20 h-[52%] bg-gradient-to-b from-black/85 via-black/45 to-transparent sm:h-[48%] sm:from-black/65 sm:via-black/25" />
 
-        {/* Content contrast */}
+        {/* Main content contrast */}
+
         <div className="absolute inset-0 z-20 bg-gradient-to-t from-[#080808]/90 via-black/25 to-transparent sm:bg-gradient-to-r sm:from-black/75 sm:via-black/40 sm:to-black/5" />
 
         {/* Bottom transition */}
+
         <div className="absolute inset-x-0 bottom-0 z-20 h-32 bg-gradient-to-t from-[#090909] via-[#090909]/45 to-transparent" />
 
         {/* Hero content */}
+
         <div className="relative z-30 mx-auto flex h-full w-full max-w-[1440px] items-center px-5 pb-14 pt-24 sm:px-8 sm:pb-16 sm:pt-28 lg:px-12 xl:px-16">
           <div
             key={currentSlide}
@@ -348,15 +280,17 @@ const Home = () => {
               {slide.description}
             </p>
 
-            {/* CTA buttons: side by side on mobile (short labels),
-                full labels from tablet upwards */}
+            {/* CTA buttons */}
+
             <div className="mt-7 flex w-full max-w-[340px] flex-row items-center gap-2.5 sm:mt-9 sm:max-w-none sm:gap-4">
               <a
                 href={slide.url}
                 className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#C0652B] bg-[#C0652B] px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-white transition-colors duration-200 hover:border-[#D77B43] hover:bg-[#D77B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7A477] focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.1em]"
               >
                 <span className="sm:hidden">Explore</span>
-                <span className="hidden sm:inline">Explore Collection</span>
+                <span className="hidden sm:inline">
+                  Explore Collection
+                </span>
 
                 <ArrowRight
                   size={14}
@@ -369,7 +303,9 @@ const Home = () => {
                 className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/55 bg-black/40 px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-md transition-colors duration-200 hover:border-white hover:bg-white hover:text-[#111111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.1em]"
               >
                 <span className="sm:hidden">Get Quote</span>
-                <span className="hidden sm:inline">Discuss Your Project</span>
+                <span className="hidden sm:inline">
+                  Discuss Your Project
+                </span>
 
                 <ArrowUpRight
                   size={14}
@@ -381,6 +317,7 @@ const Home = () => {
         </div>
 
         {/* Slide indicators */}
+
         <div className="absolute bottom-7 left-5 z-40 flex items-center gap-2 sm:bottom-9 sm:left-8 lg:left-12 xl:left-16">
           {slides.map((item, index) => (
             <button
@@ -393,7 +330,9 @@ const Home = () => {
             >
               <span
                 className={`relative block h-[2px] overflow-hidden rounded-full bg-white/40 transition-[width] duration-500 ${
-                  currentSlide === index ? "w-10 sm:w-12" : "w-5 sm:w-6"
+                  currentSlide === index
+                    ? "w-10 sm:w-12"
+                    : "w-5 sm:w-6"
                 }`}
               >
                 {currentSlide === index && (
@@ -411,93 +350,50 @@ const Home = () => {
         </div>
 
         {/* Slide count */}
+
         <div
           className="absolute bottom-8 right-5 z-40 flex items-center text-[10px] font-medium tracking-[0.18em] text-white/65 sm:bottom-9 sm:right-8 sm:text-[11px] lg:right-12 xl:right-16"
           aria-live="polite"
           aria-label={`Slide ${currentSlide + 1} of ${slides.length}`}
         >
-          <span className="text-white">0{currentSlide + 1}</span>
+          <span className="text-white">
+            0{currentSlide + 1}
+          </span>
+
           <span className="mx-2 text-white/35">/</span>
+
           <span>0{slides.length}</span>
         </div>
       </section>
 
       {/* =====================================================
-          MARQUEE (short, white text, Montserrat)
-          Words admin panel se control honge (useMarqueeItems)
+          DISCOVER OUR COLLECTIONS
+          No marquee, no secondary heading, no description.
+          Desktop: 4 columns | Mobile: 2 columns
       ====================================================== */}
-      <section
-        aria-label="Our interior services"
-        className="relative overflow-hidden border-y border-white/10 bg-[#0B0A09]"
-      >
-        <div
-          className="gk-marquee overflow-hidden py-3 sm:py-3.5"
-          style={{
-            WebkitMaskImage:
-              "linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%)",
-            maskImage:
-              "linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%)",
-          }}
-        >
-          <div
-            className="gk-marquee-track flex w-max items-center"
-            style={{ animation: "gkMarquee 40s linear infinite" }}
-          >
-            {[0, 1].map((group) => (
-              <div
-                key={group}
-                aria-hidden={group === 1}
-                className="flex shrink-0 items-center"
-              >
-                {marqueeGroup.map((item, index) => (
-                  <div
-                    key={`${group}-${index}-${item}`}
-                    className="flex items-center gap-5 pr-5 sm:gap-7 sm:pr-7 lg:gap-9 lg:pr-9"
-                  >
-                    <span className="whitespace-nowrap text-[11px] font-medium uppercase tracking-[0.18em] text-white sm:text-[12px] lg:text-[13px]">
-                      {item}
-                    </span>
 
-                    <Diamond />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================================
-          COLLECTIONS
-          desktop: 1 2 3 4   |   mobile / tablet: 1 2 / 3 4
-      ====================================================== */}
       <section
         id="collections"
         className="bg-[#0E0D0C] py-14 sm:py-18 lg:py-24"
       >
         <div className="w-full px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-20">
+
+          {/* Section heading only */}
+
           <Reveal>
             <div className="mb-8 sm:mb-10 lg:mb-12">
               <Eyebrow>Discover Our Collections</Eyebrow>
-
-              <SectionTitle>
-                Thoughtful Design.{" "}
-                <span className="font-medium text-[#E2A078]">
-                  Beautiful Living.
-                </span>
-              </SectionTitle>
-
-              <p className="mt-4 max-w-[560px] text-[13px] font-normal leading-[1.85] text-white/70 sm:mt-5 sm:text-[14.5px]">
-                From bespoke kitchens to beautifully finished bedroom
-                furniture, explore interior solutions designed around your
-                space, your preferences and the way you live.
-              </p>
             </div>
           </Reveal>
 
+          {/* Collection cards */}
+
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
             {collections.map((collection, index) => (
-              <Reveal key={collection.title} delay={index * 70}>
+              <Reveal
+                key={collection.title}
+                delay={index * 70}
+              >
                 <a
                   href={collection.url}
                   aria-label={`Explore ${collection.title}`}
@@ -510,11 +406,17 @@ const Home = () => {
                     className="h-full w-full object-cover object-center transition-transform duration-1000 ease-out motion-safe:group-hover:scale-[1.04]"
                   />
 
+                  {/* Card overlay */}
+
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/5 transition-colors duration-500 group-hover:from-black/95" />
+
+                  {/* Collection number */}
 
                   <div className="absolute left-3 top-3 text-[13px] font-medium tracking-[0.08em] text-white/85 sm:left-5 sm:top-5 sm:text-[15px]">
                     {collection.tag}
                   </div>
+
+                  {/* Card content */}
 
                   <div className="absolute inset-x-0 bottom-0 p-3 sm:p-5">
                     <h3 className="text-[15px] font-semibold leading-tight tracking-[-0.01em] text-white sm:text-[20px] lg:text-[22px]">
@@ -526,14 +428,22 @@ const Home = () => {
                     </p>
 
                     <div className="mt-3 inline-flex items-center gap-2 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white sm:mt-4 sm:gap-3 sm:text-[11px] sm:tracking-[0.16em]">
-                      <span className="sm:hidden">Explore</span>
-                      <span className="hidden sm:inline">Explore Collection</span>
+                      <span className="sm:hidden">
+                        Explore
+                      </span>
+
+                      <span className="hidden sm:inline">
+                        Explore Collection
+                      </span>
+
                       <ArrowRight
                         size={14}
                         className="transition-transform duration-300 group-hover:translate-x-1"
                       />
                     </div>
                   </div>
+
+                  {/* Accent line */}
 
                   <span className="absolute bottom-0 left-3 h-[2px] w-8 bg-[#C0652B] transition-all duration-500 group-hover:w-14 sm:left-5" />
                 </a>
@@ -546,6 +456,7 @@ const Home = () => {
       {/* =====================================================
           WHATSAPP FLOATING BUTTON
       ====================================================== */}
+
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
           WHATSAPP_TEXT
@@ -563,31 +474,24 @@ const Home = () => {
           className="h-7 w-7 sm:h-8 sm:w-8"
           aria-hidden="true"
         >
-          <path d="M16.01 3C8.84 3 3.01 8.83 3.01 16c0 2.29.6 4.44 1.65 6.31L3 29l6.88-1.61A12.94 12.94 0 0 0 16.01 29C23.18 29 29 23.17 29 16S23.18 3 16.01 3Zm0 23.73c-2.01 0-3.88-.59-5.45-1.61l-.39-.24-4.08.96.97-3.98-.25-.41A10.7 10.7 0 0 1 5.28 16c0-5.92 4.81-10.73 10.73-10.73S26.74 10.08 26.74 16s-4.81 10.73-10.73 10.73Zm5.89-8.03c-.32-.16-1.89-.93-2.18-1.03-.29-.11-.5-.16-.71.16-.21.32-.82 1.03-1 1.24-.18.21-.37.24-.68.08-.32-.16-1.34-.49-2.55-1.57-.94-.84-1.58-1.87-1.76-2.18-.18-.32-.02-.49.14-.65.14-.14.32-.37.47-.55.16-.18.21-.32.32-.53.11-.21.05-.4-.03-.55-.08-.16-.71-1.71-.97-2.34-.26-.61-.52-.53-.71-.54h-.61c-.21 0-.55.08-.84.4-.29.32-1.1 1.08-1.1 2.63s1.13 3.05 1.29 3.26c.16.21 2.21 3.37 5.35 4.73.75.32 1.33.52 1.79.66.75.24 1.43.21 1.97.13.6-.09 1.89-.77 2.16-1.52.26-.76.26-1.4.18-1.52-.08-.13-.29-.21-.6-.37Z" />
+          <path d="M16.01 3C8.84 3 3.01 8.83 3.01 16c0 2.29.6 4.44 1.65 6.31L3 29l6.88-1.61A12.94 12.94 0 0 0 16.01 29C23.18 29 29 23.17 29 16S23.18 3 16.01 3Zm0 23.73c-2.01 0-3.88-.59-5.45-1.61l-.39-.24-4.08.96.97-3.98-.25-.41A10.7 10.7 0 0 1 5.28 16c0-5.92 4.81-10.73 10.73-10.73S26.74 10.08 26.74 16s-4.81 10.73-10.73 10.73Zm5.89-8.03c-.32-.16-1.89-.93-2.18-1.03-.29-.11-.5-.16-.71.16-.21.32-.82 1.03-1 1.24-.18.21-.37.24-.68.08-.32-.16-1.34-.49-2.55-1.57-.94-.84-1.58-1.87-1.76-2.18-.18-.32-.02-.49.14-.65.14-.14.32-.37.47-.55.16-.18.21-.32.32-.53.11-.21.05-.4-.03-.55-.08-.16-.71-1.71-.97-2.34-.26-.61-.52-.53-.71-.54h-.61c-.21 0-.55.08-.84.4-.29.32-1.1 1.08-1.1 2.63s1.13 3.05 1.29 3.26c.16.21 2.21 3.37 5.35 4.73.75.32 1.33.21 1.97.13.6-.09 1.89-.77 2.16-1.52.26-.76.26-1.4.18-1.52-.08-.13-.29-.21-.6-.37Z" />
         </svg>
       </a>
 
       {/* =====================================================
           FONTS & ANIMATIONS
       ====================================================== */}
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 
         :root {
-          /* FONT FAMILY: logo jaisa Montserrat (heading, description, button sab mein) */
           --gk-display: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
           --gk-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
           --gk-accent: #C0652B;
           --gk-accent-soft: #E08A4F;
-
-          /* Video position: 0% = upar, 50% = beech, 100% = neeche */
-          --kt-video-pos-y: 50%;
         }
 
-        /* Tailwind "font-sans" bhi Montserrat use kare */
-        .font-sans { font-family: var(--gk-sans) !important; }
-
-        /* Is page ke andar sab kuch Montserrat mein */
         .gk-home,
         .gk-home * {
           font-family: var(--gk-sans);
@@ -629,24 +533,6 @@ const Home = () => {
           }
         }
 
-        @keyframes gkMarquee {
-          0% {
-            transform: translateX(0);
-          }
-
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        .gk-marquee-track {
-          will-change: transform;
-        }
-
-        .gk-marquee:hover .gk-marquee-track {
-          animation-play-state: paused;
-        }
-
         @media (prefers-reduced-motion: reduce) {
           *,
           *::before,
@@ -655,10 +541,6 @@ const Home = () => {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
-          }
-
-          .gk-marquee-track {
-            animation: none !important;
           }
         }
       `}</style>
