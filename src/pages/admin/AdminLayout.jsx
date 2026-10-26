@@ -17,13 +17,16 @@ import {
   CircleOff,
   RefreshCw,
   ContactRound,
-  MoveHorizontal,
+  Wrench,
+  Gem,
+  Bath,
+  Box,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
-/* -------------------------------------------------------------------------- */
-/* Navigation                                                                 */
-/* -------------------------------------------------------------------------- */
+/* =========================================================
+   ADMIN NAVIGATION
+========================================================= */
 
 const navigation = [
   {
@@ -44,16 +47,17 @@ const navigation = [
   {
     label: "Preferences",
     items: [
-      {
-        name: "Footer Settings",
-        path: "/admin/footer",
-        icon: ContactRound,
-      },
-      {
-        name: "Marquee Settings",
-        path: "/admin/marquee",
-        icon: MoveHorizontal,
-      },
+      { name: "Footer Settings", path: "/admin/footer", icon: ContactRound },
+    ],
+  },
+  {
+    label: "Explore Pages",
+    items: [
+      { name: "Accessories", path: "/admin/accessories", icon: Wrench },
+      { name: "Sheets", path: "/admin/sheets", icon: Layers },
+      { name: "Corian", path: "/admin/corian", icon: Gem },
+      { name: "Vanities", path: "/admin/vanities", icon: Bath },
+      { name: "2D / 3D Design", path: "/admin/design", icon: Box },
     ],
   },
 ];
@@ -64,7 +68,6 @@ const categories = [
     description: "Kitchen designs",
     path: "/admin/products",
     icon: ChefHat,
-    number: "01",
     table: "kitchen_products",
   },
   {
@@ -72,7 +75,6 @@ const categories = [
     description: "Wardrobe designs",
     path: "/admin/wardrobe",
     icon: DoorOpen,
-    number: "02",
     table: "wardrobe_products",
   },
   {
@@ -80,7 +82,6 @@ const categories = [
     description: "Bedroom designs",
     path: "/admin/bed",
     icon: BedDouble,
-    number: "03",
     table: "bed_products",
   },
   {
@@ -88,32 +89,27 @@ const categories = [
     description: "Media wall designs",
     path: "/admin/media-walls",
     icon: PanelsTopLeft,
-    number: "04",
     table: "media_products",
   },
 ];
 
-/* -------------------------------------------------------------------------- */
-/* Reusable components                                                        */
-/* -------------------------------------------------------------------------- */
+/* =========================================================
+   STAT CARD
+========================================================= */
 
-function StatCard({ label, value, hint, icon: Icon, dark = false, loading }) {
+function StatCard({ label, value, hint, icon: Icon, loading = false }) {
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition hover:shadow-md">
       <div className="flex items-start justify-between">
         <p className="text-sm font-medium text-neutral-500">{label}</p>
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-            dark ? "bg-neutral-900 text-white" : "bg-orange-50 text-orange-600"
-          }`}
-        >
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
           <Icon size={19} />
         </div>
       </div>
 
       <p
-        className={`mt-3 text-3xl font-semibold tracking-tight text-neutral-900 ${
-          loading ? "animate-pulse text-neutral-300" : ""
+        className={`mt-3 text-3xl font-semibold tracking-tight ${
+          loading ? "animate-pulse text-neutral-300" : "text-neutral-900"
         }`}
       >
         {loading ? "—" : value}
@@ -124,9 +120,9 @@ function StatCard({ label, value, hint, icon: Icon, dark = false, loading }) {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Dashboard counts                                                           */
-/* -------------------------------------------------------------------------- */
+/* =========================================================
+   DASHBOARD DATA
+========================================================= */
 
 function useDashboardCounts() {
   const [counts, setCounts] = useState({});
@@ -150,10 +146,9 @@ function useDashboardCounts() {
             return [category.table, null];
           }
 
-          const total = data?.length ?? 0;
-          const active = (data ?? []).filter(
-            (row) => row.status === "active"
-          ).length;
+          const rows = data ?? [];
+          const total = rows.length;
+          const active = rows.filter((row) => row.status === "active").length;
 
           return [
             category.table,
@@ -182,9 +177,9 @@ function useDashboardCounts() {
   return { counts, loading, reload: load };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Dashboard                                                                  */
-/* -------------------------------------------------------------------------- */
+/* =========================================================
+   DASHBOARD HOME
+========================================================= */
 
 function DashboardHome() {
   const navigate = useNavigate();
@@ -209,7 +204,6 @@ function DashboardHome() {
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-7 p-4 sm:p-6 lg:p-8">
-      {/* Page heading */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
@@ -219,6 +213,7 @@ function DashboardHome() {
             Overview of your products and categories.
           </p>
         </div>
+
         <button
           type="button"
           onClick={reload}
@@ -231,7 +226,6 @@ function DashboardHome() {
         </button>
       </div>
 
-      {/* Summary stats */}
       <section>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
@@ -271,7 +265,6 @@ function DashboardHome() {
         )}
       </section>
 
-      {/* Product categories */}
       <section>
         <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -368,9 +361,9 @@ function DashboardHome() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Admin Layout                                                               */
-/* -------------------------------------------------------------------------- */
+/* =========================================================
+   ADMIN LAYOUT
+========================================================= */
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -392,16 +385,21 @@ export default function AdminLayout() {
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getUser().then(({ data, error }) => {
-      if (error) {
-        console.error("Could not load admin user:", error);
-        return;
-      }
+    supabase.auth
+      .getUser()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Could not load admin user:", error);
+          return;
+        }
 
-      if (active && data?.user?.email) {
-        setUserEmail(data.user.email);
-      }
-    });
+        if (active && data?.user?.email) {
+          setUserEmail(data.user.email);
+        }
+      })
+      .catch((error) => {
+        console.error("Could not load admin user:", error);
+      });
 
     return () => {
       active = false;
@@ -416,23 +414,23 @@ export default function AdminLayout() {
   useEffect(() => {
     document.body.style.overflow = sidebarOpen ? "hidden" : "";
 
-    const onKey = (event) => {
+    const onKeyDown = (event) => {
       if (event.key === "Escape") {
         setSidebarOpen(false);
         setUserMenuOpen(false);
       }
     };
 
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKeyDown);
 
     return () => {
       document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKeyDown);
     };
   }, [sidebarOpen]);
 
   useEffect(() => {
-    const onClick = (event) => {
+    const onDocumentClick = (event) => {
       if (
         userMenuRef.current &&
         !userMenuRef.current.contains(event.target)
@@ -441,19 +439,15 @@ export default function AdminLayout() {
       }
     };
 
-    document.addEventListener("mousedown", onClick);
-
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("mousedown", onDocumentClick);
+    return () => document.removeEventListener("mousedown", onDocumentClick);
   }, []);
 
   const handleLogout = async () => {
     try {
       setLoggingOut(true);
-
       const { error } = await supabase.auth.signOut();
-
       if (error) throw error;
-
       navigate("/admin/login", { replace: true });
     } catch (error) {
       console.error("Logout failed:", error);
@@ -467,13 +461,11 @@ export default function AdminLayout() {
 
   const sidebarContent = (
     <div className="flex h-full flex-col border-r border-white/10 bg-[#0a0a0a] text-white">
-      {/* Brand */}
       <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/10 px-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500 text-white shadow-lg shadow-orange-500/30">
             <ChefHat size={22} />
           </div>
-
           <div>
             <p className="text-sm font-bold tracking-[0.18em]">GOHAR</p>
             <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-white/40">
@@ -492,7 +484,6 @@ export default function AdminLayout() {
         </button>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 space-y-7 overflow-y-auto px-3 py-6 [scrollbar-width:thin] [scrollbar-color:#333_transparent]">
         {navigation.map((section) => (
           <div key={section.label}>
@@ -535,7 +526,6 @@ export default function AdminLayout() {
                           >
                             <Icon size={17} strokeWidth={1.9} />
                           </span>
-
                           {item.name}
                         </span>
 
@@ -552,7 +542,6 @@ export default function AdminLayout() {
         ))}
       </nav>
 
-      {/* Footer actions */}
       <div className="shrink-0 border-t border-white/10 p-3">
         <a
           href="/"
@@ -579,7 +568,6 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f4] lg:flex">
-      {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[264px] lg:block">
         {sidebarContent}
       </aside>
@@ -610,9 +598,7 @@ export default function AdminLayout() {
         </aside>
       </div>
 
-      {/* Content column */}
       <div className="min-w-0 flex-1 lg:ml-[264px]">
-        {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-neutral-200 bg-white/90 px-4 backdrop-blur-xl sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -628,7 +614,6 @@ export default function AdminLayout() {
               <p className="truncate text-sm font-semibold text-neutral-900 sm:text-base">
                 {currentPage}
               </p>
-
               <nav
                 aria-label="Breadcrumb"
                 className="hidden items-center gap-1.5 text-xs text-neutral-500 sm:flex"
@@ -645,7 +630,6 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* User menu */}
             <div className="relative" ref={userMenuRef}>
               <button
                 type="button"
@@ -657,11 +641,9 @@ export default function AdminLayout() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-orange-400">
                   {initial}
                 </span>
-
                 <span className="hidden text-xs font-semibold text-neutral-800 sm:block">
                   Admin
                 </span>
-
                 <ChevronDown
                   size={14}
                   className={`text-neutral-500 transition-transform ${
@@ -679,7 +661,6 @@ export default function AdminLayout() {
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
                       Signed in as
                     </p>
-
                     <p className="mt-1 truncate text-sm font-semibold text-neutral-900">
                       {userEmail || "Administrator"}
                     </p>
@@ -714,7 +695,6 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        {/* Page content */}
         <main className="min-h-[calc(100vh-68px)]">
           {location.pathname === "/admin" ||
           location.pathname === "/admin/dashboard" ? (

@@ -1,6 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 
 /* =========================================================
+   BRAND LOGO STYLE
+   "white"    = har logo automatically clean white silhouette ban jata
+                hai (white, black, colored ya transparent - koi bhi
+                background ho). Extra khali jagah crop hoti hai aur
+                sab logos barabar size mein dikhte hain.
+   "original" = logos apne asli rang mein, white tile par
+========================================================= */
+
+const BRAND_LOGO_MODE = "white"; // "white" | "original"
+
+/* =========================================================
    SERVICES DATA
 ========================================================= */
 
@@ -44,10 +55,10 @@ const services = [
 ========================================================= */
 
 const brands = [
-  { name: "Brand Partner 1", image: "brand1.webp" },
-  { name: "Brand Partner 2", image: "brand2.webp" },
+  { name: "NUOMI Pakistan", image: "brand1.webp" },
+  { name: "DTC", image: "brand2.webp" },
   { name: "Brand Partner 3", image: "brand3.webp" },
-  { name: "Brand Partner 4", image: "brand4.webp" },
+  { name: "Corian Solid Surface", image: "brand4.webp" },
 ];
 
 /* =========================================================
@@ -115,13 +126,11 @@ const useReveal = () => {
 
     if (!element) return undefined;
 
-    const reducedMotion =
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-    if (
-      reducedMotion ||
-      typeof IntersectionObserver === "undefined"
-    ) {
+    if (reducedMotion || typeof IntersectionObserver === "undefined") {
       setVisible(true);
       return undefined;
     }
@@ -147,11 +156,7 @@ const useReveal = () => {
   return [ref, visible];
 };
 
-const Reveal = ({
-  children,
-  delay = 0,
-  className = "",
-}) => {
+const Reveal = ({ children, delay = 0, className = "" }) => {
   const [ref, visible] = useReveal();
 
   return (
@@ -184,7 +189,7 @@ const SectionHeading = ({ id, children }) => (
 );
 
 /* =========================================================
-   OUR SERVICES
+   OUR SERVICES  (soft white)
 ========================================================= */
 
 const OurServices = () => (
@@ -195,9 +200,7 @@ const OurServices = () => (
   >
     <div className="gk-container">
       <Reveal className="gk-heading-wrap">
-        <SectionHeading id="gk-services-title">
-          Our Services
-        </SectionHeading>
+        <SectionHeading id="gk-services-title">Our Services</SectionHeading>
       </Reveal>
 
       <div className="gk-services-grid">
@@ -220,14 +223,9 @@ const OurServices = () => (
                   decoding="async"
                 />
 
-                <span className="gk-service-number">
-                  {service.number}
-                </span>
+                <span className="gk-service-number">{service.number}</span>
 
-                <span
-                  className="gk-service-arrow"
-                  aria-hidden="true"
-                >
+                <span className="gk-service-arrow" aria-hidden="true">
                   ↗
                 </span>
               </div>
@@ -250,7 +248,7 @@ const OurServices = () => (
 );
 
 /* =========================================================
-   WHY CHOOSE US
+   WHY CHOOSE US  (pure white)
 ========================================================= */
 
 const WhyChooseGohar = () => (
@@ -262,22 +260,18 @@ const WhyChooseGohar = () => (
     <div className="gk-container">
       <div className="gk-why-layout">
         <Reveal className="gk-why-intro">
-          <SectionHeading id="gk-why-title">
-            Why Choose Us
-          </SectionHeading>
+          <SectionHeading id="gk-why-title">Why Choose Us</SectionHeading>
 
           <p className="gk-body gk-why-lead">
-            Your interior should reflect the way you live.
-            That is why every project deserves thoughtful
-            planning, appropriate materials and attention
-            to the smallest details.
+            Your interior should reflect the way you live. That is why every
+            project deserves thoughtful planning, appropriate materials and
+            attention to the smallest details.
           </p>
 
           <p className="gk-body gk-why-secondary">
-            From the first conversation to the final
-            installation, we focus on practical solutions,
-            considered design and a finish that complements
-            your space.
+            From the first conversation to the final installation, we focus on
+            practical solutions, considered design and a finish that
+            complements your space.
           </p>
 
           <a href="/contact" className="gk-btn-solid gk-why-button">
@@ -294,14 +288,9 @@ const WhyChooseGohar = () => (
               className="gk-benefit-card"
             >
               <div className="gk-benefit-top">
-                <span className="gk-benefit-number">
-                  {benefit.number}
-                </span>
+                <span className="gk-benefit-number">{benefit.number}</span>
 
-                <span
-                  className="gk-benefit-mark"
-                  aria-hidden="true"
-                >
+                <span className="gk-benefit-mark" aria-hidden="true">
                   ↗
                 </span>
               </div>
@@ -317,7 +306,181 @@ const WhyChooseGohar = () => (
 );
 
 /* =========================================================
-   BRAND PARTNERSHIPS
+   LOGO NORMALISER
+   Logo image ko canvas par padhta hai, background (white / black /
+   colored / transparent) pehchan kar hata deta hai, logo ko pure white
+   banata hai aur logo ke aas-paas ki extra jagah crop kar deta hai.
+========================================================= */
+
+const logoCache = new Map();
+
+const smoothstep = (t) => t * t * (3 - 2 * t);
+
+const normaliseLogo = (src) => {
+  if (logoCache.has(src)) return logoCache.get(src);
+
+  const job = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      try {
+        const MAX = 720;
+        const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const px = imageData.data;
+
+        /* background colour = average of the four corners */
+        const patch = Math.max(1, Math.min(4, Math.floor(Math.min(w, h) / 6)));
+        let br = 0, bg = 0, bb = 0, ba = 0, n = 0;
+
+        [[0, 0], [w - patch, 0], [0, h - patch], [w - patch, h - patch]].forEach(
+          ([sx, sy]) => {
+            for (let y = sy; y < sy + patch; y += 1) {
+              for (let x = sx; x < sx + patch; x += 1) {
+                const i = (y * w + x) * 4;
+                br += px[i];
+                bg += px[i + 1];
+                bb += px[i + 2];
+                ba += px[i + 3];
+                n += 1;
+              }
+            }
+          }
+        );
+
+        br /= n; bg /= n; bb /= n; ba /= n;
+        const transparentBg = ba < 200;
+
+        let minX = w, minY = h, maxX = -1, maxY = -1;
+
+        for (let y = 0; y < h; y += 1) {
+          for (let x = 0; x < w; x += 1) {
+            const i = (y * w + x) * 4;
+            const a = px[i + 3] / 255;
+            let alpha = a;
+
+            if (!transparentBg) {
+              const dr = px[i] - br;
+              const dg = px[i + 1] - bg;
+              const db = px[i + 2] - bb;
+              const dist = Math.sqrt(dr * dr + dg * dg + db * db) / 441.67;
+              const t = Math.min(1, Math.max(0, (dist - 0.07) / 0.25));
+              alpha = smoothstep(t) * a;
+            }
+
+            px[i] = 255;
+            px[i + 1] = 255;
+            px[i + 2] = 255;
+            px[i + 3] = Math.round(alpha * 255);
+
+            if (alpha > 0.1) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        if (maxX < 0) {
+          reject(new Error("empty logo"));
+          return;
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+
+        /* crop to the logo itself (+ tiny margin) */
+        const pad = 2;
+        const cx = Math.max(0, minX - pad);
+        const cy = Math.max(0, minY - pad);
+        const cw = Math.min(w - cx, maxX - minX + 1 + pad * 2);
+        const ch = Math.min(h - cy, maxY - minY + 1 + pad * 2);
+
+        const out = document.createElement("canvas");
+        out.width = cw;
+        out.height = ch;
+        out.getContext("2d").drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
+
+        resolve({ url: out.toDataURL("image/png"), ratio: cw / ch });
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    img.onerror = reject;
+    img.src = src;
+  });
+
+  logoCache.set(src, job);
+  return job;
+};
+
+const BrandLogo = ({ src, name }) => {
+  const [logo, setLogo] = useState({ status: "loading" });
+
+  useEffect(() => {
+    let active = true;
+
+    if (BRAND_LOGO_MODE !== "white") {
+      setLogo({ status: "original" });
+      return undefined;
+    }
+
+    normaliseLogo(src)
+      .then((result) => {
+        if (active) setLogo({ status: "ready", ...result });
+      })
+      .catch(() => {
+        if (active) setLogo({ status: "fallback" });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [src]);
+
+  if (logo.status === "loading") {
+    return <span className="gk-brand-skeleton" aria-hidden="true" />;
+  }
+
+  if (logo.status === "ready") {
+    return (
+      <img
+        className="gk-brand-logo"
+        style={{ "--gk-ar": logo.ratio.toFixed(3) }}
+        src={logo.url}
+        alt={name}
+        decoding="async"
+      />
+    );
+  }
+
+  return (
+    <img
+      className={`gk-brand-logo gk-brand-logo-${logo.status}`}
+      src={src}
+      alt={name}
+      loading="lazy"
+      decoding="async"
+    />
+  );
+};
+
+/* =========================================================
+   BRAND PARTNERSHIPS  (shortest section = BLACK, white text)
+   Logos uniform white, equal tiles
 ========================================================= */
 
 const BrandPartnerships = () => (
@@ -333,26 +496,20 @@ const BrandPartnerships = () => (
         </SectionHeading>
 
         <p className="gk-body gk-partnerships-description">
-          Thoughtful interiors begin with the right choices.
-          We consider materials, finishes and fittings to
-          complement each project's design and requirements.
+          Thoughtful interiors begin with the right choices. We consider
+          materials, finishes and fittings to complement each project's design
+          and requirements.
         </p>
       </Reveal>
 
-      <div className="gk-brands-grid">
+      <div className="gk-brands-grid" data-logo-mode={BRAND_LOGO_MODE}>
         {brands.map((brand, index) => (
           <Reveal
             key={brand.image}
             delay={index * 70}
             className="gk-brand-item"
           >
-            <img
-              className="gk-brand-logo"
-              src={getImage(brand.image)}
-              alt={brand.name}
-              loading="lazy"
-              decoding="async"
-            />
+            <BrandLogo src={getImage(brand.image)} name={brand.name} />
           </Reveal>
         ))}
       </div>
@@ -372,15 +529,9 @@ const Styles = () => (
       --gk-display: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
       --gk-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-      --gk-bg: #0A0A0A;
-      --gk-bg-warm: #100F0E;
       --gk-accent: #C0652B;
-      --gk-accent-hover: #E08A4F;
-
-      --gk-white: #FFFFFF;
-      --gk-muted: rgba(255, 255, 255, 0.72);
-      --gk-muted-strong: rgba(255, 255, 255, 0.88);
-      --gk-border: rgba(255, 255, 255, 0.13);
+      --gk-accent-hover: #A8531F;
+      --gk-accent-light: #E08A4F;
 
       --gk-ease: cubic-bezier(0.2, 0.65, 0.3, 1);
     }
@@ -390,8 +541,19 @@ const Styles = () => (
       padding-block: 56px;
       overflow: clip;
       isolation: isolate;
-      color: var(--gk-white);
       font-family: var(--gk-sans);
+
+      /* default = LIGHT tokens */
+      --gk-bg: #FFFFFF;
+      --gk-text: #141414;
+      --gk-muted: rgba(20, 20, 20, 0.68);
+      --gk-muted-strong: rgba(20, 20, 20, 0.84);
+      --gk-border: rgba(20, 20, 20, 0.12);
+      --gk-card: #FFFFFF;
+      --gk-link: var(--gk-accent);
+
+      background: var(--gk-bg);
+      color: var(--gk-text);
     }
 
     @media (min-width: 640px) {
@@ -413,16 +575,39 @@ const Styles = () => (
       font-family: var(--gk-sans);
     }
 
-    .gk-services,
-    .gk-partnerships {
-      background: var(--gk-bg);
+    /* Section themes */
+
+    .gk-services {
+      --gk-bg: #F6F4F1;
+      --gk-card: #FFFFFF;
+      border-top: 1px solid rgba(20, 20, 20, 0.06);
     }
 
     .gk-why {
-      background: var(--gk-bg-warm);
+      --gk-bg: #FFFFFF;
+      --gk-card: #FAF8F5;
     }
 
-    /* Home.jsx ki collections section jitni hi width + padding:
+    /* Shortest section = black */
+    .gk-partnerships {
+      --gk-bg: #000000;
+      --gk-text: #FFFFFF;
+      --gk-muted: rgba(255, 255, 255, 0.72);
+      --gk-muted-strong: rgba(255, 255, 255, 0.88);
+      --gk-border: rgba(255, 255, 255, 0.16);
+      --gk-link: var(--gk-accent-light);
+      padding-block: 48px;
+    }
+
+    @media (min-width: 640px) {
+      .gk-partnerships { padding-block: 60px; }
+    }
+
+    @media (min-width: 1024px) {
+      .gk-partnerships { padding-block: 72px; }
+    }
+
+    /* Home.jsx collections jitni hi width + padding:
        px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-20 */
     .gk-container {
       width: 100%;
@@ -450,7 +635,7 @@ const Styles = () => (
     }
 
     .gk-section a:focus-visible {
-      outline: 2px solid var(--gk-accent-hover);
+      outline: 2px solid var(--gk-accent);
       outline-offset: 5px;
     }
 
@@ -476,7 +661,7 @@ const Styles = () => (
 
     .gk-heading {
       margin: 0;
-      color: var(--gk-white);
+      color: var(--gk-text);
       font-family: var(--gk-display);
       font-size: 20px;
       font-weight: 600;
@@ -523,7 +708,7 @@ const Styles = () => (
       .gk-body { font-size: 14px; }
     }
 
-    /* BUTTON */
+    /* BUTTON (black on white sections) */
 
     .gk-btn-solid {
       display: inline-flex;
@@ -532,10 +717,10 @@ const Styles = () => (
       justify-content: center;
       gap: 13px;
       padding: 12px 23px;
-      border: 1px solid var(--gk-white);
+      border: 1px solid #141414;
       border-radius: 2px;
-      color: #111111;
-      background: var(--gk-white);
+      color: #FFFFFF;
+      background: #141414;
       font-size: 10px;
       font-weight: 600;
       line-height: 1.4;
@@ -550,7 +735,7 @@ const Styles = () => (
     }
 
     .gk-btn-solid:hover {
-      color: var(--gk-white);
+      color: #FFFFFF;
       background: var(--gk-accent);
       border-color: var(--gk-accent);
     }
@@ -566,8 +751,8 @@ const Styles = () => (
     .gk-service-card {
       min-width: 0;
       border: 1px solid var(--gk-border);
-      background: rgba(255, 255, 255, 0.015);
-      transition: none;
+      background: var(--gk-card);
+      box-shadow: 0 1px 2px rgba(20, 20, 20, 0.04);
     }
 
     .gk-service-link {
@@ -581,7 +766,7 @@ const Styles = () => (
       position: relative;
       aspect-ratio: 4 / 3;
       overflow: hidden;
-      background: #171513;
+      background: #E9E5E0;
     }
 
     .gk-service-image img {
@@ -604,8 +789,8 @@ const Styles = () => (
       align-items: center;
       justify-content: center;
       border: 1px solid rgba(255, 255, 255, 0.35);
-      color: var(--gk-white);
-      background: rgba(0, 0, 0, 0.48);
+      color: #FFFFFF;
+      background: rgba(0, 0, 0, 0.55);
       font-size: 10px;
       font-weight: 600;
       letter-spacing: 0.1em;
@@ -621,10 +806,10 @@ const Styles = () => (
       height: 35px;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.55);
       border-radius: 50%;
-      color: var(--gk-white);
-      background: rgba(0, 0, 0, 0.38);
+      color: #FFFFFF;
+      background: rgba(0, 0, 0, 0.45);
       font-size: 18px;
       transition: none !important;
     }
@@ -635,7 +820,7 @@ const Styles = () => (
 
     .gk-service-content h3 {
       margin: 0 0 9px;
-      color: var(--gk-white);
+      color: var(--gk-text);
       font-family: var(--gk-display);
       font-size: clamp(16px, 1.4vw, 20px);
       font-weight: 600;
@@ -656,7 +841,7 @@ const Styles = () => (
       align-items: center;
       gap: 7px;
       margin-top: 16px;
-      color: var(--gk-accent-hover);
+      color: var(--gk-link);
       font-size: 10px;
       font-weight: 600;
       letter-spacing: 0.08em;
@@ -702,15 +887,15 @@ const Styles = () => (
       flex-direction: column;
       padding: 24px 22px;
       border: 1px solid var(--gk-border);
-      background: rgba(255, 255, 255, 0.025);
+      background: var(--gk-card);
       transition:
         border-color 250ms ease,
         background-color 250ms ease;
     }
 
     .gk-benefit-card:hover {
-      border-color: rgba(192, 101, 43, 0.6);
-      background: rgba(192, 101, 43, 0.045);
+      border-color: rgba(192, 101, 43, 0.65);
+      background: #FFF6EF;
     }
 
     .gk-benefit-top {
@@ -722,20 +907,20 @@ const Styles = () => (
     }
 
     .gk-benefit-number {
-      color: var(--gk-accent-hover);
+      color: var(--gk-accent);
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.14em;
     }
 
     .gk-benefit-mark {
-      color: rgba(255, 255, 255, 0.5);
+      color: rgba(20, 20, 20, 0.4);
       font-size: 17px;
     }
 
     .gk-benefit-card h3 {
       margin: 0 0 10px;
-      color: var(--gk-white);
+      color: var(--gk-text);
       font-family: var(--gk-display);
       font-size: clamp(16px, 1.5vw, 20px);
       font-weight: 600;
@@ -751,7 +936,7 @@ const Styles = () => (
       line-height: 1.85;
     }
 
-    /* BRAND PARTNERSHIPS */
+    /* BRAND PARTNERSHIPS (black section) */
 
     .gk-partnerships-heading .gk-body {
       max-width: 620px;
@@ -763,38 +948,89 @@ const Styles = () => (
       line-height: 1.9;
     }
 
+    .gk-partnerships .gk-heading-wrap {
+      margin-bottom: 28px;
+    }
+
+    @media (min-width: 1024px) {
+      .gk-partnerships .gk-heading-wrap { margin-bottom: 36px; }
+    }
+
     .gk-brands-grid {
+      --gk-logo-h: 58px;
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      align-items: center;
-      gap: 30px;
+      align-items: stretch;
+      gap: 16px;
     }
 
     .gk-brand-item {
       display: flex;
       min-width: 0;
-      min-height: 115px;
+      min-height: 150px;
       align-items: center;
       justify-content: center;
-      padding: 12px 18px;
-      border: 1px solid transparent;
+      padding: 28px 24px;
+      border: 1px solid var(--gk-border);
+      background: rgba(255, 255, 255, 0.035);
       transition:
         border-color 250ms ease,
         background-color 250ms ease;
     }
 
     .gk-brand-item:hover {
-      border-color: var(--gk-border);
-      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(224, 138, 79, 0.7);
+      background: rgba(255, 255, 255, 0.07);
     }
 
+    /* normalised logo: crop ho chuka hai, isliye har logo
+       barabar height / balanced width mein aata hai */
     .gk-brand-logo {
       display: block;
-      width: 100%;
-      max-width: 205px;
-      height: 88px;
+      width: min(82%, calc(var(--gk-logo-h) * var(--gk-ar, 2.4)));
+      height: auto;
+      max-height: calc(var(--gk-logo-h) * 1.15);
       object-fit: contain;
-      object-position: center;
+      opacity: 0.92;
+      transition: opacity 250ms ease, transform 250ms ease;
+    }
+
+    .gk-brand-item:hover .gk-brand-logo {
+      opacity: 1;
+      transform: scale(1.04);
+    }
+
+    .gk-brand-skeleton {
+      display: block;
+      width: 55%;
+      height: 14px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* fallback (agar canvas image process na kar sake) */
+    .gk-brand-logo-fallback {
+      width: 100%;
+      max-width: 190px;
+      height: var(--gk-logo-h);
+      object-fit: contain;
+      filter: grayscale(1) invert(1) brightness(1.8) contrast(1.6);
+      mix-blend-mode: screen;
+      opacity: 1;
+    }
+
+    /* "original" mode: white tile par asli rang ke logos */
+    .gk-brands-grid[data-logo-mode="original"] .gk-brand-item {
+      border-color: transparent;
+      background: #FFFFFF;
+    }
+
+    .gk-brands-grid[data-logo-mode="original"] .gk-brand-logo-original {
+      width: 100%;
+      max-width: 190px;
+      height: var(--gk-logo-h);
+      object-fit: contain;
+      opacity: 1;
     }
 
     /* TABLET */
@@ -827,17 +1063,13 @@ const Styles = () => (
       }
 
       .gk-brands-grid {
+        --gk-logo-h: 52px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
       }
 
       .gk-brand-item {
-        min-height: 110px;
-      }
-
-      .gk-brand-logo {
-        max-width: 190px;
-        height: 82px;
+        min-height: 128px;
       }
     }
 
@@ -849,7 +1081,7 @@ const Styles = () => (
         line-height: 1.85;
       }
 
-      /* SERVICES (Home.jsx jaisa 2 columns, gap-3) */
+      /* SERVICES (2 columns, gap-3) */
 
       .gk-services-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -959,18 +1191,14 @@ const Styles = () => (
       }
 
       .gk-brands-grid {
+        --gk-logo-h: 42px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 9px;
       }
 
       .gk-brand-item {
-        min-height: 100px;
-        padding: 10px;
-      }
-
-      .gk-brand-logo {
-        max-width: 150px;
-        height: 75px;
+        min-height: 104px;
+        padding: 20px 14px;
       }
     }
 
@@ -1013,12 +1241,13 @@ const Styles = () => (
         font-size: 10.5px;
       }
 
-      .gk-brand-item {
-        min-height: 85px;
+      .gk-brands-grid {
+        --gk-logo-h: 36px;
       }
 
-      .gk-brand-logo {
-        height: 65px;
+      .gk-brand-item {
+        min-height: 92px;
+        padding: 16px 10px;
       }
     }
 
@@ -1035,7 +1264,7 @@ const Styles = () => (
       .gk-service-arrow,
       .gk-service-card,
       .gk-benefit-card,
-      .gk-brand-item {
+      .gk-brand-logo {
         transition: none !important;
       }
     }

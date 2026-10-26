@@ -1,7 +1,7 @@
 // Kitchen.jsx
 // Install: npm i lucide-react
 // Needs: Tailwind CSS, ../assets/kitchen.mp4 (sirf hero background), ../assets/kitchen1.webp ... kitchen50.webp
-// Hero background: ab image nahi, kitchen.mp4 video (muted, loop, autoplay) heading ke peeche chalti hai
+// THEME: hero = video (dark overlay, white text) | products = WHITE | preview viewer = BLACK
 // Font: Montserrat (logo jaisa) -> Styles ke andar auto import hai
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -251,7 +251,7 @@ const FirstScreen = ({ onExplore }) => (
 );
 
 /* =========================================================
-  4. INQUIRY MODAL
+  4. INQUIRY MODAL  (white card)
 ========================================================= */
 function InquiryModal({ product, onClose }) {
   const [form, setForm] = useState({ name: "", phone: "", city: "" });
@@ -294,14 +294,14 @@ Please share more details and available options.
   };
 
   const inputCls =
-    "w-full rounded-lg border border-white/15 bg-white/[0.04] px-4 py-3.5 font-sans text-sm text-white outline-none transition duration-200 placeholder:text-white/35 focus:border-[#C0652B] focus:ring-2 focus:ring-[#C0652B]/20";
+    "w-full rounded-lg border border-black/15 bg-neutral-50 px-4 py-3.5 font-sans text-sm text-neutral-900 outline-none transition duration-200 placeholder:text-neutral-400 focus:border-[#C0652B] focus:bg-white focus:ring-2 focus:ring-[#C0652B]/20";
 
   const labelCls =
-    "mb-2 block font-sans text-[11px] font-medium uppercase tracking-[0.16em] text-white/60";
+    "mb-2 block font-sans text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-600";
 
   return (
     <div
-      className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -309,16 +309,16 @@ Please share more details and available options.
       <div
         role="dialog"
         aria-modal="true"
-        className="relative max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-md border border-white/10 bg-[#0F0E0D] shadow-[0_30px_80px_rgba(0,0,0,0.6)]"
+        className="gk-light relative max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-md border border-black/10 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
       >
-        <div className="relative overflow-hidden border-b border-white/10 px-5 py-6 sm:px-8 sm:py-7">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#C0652B] opacity-[0.12] blur-3xl" />
+        <div className="relative overflow-hidden border-b border-black/10 px-5 py-6 sm:px-8 sm:py-7">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#C0652B] opacity-[0.1] blur-3xl" />
 
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/80 transition hover:bg-white/10 hover:text-white"
+            className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-black/15 text-neutral-700 transition hover:bg-black/5 hover:text-black"
           >
             <X size={17} />
           </button>
@@ -388,7 +388,7 @@ Please share more details and available options.
             />
           </button>
 
-          <p className="mt-3 text-center font-sans text-[11px] leading-5 text-white/40">
+          <p className="mt-3 text-center font-sans text-[11px] leading-5 text-neutral-500">
             Your inquiry will be sent directly to our WhatsApp.
           </p>
         </form>
@@ -398,7 +398,7 @@ Please share more details and available options.
 }
 
 /* =========================================================
-  5. PREVIEW (image + title + description, koi arrows nahi)
+  5. PREVIEW (BLACK viewer: image + title + description)
 ========================================================= */
 const Preview = ({ product, onClose, onInquiry }) => {
   useEffect(() => {
@@ -418,7 +418,7 @@ const Preview = ({ product, onClose, onInquiry }) => {
 
   return (
     <div
-      className="kt-preview fixed inset-0 z-[110] flex flex-col bg-[#070707] lg:flex-row"
+      className="kt-preview fixed inset-0 z-[110] flex flex-col bg-black lg:flex-row"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -480,7 +480,7 @@ const Preview = ({ product, onClose, onInquiry }) => {
 const ProductCard = ({ product, index, onPreview, onInquiry }) => (
   <Reveal delay={(index % 4) * 80} className="h-full">
     <article className="kt-product group">
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#171513]">
+      <div className="relative aspect-[4/5] overflow-hidden bg-neutral-200">
         <img
           src={product.image}
           alt={product.title}
@@ -489,8 +489,6 @@ const ProductCard = ({ product, index, onPreview, onInquiry }) => (
           onClick={() => onPreview(product)}
           className="h-full w-full cursor-zoom-in object-cover transition-transform duration-700 group-hover:scale-[1.05]"
         />
-
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 to-transparent" />
 
         {/* crop icon (top left) -> full preview */}
         <button
@@ -510,8 +508,8 @@ const ProductCard = ({ product, index, onPreview, onInquiry }) => (
           {product.description}
         </p>
 
-        <p className="mt-3 flex items-center gap-2 font-sans text-[10.5px] font-medium tracking-wide text-white/55 sm:text-xs">
-          <Truck size={14} strokeWidth={1.6} className="shrink-0 text-[#E08A4F]" />
+        <p className="mt-3 flex items-center gap-2 font-sans text-[10.5px] font-medium tracking-wide text-neutral-600 sm:text-xs">
+          <Truck size={14} strokeWidth={1.6} className="shrink-0 text-[#C0652B]" />
           <span className="truncate">{product.deliveryText || DELIVERY_TEXT}</span>
         </p>
 
@@ -648,14 +646,14 @@ const Products = ({ products, onPreview, onInquiry }) => {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-5 border-t border-white/10 pt-6 sm:mt-12 sm:flex-row">
-          <p className="font-sans text-xs font-light tracking-wide text-white/50 sm:text-sm">
+        <div className="mt-10 flex flex-col items-center justify-between gap-5 border-t border-black/10 pt-6 sm:mt-12 sm:flex-row">
+          <p className="font-sans text-xs font-light tracking-wide text-neutral-500 sm:text-sm">
             Showing{" "}
-            <span className="font-medium text-white">
+            <span className="font-semibold text-neutral-900">
               {products.length === 0 ? 0 : startIndex + 1}–{endIndex}
             </span>{" "}
             of{" "}
-            <span className="font-medium text-white">{products.length}</span>{" "}
+            <span className="font-semibold text-neutral-900">{products.length}</span>{" "}
             designs
           </p>
 
@@ -683,8 +681,7 @@ const Styles = () => (
       --gk-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
       --gk-accent: #C0652B;
       --gk-accent-soft: #E08A4F;
-
-      /* Video position: 0% = upar, 50% = beech, 100% = neeche */
+      --gk-ink: #141414;
     }
 
     /* Tailwind "font-sans" bhi Montserrat use kare */
@@ -697,8 +694,12 @@ const Styles = () => (
       font-weight: 500;
       letter-spacing: 0.32em;
       text-transform: uppercase;
-      color: var(--gk-accent-soft);
+      color: var(--gk-accent-soft); /* hero + black preview */
     }
+
+    /* white areas par darker orange (readable) */
+    .kt-content .gk-eyebrow,
+    .gk-light .gk-eyebrow { color: var(--gk-accent); font-weight: 600; }
 
     @media (max-width: 640px) {
       .gk-eyebrow { font-size: 10px; letter-spacing: 0.24em; }
@@ -727,7 +728,7 @@ const Styles = () => (
     .gk-h2 {
       font-family: var(--gk-display);
       font-weight: 700;
-      color: #fff;
+      color: var(--gk-ink);
       line-height: 1.25;
       letter-spacing: 0.03em;
       text-transform: uppercase;
@@ -761,12 +762,16 @@ const Styles = () => (
 
     @media (min-width: 1024px) { .gk-body { font-size: 16px; } }
 
+    /* white modal overrides */
+    .gk-light .gk-h3 { color: var(--gk-ink); }
+    .gk-light .gk-body { color: rgba(20,20,20,0.68); }
+
     .kt-section-text {
       font-family: var(--gk-sans);
       font-weight: 400;
       font-size: 13.5px;
       line-height: 1.7;
-      color: rgba(255,255,255,0.72);
+      color: rgba(20,20,20,0.68);
     }
 
     @media (min-width: 640px) { .kt-section-text { font-size: 14.5px; } }
@@ -776,7 +781,7 @@ const Styles = () => (
       font-weight: 400;
       font-size: 11.5px;
       line-height: 1.6;
-      color: rgba(255,255,255,0.65);
+      color: rgba(20,20,20,0.64);
     }
 
     @media (min-width: 640px) { .kt-card-desc { font-size: 13.5px; } }
@@ -806,7 +811,7 @@ const Styles = () => (
     .gk-btn-solid { background: var(--gk-accent); }
     .gk-btn-solid:hover { background: #D2743A; }
 
-    /* ---------- FIRST SCREEN: hero = 100% screen ---------- */
+    /* ---------- FIRST SCREEN: hero = 100% screen (video, dark overlay) ---------- */
     .kt-first {
       display: flex;
       flex-direction: column;
@@ -840,7 +845,7 @@ const Styles = () => (
       height: 100%;
       object-fit: cover;
       object-position: center;
-      opacity: 0.85;
+      opacity: 0.9;
       pointer-events: none;
       background: #0A0A0A;
     }
@@ -852,9 +857,9 @@ const Styles = () => (
       z-index: -2;
       pointer-events: none;
       background:
-        radial-gradient(ellipse 70% 55% at 50% 50%, rgba(10,10,10,0.55), transparent 80%),
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,0.22), transparent 60%),
-        linear-gradient(180deg, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.50) 40%, rgba(10,10,10,0.62) 75%, #0A0A0A 100%);
+        radial-gradient(ellipse 70% 55% at 50% 50%, rgba(10,10,10,0.5), transparent 80%),
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,0.18), transparent 60%),
+        linear-gradient(180deg, rgba(10,10,10,0.7) 0%, rgba(10,10,10,0.42) 40%, rgba(10,10,10,0.5) 100%);
     }
 
     .kt-hero-glow {
@@ -913,23 +918,28 @@ const Styles = () => (
       .kt-hero { padding-top: 6rem; padding-bottom: 2rem; }
     }
 
-    /* ---------- Product card ---------- */
+    /* ---------- Product card (white) ---------- */
     .kt-product {
       display: flex;
       flex-direction: column;
       height: 100%;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(20,20,20,0.12);
       border-radius: 4px;
-      background: #141211;
-      transition: border-color .4s ease, transform .4s ease;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(20,20,20,0.04);
+      transition: border-color .4s ease, transform .4s ease, box-shadow .4s ease;
     }
 
-    .kt-product:hover { border-color: rgba(192,101,43,0.5); transform: translateY(-3px); }
+    .kt-product:hover {
+      border-color: rgba(192,101,43,0.55);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 32px rgba(20,20,20,0.1);
+    }
 
     .kt-card-title {
       font-family: var(--gk-display);
-      color: #fff;
+      color: var(--gk-ink);
       line-height: 1.3;
       font-weight: 700;
       text-transform: uppercase;
@@ -951,7 +961,7 @@ const Styles = () => (
       height: 36px;
       border-radius: 999px;
       background: rgba(10,10,10,0.65);
-      border: 1px solid rgba(255,255,255,0.25);
+      border: 1px solid rgba(255,255,255,0.3);
       color: #fff;
       backdrop-filter: blur(6px);
       transition: background-color .3s ease, border-color .3s ease, transform .3s ease;
@@ -988,7 +998,7 @@ const Styles = () => (
       .kt-inquiry { font-size: 11.5px; padding: 13px 14px; letter-spacing: 0.1em; }
     }
 
-    /* ---------- PAGINATION ---------- */
+    /* ---------- PAGINATION (light) ---------- */
     .kt-pagination {
       display: flex;
       flex-wrap: wrap;
@@ -1005,11 +1015,11 @@ const Styles = () => (
       align-items: center;
       justify-content: center;
       gap: 6px;
-      border: 1px solid rgba(255,255,255,.16);
+      border: 1px solid rgba(20,20,20,.18);
       border-radius: 999px;
-      background: rgba(255,255,255,.025);
+      background: #fff;
       padding: 0 13px;
-      color: rgba(255,255,255,.7);
+      color: rgba(20,20,20,.75);
       font-family: var(--gk-sans);
       font-size: 12px;
       font-weight: 500;
@@ -1021,21 +1031,21 @@ const Styles = () => (
 
     .kt-page-number:hover,
     .kt-page-arrow:not(:disabled):hover {
-      color: #fff;
+      color: var(--gk-accent);
       border-color: var(--gk-accent);
-      background: rgba(192,101,43,.15);
+      background: rgba(192,101,43,.08);
     }
 
     .kt-page-number.is-active {
       color: #fff;
-      border-color: var(--gk-accent);
-      background: var(--gk-accent);
-      box-shadow: 0 4px 18px rgba(192,101,43,.2);
+      border-color: var(--gk-ink);
+      background: var(--gk-ink);
+      box-shadow: 0 4px 18px rgba(20,20,20,.18);
     }
 
     .kt-page-arrow:disabled {
       cursor: not-allowed;
-      opacity: .3;
+      opacity: .35;
     }
 
     @media (max-width: 400px) {
@@ -1048,7 +1058,7 @@ const Styles = () => (
       }
     }
 
-    /* ---------- Close button (preview + video popup) ---------- */
+    /* ---------- Close button (black preview viewer) ---------- */
     .kt-ctrl {
       display: flex; align-items: center; justify-content: center;
       width: 40px; height: 40px; border-radius: 999px;
@@ -1074,7 +1084,7 @@ const Styles = () => (
       max-height: 48vh;
       overflow-y: auto;
       padding: 1.5rem 1.25rem 1.75rem;
-      background: #0F0E0D;
+      background: #0A0A0A;
       border-top: 1px solid rgba(255,255,255,0.1);
     }
 
@@ -1095,11 +1105,16 @@ const Styles = () => (
       }
     }
 
-    /* products hero ke foran baad, scroll karne par show hote hain */
+    /* products hero ke foran baad, scroll karne par show hote hain (WHITE) */
     .kt-content {
       position: relative;
       z-index: 10;
-      background: #0A0A0A;
+      background: #fff;
+      color: var(--gk-ink);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .kt-product, .kt-lb-img { animation: none; transition: none; }
     }
   `}</style>
 );
@@ -1161,7 +1176,7 @@ export default function Kitchen() {
   };
 
   return (
-    <main className="bg-[#0A0A0A] text-white">
+    <main className="bg-white text-[#141414]">
       <Styles />
 
       <FirstScreen onExplore={scrollToProducts} />

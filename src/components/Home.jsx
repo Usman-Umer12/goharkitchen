@@ -18,6 +18,25 @@ const WHATSAPP_TEXT =
 const SLIDE_MS = 6500;
 
 /* =========================================================
+   THEME
+   Hero = images (dark overlay, white text)
+   Collections = WHITE section, dark text
+========================================================= */
+
+const BG_MAIN = "#FFFFFF";
+const BG_SECTION = "#FFFFFF";
+const INK = "#141414";
+
+/* =========================================================
+   HERO IMAGE DARKNESS
+   HERO_BRIGHTNESS : 1 = original, kam karo to image dark hogi
+   HERO_OVERLAY    : 0 se 1 tak, zyada karo to image dark hogi
+========================================================= */
+
+const HERO_BRIGHTNESS = 0.92;
+const HERO_OVERLAY = 0.22;
+
+/* =========================================================
    SLIDER DATA
 ========================================================= */
 
@@ -33,7 +52,7 @@ const slides = [
       </>
     ),
     description:
-      "Transform your kitchen with thoughtfully planned layouts, premium materials and refined craftsmanship. Every detail is tailored to your home, your needs and your lifestyle.",
+      "Thoughtful layouts, premium materials and refined craftsmanship, tailored to your home and the way you live.",
     url: "/kitchen",
   },
   {
@@ -47,7 +66,7 @@ const slides = [
       </>
     ),
     description:
-      "Discover made-to-measure wardrobes that combine intelligent storage, elegant finishes and practical details to bring lasting style to your everyday routine.",
+      "Made-to-measure wardrobes that combine smart storage, elegant finishes and practical details for everyday ease.",
     url: "/wordrobe",
   },
   {
@@ -61,7 +80,7 @@ const slides = [
       </>
     ),
     description:
-      "Create a more inviting bedroom with beautifully designed beds and statement headboards, crafted to balance everyday comfort with sophisticated style.",
+      "Beautifully crafted beds and statement headboards that bring comfort and sophisticated style to your bedroom.",
     url: "/bedroom-walls",
   },
   {
@@ -75,7 +94,7 @@ const slides = [
       </>
     ),
     description:
-      "Bring your living space together with bespoke media walls featuring integrated storage, refined textures and carefully considered contemporary detailing.",
+      "Bespoke media walls with integrated storage, refined textures and clean contemporary detailing.",
     url: "/media-walls",
   },
 ];
@@ -87,28 +106,28 @@ const slides = [
 const collections = [
   {
     title: "Bespoke Kitchens",
-    text: "Custom kitchen solutions featuring practical layouts, quality materials and beautifully considered finishes.",
+    text: "Custom kitchens with practical layouts, quality materials and carefully considered finishes.",
     image: des2,
     url: "/kitchen",
     tag: "01",
   },
   {
     title: "Custom Wardrobes",
-    text: "Personalised wardrobe designs with considered storage, elegant finishes and functional detailing.",
+    text: "Personalised wardrobes with smart storage, elegant finishes and functional detailing.",
     image: des3,
     url: "/wordrobe",
     tag: "02",
   },
   {
     title: "Luxury Beds",
-    text: "Distinctive wooden and upholstered beds designed to bring comfort, character and balance to your bedroom.",
+    text: "Wooden and upholstered beds designed to bring comfort, character and balance to your bedroom.",
     image: des1,
     url: "/bedroom-walls",
     tag: "03",
   },
   {
     title: "Media Walls",
-    text: "Contemporary feature walls and TV units that bring storage, texture and visual harmony into your living space.",
+    text: "Contemporary feature walls and TV units that blend storage, texture and visual harmony.",
     image: des4,
     url: "/media-walls",
     tag: "04",
@@ -174,15 +193,17 @@ const Reveal = ({ children, delay = 0, className = "" }) => {
 
 /* =========================================================
    SECTION HEADING
+   (HomeExtras.jsx ke headings isi size / position par hain)
 ========================================================= */
 
 const Eyebrow = ({ children }) => (
   <div className="mb-4 sm:mb-6">
-    <h2 className="text-[20px] font-semibold uppercase tracking-[0.02em] text-white sm:text-[24px] md:text-[28px] lg:text-[30px]">
+    <h2 className="text-[20px] font-semibold uppercase tracking-[0.02em] text-[#141414] sm:text-[24px] md:text-[28px] lg:text-[30px]">
       {children}
     </h2>
   </div>
 );
+
 /* =========================================================
    MAIN COMPONENT
 ========================================================= */
@@ -201,16 +222,18 @@ const Home = () => {
   const slide = slides[currentSlide];
 
   return (
-    <main className="gk-home min-h-screen overflow-x-clip bg-[#090909] text-white antialiased">
-
+    <main
+      className="gk-home min-h-screen overflow-x-clip antialiased"
+      style={{ backgroundColor: BG_MAIN, color: INK }}
+    >
       {/* =====================================================
-          HERO SLIDER
+          HERO SLIDER (images + dark overlay, white text)
       ====================================================== */}
 
       <section
         id="home"
         aria-label="Featured interior collections"
-        className="relative isolate flex h-[75svh] min-h-[680px] max-h-[820px] w-full overflow-hidden bg-[#080808] max-sm:h-[88svh] max-sm:min-h-[660px] max-sm:max-h-[800px]"
+        className="relative isolate flex h-[75svh] min-h-[680px] max-h-[820px] w-full overflow-hidden bg-[#1A1816] text-white max-sm:h-[88svh] max-sm:min-h-[660px] max-sm:max-h-[800px]"
       >
         {/* Slider images */}
 
@@ -235,26 +258,26 @@ const Home = () => {
                   currentSlide === index
                     ? "gkSlowZoom 8s ease-out forwards"
                     : "none",
+                filter: `brightness(${HERO_BRIGHTNESS}) saturate(1.06)`,
               }}
             />
           </div>
         ))}
 
-        {/* Image contrast */}
+        {/* Image darkening (thora sa dark) */}
 
-        <div className="absolute inset-0 z-20 bg-black/20" />
+        <div
+          className="absolute inset-0 z-20"
+          style={{ backgroundColor: `rgba(0, 0, 0, ${HERO_OVERLAY})` }}
+        />
 
         {/* Navbar and logo contrast */}
 
-        <div className="absolute inset-x-0 top-0 z-20 h-[52%] bg-gradient-to-b from-black/85 via-black/45 to-transparent sm:h-[48%] sm:from-black/65 sm:via-black/25" />
+        <div className="absolute inset-x-0 top-0 z-20 h-[40%] bg-gradient-to-b from-black/50 via-black/18 to-transparent sm:h-[34%] sm:from-black/40 sm:via-black/12" />
 
         {/* Main content contrast */}
 
-        <div className="absolute inset-0 z-20 bg-gradient-to-t from-[#080808]/90 via-black/25 to-transparent sm:bg-gradient-to-r sm:from-black/75 sm:via-black/40 sm:to-black/5" />
-
-        {/* Bottom transition */}
-
-        <div className="absolute inset-x-0 bottom-0 z-20 h-32 bg-gradient-to-t from-[#090909] via-[#090909]/45 to-transparent" />
+        <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/55 via-black/8 to-transparent sm:bg-gradient-to-r sm:from-black/48 sm:via-black/14 sm:to-transparent" />
 
         {/* Hero content */}
 
@@ -267,16 +290,16 @@ const Home = () => {
             <div className="mb-5 flex items-center gap-3 sm:mb-6 sm:gap-4">
               <span className="h-px w-8 shrink-0 bg-[#C0652B] sm:w-12" />
 
-              <span className="text-[10px] font-semibold uppercase leading-none tracking-[0.2em] text-[#F1B58A] sm:text-xs sm:tracking-[0.24em]">
+              <span className="text-[11px] font-semibold uppercase leading-none tracking-[0.2em] text-[#F6C39C] sm:text-xs sm:tracking-[0.24em]">
                 {slide.category}
               </span>
             </div>
 
-            <h1 className="max-w-[820px] text-[clamp(30px,8vw,40px)] font-semibold leading-[1.12] tracking-[-0.03em] text-white [text-shadow:0_3px_25px_rgba(0,0,0,0.65)] sm:text-[46px] md:text-[54px] lg:text-[60px] xl:text-[66px]">
+            <h1 className="max-w-[820px] text-[clamp(30px,8vw,40px)] font-semibold leading-[1.14] tracking-[-0.025em] text-white [text-shadow:0_3px_25px_rgba(0,0,0,0.55)] sm:text-[46px] md:text-[54px] lg:text-[60px] xl:text-[66px]">
               {slide.title}
             </h1>
 
-            <p className="mt-5 max-w-[340px] text-[13px] font-normal leading-[1.85] text-white/90 [text-shadow:0_2px_12px_rgba(0,0,0,0.8)] sm:mt-6 sm:max-w-[520px] sm:text-[14.5px] md:max-w-[590px] lg:text-[15.5px] lg:leading-[1.9]">
+            <p className="mt-5 max-w-[340px] text-[14px] font-normal leading-[1.8] text-white/95 [text-shadow:0_2px_12px_rgba(0,0,0,0.7)] sm:mt-6 sm:max-w-[500px] sm:text-[15px] md:max-w-[560px] lg:text-[16px] lg:leading-[1.85]">
               {slide.description}
             </p>
 
@@ -285,7 +308,7 @@ const Home = () => {
             <div className="mt-7 flex w-full max-w-[340px] flex-row items-center gap-2.5 sm:mt-9 sm:max-w-none sm:gap-4">
               <a
                 href={slide.url}
-                className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#C0652B] bg-[#C0652B] px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-white transition-colors duration-200 hover:border-[#D77B43] hover:bg-[#D77B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7A477] focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.1em]"
+                className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#C0652B] bg-[#C0652B] px-3 py-3 text-center text-[10.5px] font-semibold uppercase tracking-[0.08em] text-white transition-colors duration-200 hover:border-[#D77B43] hover:bg-[#D77B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7A477] focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11.5px] sm:tracking-[0.1em]"
               >
                 <span className="sm:hidden">Explore</span>
                 <span className="hidden sm:inline">
@@ -300,7 +323,7 @@ const Home = () => {
 
               <a
                 href="/contact"
-                className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/55 bg-black/40 px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-md transition-colors duration-200 hover:border-white hover:bg-white hover:text-[#111111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.1em]"
+                className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/60 bg-black/35 px-3 py-3 text-center text-[10.5px] font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-md transition-colors duration-200 hover:border-white hover:bg-white hover:text-[#111111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:min-h-[53px] sm:flex-none sm:gap-3 sm:px-8 sm:text-[11.5px] sm:tracking-[0.1em]"
               >
                 <span className="sm:hidden">Get Quote</span>
                 <span className="hidden sm:inline">
@@ -329,7 +352,7 @@ const Home = () => {
               className="flex h-7 min-w-7 items-center justify-center px-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               <span
-                className={`relative block h-[2px] overflow-hidden rounded-full bg-white/40 transition-[width] duration-500 ${
+                className={`relative block h-[2px] overflow-hidden rounded-full bg-white/45 transition-[width] duration-500 ${
                   currentSlide === index
                     ? "w-10 sm:w-12"
                     : "w-5 sm:w-6"
@@ -352,32 +375,29 @@ const Home = () => {
         {/* Slide count */}
 
         <div
-          className="absolute bottom-8 right-5 z-40 flex items-center text-[10px] font-medium tracking-[0.18em] text-white/65 sm:bottom-9 sm:right-8 sm:text-[11px] lg:right-12 xl:right-16"
+          className="absolute bottom-8 right-5 z-40 flex items-center text-[10.5px] font-medium tracking-[0.18em] text-white/75 sm:bottom-9 sm:right-8 sm:text-[11.5px] lg:right-12 xl:right-16"
           aria-live="polite"
           aria-label={`Slide ${currentSlide + 1} of ${slides.length}`}
         >
-          <span className="text-white">
-            0{currentSlide + 1}
-          </span>
+          <span className="text-white">0{currentSlide + 1}</span>
 
-          <span className="mx-2 text-white/35">/</span>
+          <span className="mx-2 text-white/40">/</span>
 
           <span>0{slides.length}</span>
         </div>
       </section>
 
       {/* =====================================================
-          DISCOVER OUR COLLECTIONS
-          No marquee, no secondary heading, no description.
+          DISCOVER OUR COLLECTIONS  (WHITE)
           Desktop: 4 columns | Mobile: 2 columns
       ====================================================== */}
 
       <section
         id="collections"
-        className="bg-[#0E0D0C] py-14 sm:py-18 lg:py-24"
+        className="py-14 sm:py-18 lg:py-24"
+        style={{ backgroundColor: BG_SECTION }}
       >
         <div className="w-full px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-20">
-
           {/* Section heading only */}
 
           <Reveal>
@@ -390,47 +410,42 @@ const Home = () => {
 
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
             {collections.map((collection, index) => (
-              <Reveal
-                key={collection.title}
-                delay={index * 70}
-              >
+              <Reveal key={collection.title} delay={index * 70}>
                 <a
                   href={collection.url}
                   aria-label={`Explore ${collection.title}`}
-                  className="group relative block h-[240px] overflow-hidden rounded-[4px] bg-[#181614] outline-none focus-visible:ring-2 focus-visible:ring-[#C0652B] focus-visible:ring-offset-4 focus-visible:ring-offset-[#0E0D0C] sm:h-[320px] lg:h-[clamp(400px,28vw,520px)]"
+                  className="group relative block h-[240px] overflow-hidden rounded-[4px] bg-[#E9E5E0] outline-none focus-visible:ring-2 focus-visible:ring-[#C0652B] focus-visible:ring-offset-4 focus-visible:ring-offset-white sm:h-[320px] lg:h-[clamp(400px,28vw,520px)]"
                 >
                   <img
                     src={collection.image}
                     alt={collection.title}
                     loading="lazy"
-                    className="h-full w-full object-cover object-center transition-transform duration-1000 ease-out motion-safe:group-hover:scale-[1.04]"
+                    className="h-full w-full object-cover object-center brightness-[1.08] saturate-[1.05] transition-transform duration-1000 ease-out motion-safe:group-hover:scale-[1.04]"
                   />
 
-                  {/* Card overlay */}
+                  {/* Card overlay (text readable on image) */}
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/5 transition-colors duration-500 group-hover:from-black/95" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent transition-colors duration-500 group-hover:from-black/75" />
 
                   {/* Collection number */}
 
-                  <div className="absolute left-3 top-3 text-[13px] font-medium tracking-[0.08em] text-white/85 sm:left-5 sm:top-5 sm:text-[15px]">
+                  <div className="absolute left-3 top-3 text-[13px] font-medium tracking-[0.08em] text-white/90 [text-shadow:0_1px_8px_rgba(0,0,0,0.6)] sm:left-5 sm:top-5 sm:text-[15px]">
                     {collection.tag}
                   </div>
 
                   {/* Card content */}
 
-                  <div className="absolute inset-x-0 bottom-0 p-3 sm:p-5">
-                    <h3 className="text-[15px] font-semibold leading-tight tracking-[-0.01em] text-white sm:text-[20px] lg:text-[22px]">
+                  <div className="absolute inset-x-0 bottom-0 p-3 pb-4 sm:p-5 sm:pb-6">
+                    <h3 className="text-[15px] font-semibold leading-tight tracking-[-0.01em] text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.65)] sm:text-[20px] lg:text-[22px]">
                       {collection.title}
                     </h3>
 
-                    <p className="mt-2 hidden text-[12px] font-normal leading-[1.7] text-white/75 sm:line-clamp-3 sm:block">
+                    <p className="mt-2 hidden text-[12.5px] font-normal leading-[1.7] text-white/95 [text-shadow:0_1px_10px_rgba(0,0,0,0.7)] sm:line-clamp-3 sm:block">
                       {collection.text}
                     </p>
 
-                    <div className="mt-3 inline-flex items-center gap-2 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white sm:mt-4 sm:gap-3 sm:text-[11px] sm:tracking-[0.16em]">
-                      <span className="sm:hidden">
-                        Explore
-                      </span>
+                    <div className="mt-3 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white sm:mt-4 sm:gap-3 sm:text-[11px] sm:tracking-[0.16em]">
+                      <span className="sm:hidden">Explore</span>
 
                       <span className="hidden sm:inline">
                         Explore Collection
@@ -445,7 +460,7 @@ const Home = () => {
 
                   {/* Accent line */}
 
-                  <span className="absolute bottom-0 left-3 h-[2px] w-8 bg-[#C0652B] transition-all duration-500 group-hover:w-14 sm:left-5" />
+                  <span className="absolute bottom-0 left-3 h-[3px] w-8 bg-[#C0652B] transition-all duration-500 group-hover:w-14 sm:left-5" />
                 </a>
               </Reveal>
             ))}
@@ -465,7 +480,7 @@ const Home = () => {
         rel="noopener noreferrer"
         aria-label="Chat with Gohar Kitchen Interior on WhatsApp"
         title="Chat with us on WhatsApp"
-        className="fixed bottom-5 right-4 z-50 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_5px_25px_rgba(0,0,0,0.4)] transition-colors duration-200 hover:bg-[#20BA5A] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/40 active:scale-95 sm:bottom-6 sm:right-6 sm:h-[58px] sm:w-[58px] lg:bottom-7 lg:right-7 lg:h-[62px] lg:w-[62px]"
+        className="fixed bottom-5 right-4 z-50 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_5px_25px_rgba(0,0,0,0.3)] transition-colors duration-200 hover:bg-[#20BA5A] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/40 active:scale-95 sm:bottom-6 sm:right-6 sm:h-[58px] sm:w-[58px] lg:bottom-7 lg:right-7 lg:h-[62px] lg:w-[62px]"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

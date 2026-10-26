@@ -334,10 +334,10 @@ Please share more details and available options.
   };
 
   const inputClass =
-    "w-full rounded-lg border border-white/15 bg-white/[0.04] px-4 py-3.5 font-sans text-sm text-white outline-none transition placeholder:text-white/35 focus:border-[#C0652B] focus:ring-2 focus:ring-[#C0652B]/20";
+    "w-full rounded-lg border border-black/15 bg-neutral-50 px-4 py-3.5 font-sans text-sm text-neutral-900 outline-none transition duration-200 placeholder:text-neutral-400 focus:border-[#C0652B] focus:bg-white focus:ring-2 focus:ring-[#C0652B]/20";
 
   const labelClass =
-    "mb-2 block font-sans text-[11px] font-medium uppercase tracking-[0.16em] text-white/60";
+    "mb-2 block font-sans text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-600";
 
   return (
     <div
@@ -350,14 +350,14 @@ Please share more details and available options.
         role="dialog"
         aria-modal="true"
         aria-label="Wardrobe inquiry form"
-        className="relative max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-md border border-white/10 bg-[#0F0E0D] shadow-2xl"
+        className="gk-light relative max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-md border border-black/10 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
       >
-        <div className="relative border-b border-white/10 px-5 py-6 sm:px-8 sm:py-7">
+        <div className="relative overflow-hidden border-b border-black/10 px-5 py-6 sm:px-8 sm:py-7">
           <button
             type="button"
             onClick={onClose}
             aria-label="Close inquiry"
-            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/80 transition hover:bg-white/10"
+            className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-black/15 text-neutral-700 transition hover:bg-black/5 hover:text-black"
           >
             <X size={17} />
           </button>
@@ -438,7 +438,7 @@ Please share more details and available options.
             <ArrowRight size={15} />
           </button>
 
-          <p className="mt-3 text-center font-sans text-[11px] leading-5 text-white/40">
+          <p className="mt-3 text-center font-sans text-[11px] leading-5 text-neutral-500">
             Your inquiry will be sent directly to our WhatsApp.
           </p>
         </form>
@@ -514,13 +514,13 @@ function Preview({ product, onClose, onInquiry }) {
         </p>
 
         {Number(product.price) > 0 && (
-          <p className="mt-4 font-sans text-base font-semibold text-[#E08A4F]">
+          <p className="mt-4 font-sans text-base font-semibold text-[#C0652B]">
             {formatPrice(product.price)}
           </p>
         )}
 
         <p className="mt-4 flex items-center gap-2 font-sans text-xs text-white/60 sm:text-[13px]">
-          <Truck size={15} className="shrink-0 text-[#E08A4F]" />
+          <Truck size={15} className="shrink-0 text-[#C0652B]" />
           {product.deliveryText || DELIVERY_TEXT}
         </p>
 
@@ -575,13 +575,13 @@ function ProductCard({ product, index, onPreview, onInquiry }) {
           </p>
 
           {Number(product.price) > 0 && (
-            <p className="mt-3 font-sans text-xs font-semibold text-[#E08A4F] sm:text-sm">
+            <p className="mt-3 font-sans text-xs font-semibold text-[#C0652B] sm:text-sm">
               {formatPrice(product.price)}
             </p>
           )}
 
-          <p className="mt-3 flex items-center gap-2 font-sans text-[10.5px] text-white/55 sm:text-xs">
-            <Truck size={14} className="shrink-0 text-[#E08A4F]" />
+          <p className="mt-3 flex items-center gap-2 font-sans text-[10.5px] text-neutral-600 sm:text-xs">
+            <Truck size={14} className="shrink-0 text-[#C0652B]" />
             <span className="truncate">
               {product.deliveryText || DELIVERY_TEXT}
             </span>
@@ -723,19 +723,19 @@ function Products({ products, onPreview, onInquiry }) {
             ))}
           </div>
         ) : (
-          <p className="py-12 text-center font-sans text-sm text-white/60">
+          <p className="py-12 text-center font-sans text-sm text-neutral-600">
             No wardrobe designs are available right now.
           </p>
         )}
 
         <div className="mt-10 flex flex-col items-center justify-between gap-5 border-t border-white/10 pt-6 sm:mt-12 sm:flex-row">
-          <p className="font-sans text-xs text-white/50 sm:text-sm">
+          <p className="font-sans text-xs text-neutral-500 sm:text-sm">
             Showing{" "}
-            <span className="font-medium text-white">
+            <span className="font-medium text-neutral-900">
               {products.length === 0 ? 0 : startIndex + 1}–{endIndex}
             </span>{" "}
             of{" "}
-            <span className="font-medium text-white">{products.length}</span>{" "}
+            <span className="font-medium text-neutral-900">{products.length}</span>{" "}
             designs
           </p>
 
@@ -754,394 +754,453 @@ function Products({ products, onPreview, onInquiry }) {
    STYLES
 ========================================================= */
 
-function Styles() {
-  return (
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+const Styles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 
-      :root {
-        --gk-display: 'Montserrat', system-ui, sans-serif;
-        --gk-sans: 'Montserrat', system-ui, sans-serif;
-        --gk-accent: #C0652B;
-        --gk-accent-soft: #E08A4F;
-      }
+    :root {
+      /* FONT FAMILY: logo jaisa Montserrat (heading, description, button sab mein) */
+      --gk-display: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --gk-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --gk-accent: #C0652B;
+      --gk-accent-soft: #E08A4F;
+      --gk-ink: #141414;
+    }
 
-      .font-sans { font-family: var(--gk-sans) !important; }
+    /* Tailwind "font-sans" bhi Montserrat use kare */
+    .font-sans { font-family: var(--gk-sans) !important; }
 
-      .gk-eyebrow {
-        font-family: var(--gk-sans);
+    /* ---------- Typography ---------- */
+    .gk-eyebrow {
+      font-family: var(--gk-sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gk-accent-soft); /* hero + black preview */
+    }
+
+    /* white areas par darker orange (readable) */
+    .kt-content .gk-eyebrow,
+    .gk-light .gk-eyebrow { color: var(--gk-accent); font-weight: 600; }
+
+    @media (max-width: 640px) {
+      .gk-eyebrow { font-size: 10px; letter-spacing: 0.24em; }
+    }
+
+    /* heading ki har line alag line mein (2 lines), kabhi wrap nahi hoti */
+    .gk-line { display: block; white-space: nowrap; }
+
+    .gk-hero-title {
+      font-family: var(--gk-display);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-size: clamp(1.35rem, 6vw, 4rem);
+    }
+
+    .gk-hero-title em {
+      font-family: var(--gk-display);
+      font-style: normal;
+      font-weight: 700;
+      color: var(--gk-accent);
+    }
+
+    .gk-h2 {
+      font-family: var(--gk-display);
+      font-weight: 700;
+      color: var(--gk-ink);
+      line-height: 1.25;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-size: clamp(1.15rem, 5.4vw, 2.6rem);
+    }
+
+    .gk-h2 em {
+      font-family: var(--gk-display);
+      font-style: normal;
+      font-weight: 700;
+      color: var(--gk-accent);
+    }
+
+    .gk-h3 {
+      font-family: var(--gk-display);
+      color: #fff;
+      line-height: 1.3;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: clamp(1.2rem, 1rem + 0.8vw, 1.55rem);
+    }
+
+    .gk-body {
+      font-family: var(--gk-sans);
+      font-weight: 400;
+      color: rgba(255,255,255,0.78);
+      line-height: 1.8;
+      font-size: 15px;
+    }
+
+    @media (min-width: 1024px) { .gk-body { font-size: 16px; } }
+
+    /* white modal overrides */
+    .gk-light .gk-h3 { color: var(--gk-ink); }
+    .gk-light .gk-body { color: rgba(20,20,20,0.68); }
+
+    .kt-section-text {
+      font-family: var(--gk-sans);
+      font-weight: 400;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: rgba(20,20,20,0.68);
+    }
+
+    @media (min-width: 640px) { .kt-section-text { font-size: 14.5px; } }
+
+    .kt-card-desc {
+      font-family: var(--gk-sans);
+      font-weight: 400;
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: rgba(20,20,20,0.64);
+    }
+
+    @media (min-width: 640px) { .kt-card-desc { font-size: 13.5px; } }
+
+    /* ---------- Buttons ---------- */
+    .gk-btn-outline,
+    .gk-btn-solid {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 50px;
+      padding: 0 30px;
+      border-radius: 999px;
+      font-family: var(--gk-sans);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+      white-space: nowrap;
+      transition: background-color .3s ease, color .3s ease, border-color .3s ease, transform .3s ease;
+    }
+
+    .gk-btn-outline { border: 1px solid rgba(255,255,255,0.35); }
+    .gk-btn-outline:hover { background: #fff; color: #0A0A0A; border-color: #fff; }
+    .gk-btn-solid { background: var(--gk-accent); }
+    .gk-btn-solid:hover { background: #D2743A; }
+
+    /* ---------- FIRST SCREEN: hero = 100% screen (video, dark overlay) ---------- */
+    .kt-first {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: #0A0A0A;
+    }
+
+    .kt-hero {
+      position: relative;
+      isolation: isolate;
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      /* top padding = navbar jagah */
+      padding: 7rem 0 3rem;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,0.28), transparent 60%),
+        radial-gradient(ellipse 60% 50% at 100% 100%, rgba(192,101,43,0.16), transparent 65%),
+        linear-gradient(180deg, #14100D 0%, #0D0B0A 55%, #0A0A0A 100%);
+    }
+
+    /* ---------- HERO BACKGROUND VIDEO ---------- */
+    .kt-hero-video {
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      opacity: 0.9;
+      pointer-events: none;
+      background: #0A0A0A;
+    }
+
+    /* dark overlay: video ke upar, text ke neeche -> heading hamesha saaf nazar aaye */
+    .kt-hero-shade {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 55% at 50% 50%, rgba(10,10,10,0.5), transparent 80%),
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,0.18), transparent 60%),
+        linear-gradient(180deg, rgba(10,10,10,0.7) 0%, rgba(10,10,10,0.42) 40%, rgba(10,10,10,0.5) 100%);
+    }
+
+    .kt-hero-glow {
+      position: absolute;
+      z-index: -1;
+      border-radius: 999px;
+      filter: blur(90px);
+      background: var(--gk-accent);
+      pointer-events: none;
+    }
+
+    .kt-hero-glow-a { left: -160px; top: 25%; width: 420px; height: 420px; opacity: 0.12; }
+    .kt-hero-glow-b { right: -180px; bottom: 5%; width: 460px; height: 460px; opacity: 0.09; }
+
+    .kt-hero-lines {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image: linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px);
+      background-size: 25% 100%;
+      -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+      mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+    }
+
+    /* video ke upar text ko soft shadow taake sharp dikhe */
+    .kt-hero .gk-hero-title { text-shadow: 0 2px 24px rgba(0,0,0,0.55); }
+    .kt-hero .gk-eyebrow { text-shadow: 0 1px 12px rgba(0,0,0,0.6); }
+
+    /* HERO DESCRIPTION - pure WHITE */
+    .kt-hero-text {
+      margin: 1.25rem auto 0;
+      max-width: 520px;
+      font-family: var(--gk-sans);
+      font-weight: 400;
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #ffffff;
+      opacity: 1;
+      text-wrap: balance;
+      text-shadow: 0 1px 14px rgba(0,0,0,0.65);
+    }
+
+    .kt-hero-btn { margin-top: 1.75rem; height: 48px; padding: 0 28px; font-size: 11.5px; letter-spacing: .12em; }
+
+    @media (max-width: 640px) {
+      .kt-hero { padding: 6.5rem 0 2.5rem; }
+      .kt-hero-lines { background-size: 50% 100%; }
+      .kt-hero-text { font-size: .88rem; line-height: 1.65; margin-top: 1rem; padding: 0 6px; max-width: 340px; }
+      .kt-hero-btn { width: auto; max-width: 100%; height: 44px; margin-top: 1.5rem; padding: 0 22px; font-size: 11px; }
+    }
+
+    /* chhoti height wali screens (landscape phones) */
+    @media (max-height: 640px) {
+      .kt-hero { padding-top: 6rem; padding-bottom: 2rem; }
+    }
+
+    /* ---------- Product card (white) ---------- */
+    .kt-product {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      border: 1px solid rgba(20,20,20,0.12);
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(20,20,20,0.04);
+      transition: border-color .4s ease, transform .4s ease, box-shadow .4s ease;
+    }
+
+    .kt-product:hover {
+      border-color: rgba(192,101,43,0.55);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 32px rgba(20,20,20,0.1);
+    }
+
+    .kt-card-title {
+      font-family: var(--gk-display);
+      color: var(--gk-ink);
+      line-height: 1.3;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: 0.78rem;
+    }
+
+    @media (min-width: 640px) { .kt-card-title { font-size: 1rem; } }
+
+    .kt-crop {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: rgba(10,10,10,0.65);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      backdrop-filter: blur(6px);
+      transition: background-color .3s ease, border-color .3s ease, transform .3s ease;
+    }
+
+    .kt-crop:hover { background: var(--gk-accent); border-color: var(--gk-accent); transform: scale(1.08); }
+
+    /* WhatsApp button - solid orange */
+    .kt-inquiry {
+      margin-top: 1rem;
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 11px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--gk-accent);
+      background: var(--gk-accent);
+      font-family: var(--gk-sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fff;
+      white-space: nowrap;
+      transition: background-color .3s ease, border-color .3s ease, transform .3s ease;
+    }
+
+    .kt-inquiry:hover { background: #D2743A; border-color: #D2743A; }
+    .kt-inquiry:active { transform: scale(0.98); }
+
+    @media (min-width: 640px) {
+      .kt-inquiry { font-size: 11.5px; padding: 13px 14px; letter-spacing: 0.1em; }
+    }
+
+    /* ---------- PAGINATION (light) ---------- */
+    .kt-pagination {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .kt-page-number,
+    .kt-page-arrow {
+      display: inline-flex;
+      min-width: 42px;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1px solid rgba(20,20,20,.18);
+      border-radius: 999px;
+      background: #fff;
+      padding: 0 13px;
+      color: rgba(20,20,20,.75);
+      font-family: var(--gk-sans);
+      font-size: 12px;
+      font-weight: 500;
+      transition:
+        color .25s ease,
+        background-color .25s ease,
+        border-color .25s ease;
+    }
+
+    .kt-page-number:hover,
+    .kt-page-arrow:not(:disabled):hover {
+      color: var(--gk-accent);
+      border-color: var(--gk-accent);
+      background: rgba(192,101,43,.08);
+    }
+
+    .kt-page-number.is-active {
+      color: #fff;
+      border-color: var(--gk-ink);
+      background: var(--gk-ink);
+      box-shadow: 0 4px 18px rgba(20,20,20,.18);
+    }
+
+    .kt-page-arrow:disabled {
+      cursor: not-allowed;
+      opacity: .35;
+    }
+
+    @media (max-width: 400px) {
+      .kt-page-number,
+      .kt-page-arrow {
+        min-width: 36px;
+        height: 38px;
+        padding: 0 9px;
         font-size: 11px;
-        font-weight: 500;
-        letter-spacing: .32em;
-        text-transform: uppercase;
-        color: var(--gk-accent-soft);
       }
+    }
 
-      .gk-line { display: block; white-space: nowrap; }
+    /* ---------- Close button (black preview viewer) ---------- */
+    .kt-ctrl {
+      display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 999px;
+      background: rgba(10,10,10,0.7);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      backdrop-filter: blur(6px);
+      transition: background-color .3s ease, color .3s ease;
+    }
 
-      .gk-hero-title, .gk-h2 {
-        font-family: var(--gk-display);
-        font-weight: 700;
-        color: #fff;
-        line-height: 1.25;
-        letter-spacing: .025em;
-        text-transform: uppercase;
-      }
+    .kt-ctrl:hover { background: #fff; color: #0A0A0A; }
 
-      .gk-hero-title { font-size: clamp(1.2rem, 5.7vw, 4rem); }
-      .gk-h2 { font-size: clamp(1.05rem, 4.8vw, 2.6rem); }
+    .kt-lb-img { animation: kt-fade .35s ease; }
 
-      .gk-hero-title em, .gk-h2 em {
-        color: var(--gk-accent);
-        font-style: normal;
-      }
+    @keyframes kt-fade {
+      from { opacity: 0; transform: scale(0.98); }
+      to   { opacity: 1; transform: scale(1); }
+    }
 
-      .gk-h3 {
-        font-family: var(--gk-display);
-        font-size: clamp(1.2rem, 1rem + .8vw, 1.55rem);
-        font-weight: 700;
-        line-height: 1.35;
-        color: #fff;
-        text-transform: uppercase;
-        letter-spacing: .025em;
-      }
+    /* details panel: mobile = neeche, desktop = right side */
+    .kt-preview-info {
+      flex: 0 0 auto;
+      max-height: 48vh;
+      overflow-y: auto;
+      padding: 1.5rem 1.25rem 1.75rem;
+      background: #0A0A0A;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
 
-      .gk-body {
-        font-family: var(--gk-sans);
-        font-size: 15px;
-        font-weight: 400;
-        line-height: 1.8;
-        color: rgba(255,255,255,.78);
-      }
+    @media (min-width: 640px) {
+      .kt-preview-info { padding: 2rem 2rem 2.25rem; }
+    }
 
-      .kt-section-text {
-        font-family: var(--gk-sans);
-        font-size: 13.5px;
-        line-height: 1.7;
-        color: rgba(255,255,255,.72);
-      }
-
-      .kt-card-desc {
-        font-family: var(--gk-sans);
-        font-size: 11.5px;
-        line-height: 1.6;
-        color: rgba(255,255,255,.65);
-      }
-
-      .gk-btn-solid, .gk-btn-outline {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        min-height: 48px;
-        padding: 0 25px;
-        border-radius: 999px;
-        font-family: var(--gk-sans);
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-        color: #fff;
-        transition: background .25s ease, color .25s ease, transform .25s ease;
-      }
-
-      .gk-btn-solid { background: var(--gk-accent); }
-      .gk-btn-solid:hover { background: #D2743A; }
-      .gk-btn-outline { border: 1px solid rgba(255,255,255,.35); }
-      .gk-btn-outline:hover { background: #fff; color: #0A0A0A; }
-
-      .kt-first {
-        display: flex;
-        min-height: 100vh;
-        min-height: 100dvh;
-        flex-direction: column;
-        background: #0A0A0A;
-      }
-
-      .kt-hero {
-        position: relative;
-        isolation: isolate;
-        display: flex;
-        flex: 1;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        padding: 7rem 0 3rem;
-        background: linear-gradient(180deg,#14100D,#0A0A0A);
-      }
-
-      /* ---------- HERO BACKGROUND VIDEO ---------- */
-      .kt-hero-video {
-        position: absolute;
-        inset: 0;
-        z-index: -3;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-        opacity: .85;
-        pointer-events: none;
-        background: #0A0A0A;
-      }
-
-      /* dark overlay: video ke upar, text ke neeche -> heading hamesha saaf nazar aaye */
-      .kt-hero-shade {
-        position: absolute;
-        inset: 0;
-        z-index: -2;
-        pointer-events: none;
-        background:
-          radial-gradient(ellipse 70% 55% at 50% 50%, rgba(10,10,10,.55), transparent 80%),
-          radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,101,43,.22), transparent 60%),
-          linear-gradient(180deg, rgba(10,10,10,.78) 0%, rgba(10,10,10,.50) 40%, rgba(10,10,10,.62) 75%, #0A0A0A 100%);
-      }
-
-      .kt-hero-glow {
-        position: absolute;
-        z-index: -1;
-        border-radius: 999px;
-        filter: blur(90px);
-        background: var(--gk-accent);
-        pointer-events: none;
-      }
-
-      .kt-hero-glow-a {
-        left: -160px; top: 25%;
-        width: 420px; height: 420px; opacity: .12;
-      }
-
-      .kt-hero-glow-b {
-        right: -180px; bottom: 5%;
-        width: 460px; height: 460px; opacity: .09;
-      }
-
-      .kt-hero-lines {
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        pointer-events: none;
-        opacity: .3;
-        background-image: linear-gradient(to right,rgba(255,255,255,.045) 1px,transparent 1px);
-        background-size: 25% 100%;
-        -webkit-mask-image: radial-gradient(ellipse at center,#000 20%,transparent 75%);
-        mask-image: radial-gradient(ellipse at center,#000 20%,transparent 75%);
-      }
-
-      /* video ke upar text ko soft shadow taake sharp dikhe */
-      .kt-hero .gk-hero-title { text-shadow: 0 2px 24px rgba(0,0,0,.55); }
-      .kt-hero .gk-eyebrow { text-shadow: 0 1px 12px rgba(0,0,0,.6); }
-
-      .kt-hero-text {
-        max-width: 520px;
-        margin: 1.25rem auto 0;
-        font-family: var(--gk-sans);
-        font-size: 1rem;
-        line-height: 1.75;
-        color: #fff;
-        text-wrap: balance;
-        text-shadow: 0 1px 14px rgba(0,0,0,.65);
-      }
-
-      .kt-hero-btn { margin-top: 1.75rem; }
-
-      .kt-product {
-        display: flex;
-        height: 100%;
-        flex-direction: column;
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,.1);
-        border-radius: 4px;
-        background: #141211;
-        transition: border-color .3s ease, transform .3s ease;
-      }
-
-      .kt-product:hover {
-        border-color: rgba(192,101,43,.5);
-        transform: translateY(-3px);
-      }
-
-      .kt-card-title {
-        font-family: var(--gk-display);
-        font-size: .78rem;
-        font-weight: 700;
-        line-height: 1.4;
-        color: #fff;
-        text-transform: uppercase;
-        letter-spacing: .025em;
-      }
-
-      .kt-crop {
-        position: absolute;
-        top: 10px; left: 10px;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 36px; height: 36px;
-        border: 1px solid rgba(255,255,255,.25);
-        border-radius: 999px;
-        background: rgba(10,10,10,.7);
-        color: #fff;
-        backdrop-filter: blur(6px);
-        transition: background .25s ease, transform .25s ease;
-      }
-
-      .kt-crop:hover {
-        background: var(--gk-accent);
-        transform: scale(1.05);
-      }
-
-      .kt-inquiry {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        margin-top: 1rem;
-        padding: 11px 8px;
-        border: 1px solid var(--gk-accent);
-        border-radius: 999px;
-        background: var(--gk-accent);
-        font-family: var(--gk-sans);
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: .07em;
-        text-transform: uppercase;
-        color: #fff;
-        white-space: nowrap;
-        transition: background .25s ease;
-      }
-
-      .kt-inquiry:hover { background: #D2743A; }
-
-      .kt-pagination {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-      }
-
-      .kt-page-number, .kt-page-arrow {
-        display: inline-flex;
-        min-width: 42px; height: 42px;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 0 13px;
-        border: 1px solid rgba(255,255,255,.16);
-        border-radius: 999px;
-        background: rgba(255,255,255,.025);
-        font-family: var(--gk-sans);
-        font-size: 12px;
-        color: rgba(255,255,255,.7);
-        transition: all .25s ease;
-      }
-
-      .kt-page-number:hover,
-      .kt-page-arrow:not(:disabled):hover {
-        color: #fff;
-        border-color: var(--gk-accent);
-        background: rgba(192,101,43,.15);
-      }
-
-      .kt-page-number.is-active {
-        color: #fff;
-        border-color: var(--gk-accent);
-        background: var(--gk-accent);
-      }
-
-      .kt-page-arrow:disabled { cursor: not-allowed; opacity: .3; }
-
-      .kt-ctrl {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px; height: 40px;
-        border: 1px solid rgba(255,255,255,.25);
-        border-radius: 999px;
-        background: rgba(10,10,10,.75);
-        color: #fff;
-        backdrop-filter: blur(6px);
-        transition: background .25s ease, color .25s ease;
-      }
-
-      .kt-ctrl:hover { background: #fff; color: #0A0A0A; }
-
+    @media (min-width: 1024px) {
       .kt-preview-info {
-        flex: 0 0 auto;
-        max-height: 48vh;
-        overflow-y: auto;
-        padding: 1.5rem 1.25rem 1.75rem;
-        border-top: 1px solid rgba(255,255,255,.1);
-        background: #0F0E0D;
+        width: 420px;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3rem 2.75rem;
+        border-top: 0;
+        border-left: 1px solid rgba(255,255,255,0.1);
       }
+    }
 
-      .kt-lb-img { animation: kt-fade .3s ease; }
-
-      @keyframes kt-fade {
-        from { opacity: 0; transform: scale(.98); }
-        to { opacity: 1; transform: scale(1); }
-      }
-
-      @media (min-width: 640px) {
-        .gk-body { font-size: 15px; }
-        .kt-section-text { font-size: 14.5px; }
-        .kt-card-desc { font-size: 13.5px; }
-        .kt-card-title { font-size: 1rem; }
-        .kt-inquiry { font-size: 11.5px; padding: 13px 14px; }
-        .kt-preview-info { padding: 2rem; }
-      }
-
-      @media (min-width: 1024px) {
-        .kt-preview-info {
-          display: flex;
-          width: 420px;
-          max-height: none;
-          flex-direction: column;
-          justify-content: center;
-          padding: 3rem 2.75rem;
-          border-top: 0;
-          border-left: 1px solid rgba(255,255,255,.1);
-        }
-      }
-
-      @media (max-width: 640px) {
-        .gk-eyebrow { font-size: 10px; letter-spacing: .22em; }
-        .kt-hero { padding: 6.5rem 0 2.5rem; }
-        .kt-hero-lines { background-size: 50% 100%; }
-        .kt-hero-text {
-          max-width: 340px;
-          margin-top: 1rem;
-          padding: 0 6px;
-          font-size: .88rem;
-          line-height: 1.65;
-        }
-        .kt-hero-btn { margin-top: 1.5rem; min-height: 44px; padding: 0 20px; }
-      }
-
-      @media (max-width: 400px) {
-        .kt-page-number, .kt-page-arrow {
-          min-width: 36px;
-          height: 38px;
-          padding: 0 9px;
-          font-size: 11px;
-        }
-      }
-
-      @media (max-height: 640px) {
-        .kt-hero { padding-top: 6rem; padding-bottom: 2rem; }
-      }
-
-    /* products hero ke foran baad, scroll karne par show hote hain */
+    /* products hero ke foran baad, scroll karne par show hote hain (WHITE) */
     .kt-content {
       position: relative;
       z-index: 10;
-      background: #0A0A0A;
+      background: #fff;
+      color: var(--gk-ink);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .kt-product, .kt-lb-img { animation: none; transition: none; }
     }
   `}</style>
-  );
-}
+);
 
 /* =========================================================
    MAIN COMPONENT
@@ -1216,7 +1275,7 @@ export default function Wordrobe() {
   };
 
   return (
-    <main className="bg-[#0A0A0A] text-white">
+    <main className="bg-white text-[#141414]">
       <Styles />
 
       <FirstScreen onExplore={scrollToProducts} />
