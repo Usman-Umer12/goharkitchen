@@ -11,6 +11,7 @@ const PAGE_SIZE = 24;
 const MAX_FILE_MB = 15;
 const MAX_WIDTH = 1800;
 const WEBP_QUALITY = 0.86;
+const DEFAULT_DELIVERY = "Delivery All Over Pakistan";
 
 /* Purani website images (sirf "Import existing images" ke liye) */
 const localGroups = [{ prefix: "v", count: 3 }];
@@ -100,6 +101,13 @@ const uploadToStorage = async (file) => {
 const isValidImage = (file) =>
   file.type.startsWith("image/") && file.size <= MAX_FILE_MB * 1024 * 1024;
 
+const formatPrice = (price) => {
+  const value = Number(price);
+  return Number.isFinite(value) && value > 0
+    ? `PKR ${value.toLocaleString("en-PK")}`
+    : "Price on request";
+};
+
 /* =========================================================
    COMPONENT
 ========================================================= */
@@ -113,10 +121,21 @@ const AdminVanities = () => {
   const [toast, setToast] = useState(null);
   const [dragOver, setDragOver] = useState(false);
 
+  /* EDIT DETAILS MODAL */
+  const [editRow, setEditRow] = useState(null);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+    delivery_text: DEFAULT_DELIVERY,
+    status: "active",
+  });
+  const [saving, setSaving] = useState(false);
+
   const fileInputRef = useRef(null);
   const toastTimer = useRef(null);
 
-  const locked = Boolean(progress) || Boolean(busyId);
+  const locked = Boolean(progress) || Boolean(busyId) || saving;
 
   const notify = useCallback((type, text) => {
     setToast({ type, text });
@@ -186,10 +205,17 @@ const AdminVanities = () => {
         const processed = await toWebp(valid[i]);
         const { path, url } = await uploadToStorage(processed);
 
+        const baseName = valid[i].name.replace(/\.[^.]+$/, "") || "";
+
         const { error } = await supabase.from(TABLE).insert({
           image_url: url,
           storage_path: path,
           alt: null,
+          title: baseName ? baseName.replace(/[-_]+/g, " ").trim() : null,
+          description: null,
+          price: 0,
+          delivery_text: DEFAULT_DELIVERY,
+          status: "active",
           sort_order: sort,
         });
 
@@ -214,7 +240,9 @@ const AdminVanities = () => {
     if (success && !lastError) {
       notify(
         "success",
-        `${success} image(s) add ho gayi.${skipped ? ` ${skipped} skip hui.` : ""}`
+        `${success} image(s) add ho gayi. Ab "Edit details" se title, price waghera bharein.${
+          skipped ? ` ${skipped} skip hui.` : ""
+        }`
       );
     } else if (success) {
       notify("error", `${success} add hui, baaki fail: ${lastError}`);
@@ -324,6 +352,78 @@ const AdminVanities = () => {
     }
   };
 
+  /* ---------- EDIT DETAILS ---------- */
+
+  const openEdit = (row) => {
+    if (locked) return;
+    setEditRow(row);
+    setForm({
+      title: row.title || "",
+      description: row.description || "",
+      price: row.price && Number(row.price) > 0 ? String(row.price) : "",
+      delivery_text: row.delivery_text || DEFAULT_DELIVERY,
+      status: row.status || "active",
+    });
+  };
+
+  const closeEdit = useCallback(() => {
+    if (!saving) setEditRow(null);
+  }, [saving]);
+
+  useEffect(() => {
+    if (!editRow) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") closeEdit();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editRow, closeEdit]);
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveDetails = async (e) => {
+    e.preventDefault();
+    if (!editRow || saving) return;
+
+    const priceNumber = form.price === "" ? 0 : Number(form.price);
+    if (!Number.isFinite(priceNumber) || priceNumber < 0) {
+      notify("error", "Price sahi number hona chahiye.");
+      return;
+    }
+
+    const title = form.title.trim();
+
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from(TABLE)
+        .update({
+          title: title || null,
+          alt: title || null,
+          description: form.description.trim() || null,
+          price: priceNumber,
+          delivery_text: form.delivery_text.trim() || DEFAULT_DELIVERY,
+          status: form.status === "hidden" ? "hidden" : "active",
+        })
+        .eq("id", editRow.id);
+
+      if (error) throw error;
+
+      setEditRow(null);
+      await load();
+      notify("success", "Details save ho gayi.");
+    } catch (err) {
+      console.error(err);
+      notify("error", `Details save nahi hui: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   /* ---------- IMPORT EXISTING WEBSITE IMAGES ---------- */
 
   const handleImportExisting = async () => {
@@ -370,6 +470,11 @@ const AdminVanities = () => {
             image_url: publicUrl,
             storage_path: path,
             alt: `Vanities ${i + 1}`,
+            title: `Vanity ${i + 1}`,
+            description: null,
+            price: 0,
+            delivery_text: DEFAULT_DELIVERY,
+            status: "active",
             sort_order: success,
           });
 
@@ -475,27 +580,60 @@ const AdminVanities = () => {
         .aa-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
         @media (min-width: 640px)  { .aa-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
         @media (min-width: 1024px) { .aa-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-        @media (min-width: 1280px) { .aa-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+        @media (min-width: 1280px) { .aa-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 
         .aa-card { overflow: hidden; border: 1px solid var(--aa-line); border-radius: 10px; background: #fff; }
+        .aa-card.is-hidden .aa-thumb img { opacity: .45; }
         .aa-thumb { position: relative; aspect-ratio: 1 / 1; background: #f3f0ec; }
         .aa-thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
         .aa-badge { position: absolute; top: 8px; left: 8px; min-width: 26px; padding: 3px 8px; border-radius: 999px; background: rgba(0,0,0,.72); color: #fff; font-size: 11px; font-weight: 600; text-align: center; }
+        .aa-status { position: absolute; top: 8px; right: 8px; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: #166534; color: #fff; }
+        .aa-status.is-hidden { background: #a16207; }
         .aa-card-busy { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.7); }
         .aa-spinner { width: 24px; height: 24px; border: 3px solid #ddd; border-top-color: var(--aa-accent); border-radius: 50%; animation: aa-spin .8s linear infinite; }
         @keyframes aa-spin { to { transform: rotate(360deg); } }
 
+        .aa-meta { padding: 10px 10px 0; }
+        .aa-meta-title { margin: 0; overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+        .aa-meta-title.is-empty { color: #a1a1aa; font-weight: 500; }
+        .aa-meta-price { margin: 3px 0 0; font-size: 12px; font-weight: 600; color: var(--aa-accent); }
+        .aa-meta-delivery { margin: 3px 0 0; overflow: hidden; font-size: 11px; color: var(--aa-muted); text-overflow: ellipsis; white-space: nowrap; }
+
         .aa-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; }
         .aa-actions .aa-btn { min-height: 32px; padding: 0 6px; }
+        .aa-actions .aa-btn-wide { grid-column: 1 / -1; }
 
         .aa-empty { margin-top: 24px; padding: 40px 20px; border: 1px solid var(--aa-line); border-radius: 10px; background: #fff; text-align: center; font-size: 13px; color: var(--aa-muted); }
 
         .aa-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; }
         .aa-pagination span { font-size: 12px; font-weight: 600; color: var(--aa-muted); }
 
-        .aa-toast { position: fixed; right: 16px; bottom: 16px; z-index: 50; max-width: min(92vw, 380px); padding: 12px 16px; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; line-height: 1.5; box-shadow: 0 12px 30px -10px rgba(0,0,0,.4); }
+        .aa-toast { position: fixed; right: 16px; bottom: 16px; z-index: 80; max-width: min(92vw, 380px); padding: 12px 16px; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; line-height: 1.5; box-shadow: 0 12px 30px -10px rgba(0,0,0,.4); }
         .aa-toast.is-success { background: #166534; }
         .aa-toast.is-error { background: #B91C1C; }
+
+        /* EDIT MODAL */
+        .aa-modal-bg { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.6); }
+        .aa-modal { width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; border-radius: 12px; background: #fff; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+        .aa-modal-head { display: flex; gap: 14px; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--aa-line); }
+        .aa-modal-thumb { width: 56px; height: 56px; flex: 0 0 auto; overflow: hidden; border-radius: 8px; background: #f3f0ec; }
+        .aa-modal-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .aa-modal-title { margin: 0; font-size: 16px; font-weight: 600; }
+        .aa-modal-sub { margin: 2px 0 0; font-size: 12px; color: var(--aa-muted); }
+        .aa-modal-body { padding: 20px; display: grid; gap: 16px; }
+        .aa-field label { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #525252; }
+        .aa-input, .aa-textarea, .aa-select {
+          width: 100%; padding: 11px 12px; border: 1px solid #d4d4d4; border-radius: 8px; background: #fafafa;
+          font: inherit; font-size: 14px; color: var(--aa-ink); outline: none;
+          transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+        }
+        .aa-textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+        .aa-input:focus, .aa-textarea:focus, .aa-select:focus { border-color: var(--aa-accent); background: #fff; box-shadow: 0 0 0 3px rgba(192,101,43,.15); }
+        .aa-row2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
+        @media (min-width: 520px) { .aa-row2 { grid-template-columns: 1fr 1fr; } }
+        .aa-hint { margin: 6px 0 0; font-size: 11px; color: var(--aa-muted); }
+        .aa-modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px 18px; border-top: 1px solid var(--aa-line); }
+        .aa-modal-foot .aa-btn { min-height: 40px; padding: 0 18px; }
 
         @media (prefers-reduced-motion: reduce) {
           .aa-spinner { animation-duration: 2s; }
@@ -509,7 +647,8 @@ const AdminVanities = () => {
           <h1 className="aa-title">Vanities Images</h1>
           <p className="aa-sub">
             Yahan se Vanities page ki images add, change, delete aur reorder
-            karein. Changes website par foran nazar aate hain.
+            karein. "Edit details" se title, description, price, delivery aur
+            status set karein. Changes website par foran nazar aate hain.
           </p>
         </div>
         <span className="aa-count">{rows.length} images</span>
@@ -597,16 +736,23 @@ const AdminVanities = () => {
             {pageRows.map((row, i) => {
               const globalIndex = pageStart + i;
               const isBusy = busyId === row.id;
+              const isHiddenRow = row.status === "hidden";
 
               return (
-                <article className="aa-card" key={row.id}>
+                <article
+                  className={`aa-card ${isHiddenRow ? "is-hidden" : ""}`}
+                  key={row.id}
+                >
                   <div className="aa-thumb">
                     <img
                       src={row.image_url}
-                      alt={row.alt || `Vanities ${globalIndex + 1}`}
+                      alt={row.title || row.alt || `Vanities ${globalIndex + 1}`}
                       loading="lazy"
                     />
                     <span className="aa-badge">{globalIndex + 1}</span>
+                    <span className={`aa-status ${isHiddenRow ? "is-hidden" : ""}`}>
+                      {isHiddenRow ? "Hidden" : "Active"}
+                    </span>
                     {isBusy && (
                       <div className="aa-card-busy" aria-hidden="true">
                         <span className="aa-spinner" />
@@ -614,7 +760,26 @@ const AdminVanities = () => {
                     )}
                   </div>
 
+                  <div className="aa-meta">
+                    <p className={`aa-meta-title ${row.title ? "" : "is-empty"}`}>
+                      {row.title || "Title nahi hai"}
+                    </p>
+                    <p className="aa-meta-price">{formatPrice(row.price)}</p>
+                    <p className="aa-meta-delivery">
+                      {row.delivery_text || DEFAULT_DELIVERY}
+                    </p>
+                  </div>
+
                   <div className="aa-actions">
+                    <button
+                      type="button"
+                      className="aa-btn aa-btn-primary aa-btn-wide"
+                      onClick={() => openEdit(row)}
+                      disabled={locked}
+                    >
+                      Edit details
+                    </button>
+
                     <button
                       type="button"
                       className="aa-btn"
@@ -688,6 +853,132 @@ const AdminVanities = () => {
             </nav>
           )}
         </>
+      )}
+
+      {/* EDIT DETAILS MODAL */}
+      {editRow && (
+        <div
+          className="aa-modal-bg"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeEdit();
+          }}
+        >
+          <form
+            className="aa-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="aa-edit-title"
+            onSubmit={handleSaveDetails}
+          >
+            <div className="aa-modal-head">
+              <div className="aa-modal-thumb">
+                <img src={editRow.image_url} alt="" />
+              </div>
+              <div>
+                <h2 className="aa-modal-title" id="aa-edit-title">
+                  Edit details
+                </h2>
+                <p className="aa-modal-sub">
+                  Ye information Vanities page par image ke saath dikhegi.
+                </p>
+              </div>
+            </div>
+
+            <div className="aa-modal-body">
+              <div className="aa-field">
+                <label htmlFor="aa-f-title">Title</label>
+                <input
+                  id="aa-f-title"
+                  name="title"
+                  className="aa-input"
+                  type="text"
+                  maxLength={120}
+                  value={form.title}
+                  onChange={handleFormChange}
+                  placeholder="e.g. Modern Floating Vanity"
+                />
+              </div>
+
+              <div className="aa-field">
+                <label htmlFor="aa-f-desc">Description</label>
+                <textarea
+                  id="aa-f-desc"
+                  name="description"
+                  className="aa-textarea"
+                  maxLength={600}
+                  value={form.description}
+                  onChange={handleFormChange}
+                  placeholder="Vanity ke bare mein short description likhein..."
+                />
+              </div>
+
+              <div className="aa-row2">
+                <div className="aa-field">
+                  <label htmlFor="aa-f-price">Price (PKR)</label>
+                  <input
+                    id="aa-f-price"
+                    name="price"
+                    className="aa-input"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    value={form.price}
+                    onChange={handleFormChange}
+                    placeholder="e.g. 45000"
+                  />
+                  <p className="aa-hint">Khali ya 0 ho to "Price on request" dikhega.</p>
+                </div>
+
+                <div className="aa-field">
+                  <label htmlFor="aa-f-status">Status</label>
+                  <select
+                    id="aa-f-status"
+                    name="status"
+                    className="aa-select"
+                    value={form.status}
+                    onChange={handleFormChange}
+                  >
+                    <option value="active">Active (website par dikhao)</option>
+                    <option value="hidden">Hidden (website se chhupao)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="aa-field">
+                <label htmlFor="aa-f-delivery">Delivery text</label>
+                <input
+                  id="aa-f-delivery"
+                  name="delivery_text"
+                  className="aa-input"
+                  type="text"
+                  maxLength={120}
+                  value={form.delivery_text}
+                  onChange={handleFormChange}
+                  placeholder={DEFAULT_DELIVERY}
+                />
+              </div>
+            </div>
+
+            <div className="aa-modal-foot">
+              <button
+                type="button"
+                className="aa-btn"
+                onClick={closeEdit}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="aa-btn aa-btn-primary"
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save details"}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
       {toast && (

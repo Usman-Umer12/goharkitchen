@@ -1,18 +1,31 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+// Sheets.jsx
+// Supabase table: sheets_images
+// Columns: id, image_url, title, description, price, delivery_text, status, alt, sort_order, created_at
+// Theme: Black Heading | White Product Cards | Black Preview | White Inquiry Modal
+// Font: Montserrat (same as Bed.jsx)
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Crop,
+  MessageCircle,
+  Truck,
+  X,
+} from "lucide-react";
+
 import { supabase } from "../lib/supabase";
 
 /* =========================================================
    SETTINGS
 ========================================================= */
 
+const WHATSAPP_NUMBER = "923007023202";
+const BRAND = "Gohar";
 const GALLERY_LABEL = "Sheets";
 const TABLE = "sheets_images";
+const DELIVERY_TEXT = "Delivery All Over Pakistan";
 
 /* Fallback: agar Supabase khali ho ya error aaye to ye local images dikhengi */
 const groups = [{ prefix: "kitchen", count: 30 }];
@@ -37,17 +50,58 @@ const getImage = (filename) => {
   return match ? localAssets[match] : `/assets/${filename}`;
 };
 
-const fallbackImages = groups.flatMap(({ prefix, count }) =>
+const titles = [
+  "Premium Kitchen Sheet",
+  "Modern Wardrobe Sheet",
+  "Elegant Surface Sheet",
+  "Luxury Finish Sheet",
+  "Classic Wood Texture Sheet",
+  "Contemporary Matte Sheet",
+];
+
+const descriptions = [
+  "A durable, easy-to-clean sheet with a smooth premium finish for kitchens and wardrobes.",
+  "Refined colour and texture that gives every interior surface a high-quality look.",
+  "Carefully chosen finish designed for long-lasting beauty and everyday use.",
+  "A clean contemporary sheet that brings balance and sophistication to your space.",
+];
+
+const fallbackProducts = groups.flatMap(({ prefix, count }) =>
   Array.from({ length: count }, (_, i) => ({
     id: `${prefix}${i + 1}`,
-    src: getImage(`${prefix}${i + 1}.webp`),
-    alt: `${GALLERY_LABEL} ${i + 1}`,
+    displayNumber: i + 1,
+    title: titles[i % titles.length],
+    description: descriptions[i % descriptions.length],
+    image: getImage(`${prefix}${i + 1}.webp`),
+    price: 0,
+    deliveryText: DELIVERY_TEXT,
   }))
 );
 
 /* =========================================================
-   PAGINATION HELPER  -> 1 2 3 4 5
+   HELPERS
 ========================================================= */
+
+const pad = (number) => String(number).padStart(2, "0");
+
+const formatPrice = (price) => {
+  const value = Number(price);
+  return Number.isFinite(value) && value > 0
+    ? `PKR ${value.toLocaleString("en-PK")}`
+    : "";
+};
+
+const openWhatsApp = (message) => {
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    message
+  )}`;
+
+  const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+
+  if (!newWindow) {
+    window.location.href = url;
+  }
+};
 
 const getPageNumbers = (current, total) => {
   const visible = Math.min(MAX_VISIBLE_PAGES, total);
@@ -63,47 +117,301 @@ const getPageNumbers = (current, total) => {
 };
 
 /* =========================================================
-   MASONRY ITEM (full height, covers box, no gap, no crop)
+   LOAD PRODUCTS FROM SUPABASE
 ========================================================= */
 
-const MasonryItem = ({ img, index, onOpen }) => {
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef(null);
+const loadSheetProducts = async () => {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select(
+      "id, image_url, title, description, price, delivery_text, status, alt, sort_order, created_at"
+    )
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  if (!data || data.length === 0) return fallbackProducts;
+
+  /* status column ho to sirf active dikhao, warna sab dikhao */
+  const visibleRows = data.filter(
+    (item) => item.status === undefined || item.status === null || item.status === "active"
+  );
+
+  return visibleRows.map((item, index) => {
+    const displayNumber =
+      Number(item.sort_order) > 0 ? Number(item.sort_order) : index + 1;
+
+    const rawPrice =
+      item.price === null || item.price === undefined || item.price === ""
+        ? 0
+        : Number(item.price);
+
+    return {
+      id: item.id,
+      displayNumber,
+      title: item.title || item.alt || `${GALLERY_LABEL} Design`,
+      description:
+        item.description ||
+        descriptions[index % descriptions.length],
+      image: item.image_url,
+      price: Number.isFinite(rawPrice) && rawPrice > 0 ? rawPrice : 0,
+      deliveryText: item.delivery_text || DELIVERY_TEXT,
+    };
+  });
+};
+
+/* =========================================================
+   REVEAL ANIMATION
+========================================================= */
+
+const useReveal = () => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (imgRef.current?.complete) setLoaded(true);
+    const element = ref.current;
+    if (!element) return;
+
+    if (!("IntersectionObserver" in window)) {
+      setVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.08 }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
   }, []);
 
+  return [ref, visible];
+};
+
+const Reveal = ({ children, delay = 0, className = "" }) => {
+  const [ref, visible] = useReveal();
+
   return (
-    <button
-      type="button"
-      className={`sht-item ${loaded ? "is-loaded" : ""}`}
-      style={{ "--i": index % 12 }}
-      onClick={onOpen}
-      aria-label={`View ${img.alt}`}
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-700 ease-out ${
+        visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+      } ${className}`}
     >
-      <img
-        ref={imgRef}
-        src={img.src}
-        alt={img.alt}
-        decoding="async"
-        onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(true)}
-      />
-      <span className="sht-item-overlay" aria-hidden="true">
-        <span className="sht-item-zoom">+</span>
-      </span>
-    </button>
+      {children}
+    </div>
   );
 };
 
 /* =========================================================
-   LIGHTBOX (POPUP)
+   EYEBROW
 ========================================================= */
 
-const Lightbox = ({ images, index, onClose, onChange }) => {
+const Eyebrow = ({ children, align = "center", className = "" }) => (
+  <div
+    className={`mb-4 flex items-center gap-3 sm:mb-5 ${
+      align === "center" ? "justify-center" : ""
+    } ${className}`}
+  >
+    <span className="h-px w-8 bg-[#C0652B] sm:w-10" />
+    <span className="gk-eyebrow">{children}</span>
+    {align === "center" && <span className="h-px w-8 bg-[#C0652B] sm:w-10" />}
+  </div>
+);
+
+/* =========================================================
+   1. WHATSAPP INQUIRY MODAL (WHITE)
+========================================================= */
+
+function InquiryModal({ product, onClose }) {
+  const [form, setForm] = useState({ name: "", phone: "", city: "" });
+
+  useEffect(() => {
+    const handleKey = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    const previousOverflow = document.body.style.overflow;
+
+    window.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
+  const handleChange = (event) => {
+    setForm((previous) => ({
+      ...previous,
+      [event.target.name]: event.target.value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const message = `
+Hello ${BRAND}, I would like to inquire about a sheet design.
+
+*Product:* ${product.title} (Design ${pad(product.displayNumber)})
+*Price:* ${formatPrice(product.price) || "Price on request"}
+*Name:* ${form.name}
+*Phone:* ${form.phone}
+*City:* ${form.city}
+*Delivery:* ${product.deliveryText || DELIVERY_TEXT}
+
+Please share more details and available options.
+    `.trim();
+
+    openWhatsApp(message);
+    setForm({ name: "", phone: "", city: "" });
+    onClose();
+  };
+
+  const inputCls =
+    "w-full rounded-lg border border-black/15 bg-neutral-50 px-4 py-3.5 font-sans text-sm text-neutral-900 outline-none transition duration-200 placeholder:text-neutral-400 focus:border-[#C0652B] focus:bg-white focus:ring-2 focus:ring-[#C0652B]/20";
+
+  const labelCls =
+    "mb-2 block font-sans text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-600";
+
+  return (
+    <div
+      className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sheet-inquiry-heading"
+        className="gk-light relative max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-md border border-black/10 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
+      >
+        <div className="relative overflow-hidden border-b border-black/10 px-5 py-6 sm:px-8 sm:py-7">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#C0652B] opacity-[0.1] blur-3xl" />
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close inquiry"
+            className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-black/15 text-neutral-700 transition hover:bg-black/5 hover:text-black"
+          >
+            <X size={17} />
+          </button>
+
+          <div className="relative z-10 pr-10">
+            <Eyebrow align="left">Product Inquiry</Eyebrow>
+
+            <h2
+              id="sheet-inquiry-heading"
+              className="gk-h3 !text-[1.2rem] sm:!text-[1.5rem]"
+            >
+              {product.title}
+            </h2>
+
+            <p className="gk-body mt-2 !text-[13px] sm:!text-[13.5px]">
+              Share your details and we will continue the conversation on
+              WhatsApp.
+            </p>
+
+            {Number(product.price) > 0 && (
+              <p className="mt-3 font-sans text-sm font-semibold text-[#C0652B]">
+                {formatPrice(product.price)}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-5 py-6 sm:px-8 sm:py-8">
+          <div className="space-y-5">
+            <div>
+              <label htmlFor="sheet-iq-name" className={labelCls}>
+                Full Name
+              </label>
+              <input
+                id="sheet-iq-name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                className={inputCls}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="sheet-iq-phone" className={labelCls}>
+                Phone Number
+              </label>
+              <input
+                id="sheet-iq-phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                required
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="03XX XXXXXXX"
+                className={inputCls}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="sheet-iq-city" className={labelCls}>
+                City
+              </label>
+              <input
+                id="sheet-iq-city"
+                name="city"
+                type="text"
+                autoComplete="address-level2"
+                required
+                value={form.city}
+                onChange={handleChange}
+                placeholder="Enter your city"
+                className={inputCls}
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="gk-btn-solid group mt-7 !flex w-full">
+            <MessageCircle size={17} strokeWidth={2} className="shrink-0" />
+            Send Inquiry
+            <ArrowRight
+              size={15}
+              strokeWidth={2}
+              className="shrink-0 transition-transform duration-300 group-hover:translate-x-1"
+            />
+          </button>
+
+          <p className="mt-3 text-center font-sans text-[11px] leading-5 text-neutral-500">
+            Your inquiry will be sent directly to our WhatsApp.
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   2. FULL-SCREEN PREVIEW (BLACK) + PREV / NEXT
+========================================================= */
+
+const Preview = ({ products, index, onClose, onChange, onInquiry }) => {
   const touchStart = useRef(null);
-  const total = images.length;
+  const total = products.length;
 
   const prev = useCallback(
     () => onChange((index - 1 + total) % total),
@@ -115,675 +423,884 @@ const Lightbox = ({ images, index, onClose, onChange }) => {
   );
 
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
+    const handleKey = (event) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "ArrowLeft") prev();
+      if (event.key === "ArrowRight") next();
     };
 
-    window.addEventListener("keydown", onKey);
     const previousOverflow = document.body.style.overflow;
+
+    window.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
 
     return () => {
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", handleKey);
       document.body.style.overflow = previousOverflow;
     };
   }, [onClose, prev, next]);
 
-  const handleTouchEnd = (e) => {
+  const handleTouchEnd = (event) => {
     if (touchStart.current === null) return;
-    const diff = e.changedTouches[0].clientX - touchStart.current;
+    const diff = event.changedTouches[0].clientX - touchStart.current;
     if (Math.abs(diff) > 50) (diff > 0 ? prev : next)();
     touchStart.current = null;
   };
 
-  const current = images[index];
-  if (!current) return null;
+  const product = products[index];
+  if (!product) return null;
 
   return (
     <div
-      className="sht-lightbox"
+      className="kt-preview fixed inset-0 z-[110] flex flex-col bg-black lg:flex-row"
+      onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={`${GALLERY_LABEL} gallery`}
-      onClick={onClose}
+      aria-label={`${product.title} preview`}
     >
-      <div className="sht-lightbox-top" onClick={(e) => e.stopPropagation()}>
-        <div className="sht-lightbox-info">
-          <span className="sht-lightbox-title">{GALLERY_LABEL}</span>
-          <span className="sht-lightbox-count">
-            {String(index + 1).padStart(2, "0")} /{" "}
-            {String(total).padStart(2, "0")}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          className="sht-lightbox-close"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          ✕
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close preview"
+        className="kt-ctrl absolute right-3 top-3 z-20 !h-11 !w-11 sm:right-6 sm:top-6"
+      >
+        <X size={20} />
+      </button>
 
       <div
-        className="sht-lightbox-stage"
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={(e) => (touchStart.current = e.touches[0].clientX)}
+        className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-4 pt-16 sm:p-8 sm:pt-20 lg:p-12"
+        onTouchStart={(event) => (touchStart.current = event.touches[0].clientX)}
         onTouchEnd={handleTouchEnd}
       >
         {total > 1 && (
           <button
             type="button"
-            className="sht-lightbox-nav sht-lightbox-prev"
-            onClick={prev}
-            aria-label="Previous image"
+            onClick={(event) => {
+              event.stopPropagation();
+              prev();
+            }}
+            aria-label="Previous design"
+            className="kt-ctrl absolute left-2 top-1/2 z-10 -translate-y-1/2 sm:left-5"
           >
-            ‹
+            <ChevronLeft size={20} />
           </button>
         )}
 
-        <img key={current.src} src={current.src} alt={current.alt} />
+        <img
+          key={product.id}
+          src={product.image}
+          alt={product.title}
+          onClick={(event) => event.stopPropagation()}
+          className="kt-lb-img max-h-full max-w-full rounded-sm object-contain"
+        />
 
         {total > 1 && (
           <button
             type="button"
-            className="sht-lightbox-nav sht-lightbox-next"
-            onClick={next}
-            aria-label="Next image"
+            onClick={(event) => {
+              event.stopPropagation();
+              next();
+            }}
+            aria-label="Next design"
+            className="kt-ctrl absolute right-2 top-1/2 z-10 -translate-y-1/2 sm:right-5"
           >
-            ›
+            <ChevronRight size={20} />
           </button>
         )}
       </div>
+
+      <aside onClick={(event) => event.stopPropagation()} className="kt-preview-info">
+        <Eyebrow align="left">Design {pad(product.displayNumber)}</Eyebrow>
+
+        <h3 className="gk-h3 !text-[1.15rem] sm:!text-[1.4rem] lg:!text-[1.6rem]">
+          {product.title}
+        </h3>
+
+        <div className="my-4 h-px w-12 bg-[#C0652B] sm:my-5" />
+
+        <p className="gk-body !text-[14px] sm:!text-[15px]">
+          {product.description}
+        </p>
+
+        {Number(product.price) > 0 && (
+          <p className="kt-price mt-4 text-lg">{formatPrice(product.price)}</p>
+        )}
+
+        <p className="mt-4 flex items-center gap-2 font-sans text-xs font-medium tracking-wide text-white/60 sm:text-[13px]">
+          <Truck size={15} strokeWidth={1.6} className="shrink-0 text-[#E08A4F]" />
+          {product.deliveryText || DELIVERY_TEXT}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => onInquiry(product)}
+          className="gk-btn-solid mt-6 w-full sm:mt-7"
+        >
+          <MessageCircle size={17} />
+          WhatsApp Inquiry
+        </button>
+      </aside>
     </div>
   );
 };
 
 /* =========================================================
-   MAIN COMPONENT
+   3. PRODUCT CARD (WHITE)
 ========================================================= */
 
-const Sheets = () => {
-  const [page, setPage] = useState(1);
-  const [lightboxIndex, setLightboxIndex] = useState(null);
-  const [remote, setRemote] = useState(null); // null = loading
+const ProductCard = ({ product, index, onPreview, onInquiry }) => (
+  <Reveal delay={(index % 4) * 80} className="h-full">
+    <article className="kt-product group">
+      <div className="relative aspect-[4/5] overflow-hidden bg-neutral-200">
+        <img
+          src={product.image}
+          alt={product.title}
+          loading="lazy"
+          decoding="async"
+          onClick={() => onPreview(product)}
+          className="h-full w-full cursor-zoom-in object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+        />
 
-  const galleryRef = useRef(null);
+        <button
+          type="button"
+          onClick={() => onPreview(product)}
+          aria-label={`Preview ${product.title}`}
+          className="kt-crop"
+        >
+          <Crop size={16} strokeWidth={1.8} />
+        </button>
+      </div>
 
-  /* Supabase se images load karo */
+      <div className="flex flex-1 flex-col p-3 sm:p-5">
+        <h3 className="kt-card-title line-clamp-1">{product.title}</h3>
+
+        <p className="kt-card-desc mt-2 line-clamp-2 min-h-[2.5rem]">
+          {product.description}
+        </p>
+
+        {Number(product.price) > 0 && (
+          <p className="kt-price mt-3 text-sm sm:text-base">
+            {formatPrice(product.price)}
+          </p>
+        )}
+
+        <p className="mt-3 flex items-center gap-2 font-sans text-[10.5px] font-medium tracking-wide text-neutral-600 sm:text-xs">
+          <Truck size={14} strokeWidth={1.6} className="shrink-0 text-[#C0652B]" />
+          <span className="truncate">{product.deliveryText || DELIVERY_TEXT}</span>
+        </p>
+
+        <button
+          type="button"
+          onClick={() => onInquiry(product)}
+          className="kt-inquiry mt-auto"
+        >
+          <MessageCircle
+            strokeWidth={1.8}
+            className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4"
+          />
+          <span className="truncate">
+            <span className="hidden sm:inline">WhatsApp </span>
+            Inquiry
+          </span>
+        </button>
+      </div>
+    </article>
+  </Reveal>
+);
+
+/* =========================================================
+   4. PAGINATION  (1 2 3 4 5)
+========================================================= */
+
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <nav className="kt-pagination" aria-label="Sheet product pages">
+      <button
+        type="button"
+        className="kt-page-arrow"
+        disabled={currentPage === 1}
+        onClick={() => onPageChange(currentPage - 1)}
+        aria-label="Previous page"
+      >
+        <ChevronLeft size={17} />
+        <span className="hidden sm:inline">Previous</span>
+      </button>
+
+      {getPageNumbers(currentPage, totalPages).map((page) => (
+        <button
+          key={page}
+          type="button"
+          onClick={() => onPageChange(page)}
+          aria-label={`Page ${page}`}
+          aria-current={currentPage === page ? "page" : undefined}
+          className={`kt-page-number ${currentPage === page ? "is-active" : ""}`}
+        >
+          {page}
+        </button>
+      ))}
+
+      <button
+        type="button"
+        className="kt-page-arrow"
+        disabled={currentPage === totalPages}
+        onClick={() => onPageChange(currentPage + 1)}
+        aria-label="Next page"
+      >
+        <span className="hidden sm:inline">Next</span>
+        <ChevronRight size={17} />
+      </button>
+    </nav>
+  );
+};
+
+/* =========================================================
+   5. PRODUCTS SECTION
+========================================================= */
+
+const Products = ({ products, loading, onPreview, onInquiry }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * PAGE_SIZE;
+  const endIndex = Math.min(startIndex + PAGE_SIZE, products.length);
+  const shown = products.slice(startIndex, endIndex);
+
   useEffect(() => {
-    let active = true;
+    setCurrentPage(1);
+  }, [products.length]);
+
+  const changePage = (page) => {
+    const nextPage = Math.max(1, Math.min(page, totalPages));
+    if (nextPage === safePage) return;
+
+    setCurrentPage(nextPage);
+
+    window.setTimeout(() => {
+      document.getElementById("sheet-products")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 50);
+  };
+
+  return (
+    <section
+      id="sheet-products"
+      className="relative scroll-mt-6 py-12 sm:py-16 lg:py-20"
+    >
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-8 lg:px-12">
+        {loading ? (
+          <div className="py-16 text-center font-sans text-sm text-neutral-500">
+            Loading sheet designs...
+          </div>
+        ) : products.length === 0 ? (
+          <div className="py-16 text-center">
+            <p className="font-sans text-sm text-neutral-500">
+              No sheet designs are currently available.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div
+              key={safePage}
+              className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4"
+            >
+              {shown.map((product, index) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={index}
+                  onPreview={onPreview}
+                  onInquiry={onInquiry}
+                />
+              ))}
+            </div>
+
+            <div className="mt-10 flex flex-col items-center justify-between gap-5 border-t border-black/10 pt-6 sm:mt-12 sm:flex-row">
+              <p className="font-sans text-xs font-light tracking-wide text-neutral-500 sm:text-sm">
+                Showing{" "}
+                <span className="font-semibold text-neutral-900">
+                  {startIndex + 1}–{endIndex}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-neutral-900">
+                  {products.length}
+                </span>{" "}
+                designs
+              </p>
+
+              <Pagination
+                currentPage={safePage}
+                totalPages={totalPages}
+                onPageChange={changePage}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+};
+
+/* =========================================================
+   6. STYLES  (Montserrat, same as Bed.jsx)
+========================================================= */
+
+const Styles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+    .sheets-page {
+      --gk-display: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --gk-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --gk-accent: #C0652B;
+      --gk-accent-soft: #E08A4F;
+      --gk-ink: #141414;
+      font-family: var(--gk-sans);
+      background: #fff;
+    }
+
+    .sheets-page .font-sans {
+      font-family: var(--gk-sans) !important;
+    }
+
+    .sheets-page button,
+    .sheets-page input {
+      font-family: var(--gk-sans);
+    }
+
+    /* TYPOGRAPHY */
+
+    .sheets-page .gk-eyebrow {
+      font-family: var(--gk-sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .32em;
+      text-transform: uppercase;
+      color: var(--gk-accent-soft);
+    }
+
+    .sheets-page .gk-light .gk-eyebrow {
+      color: var(--gk-accent);
+      font-weight: 600;
+    }
+
+    .sheets-page .gk-h3 {
+      font-family: var(--gk-display);
+      color: #fff;
+      line-height: 1.3;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      font-size: clamp(1.2rem, 1rem + .8vw, 1.55rem);
+    }
+
+    .sheets-page .gk-body {
+      font-family: var(--gk-sans);
+      font-weight: 400;
+      color: rgba(255,255,255,.78);
+      line-height: 1.8;
+      font-size: 15px;
+    }
+
+    .sheets-page .gk-light .gk-h3 {
+      color: var(--gk-ink);
+    }
+
+    .sheets-page .gk-light .gk-body {
+      color: rgba(20,20,20,.68);
+    }
+
+    /* BLACK HEADING SECTION */
+
+    .sheets-page .sht-top {
+      background: #000;
+      color: #fff;
+      padding: 104px 16px 56px;
+    }
+
+    .sheets-page .sht-top-inner {
+      width: 100%;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding-inline: 0;
+    }
+
+    .sheets-page .sht-heading {
+      margin: 0;
+      color: #fff;
+      font-family: var(--gk-display);
+      font-size: clamp(1.7rem, 6vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .sheets-page .sht-heading em {
+      font-style: normal;
+      color: var(--gk-accent);
+    }
+
+    .sheets-page .sht-heading-rule {
+      display: block;
+      width: 56px;
+      height: 2px;
+      margin-top: 20px;
+      background: var(--gk-accent);
+    }
+
+    .sheets-page .sht-subtext {
+      max-width: 680px;
+      margin: 20px 0 0;
+      color: rgba(255,255,255,.72);
+      font-family: var(--gk-sans);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.9;
+      letter-spacing: .01em;
+    }
+
+    @media (min-width: 640px) {
+      .sheets-page .sht-top { padding: 124px 32px 68px; }
+      .sheets-page .sht-subtext { font-size: 14px; }
+    }
+
+    @media (min-width: 1024px) {
+      .sheets-page .sht-top { padding: 148px 48px 84px; }
+    }
+
+    /* BUTTONS */
+
+    .sheets-page .gk-btn-solid {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 50px;
+      padding: 0 30px;
+      border: 1px solid var(--gk-accent);
+      border-radius: 999px;
+      background: var(--gk-accent);
+      font-family: var(--gk-sans);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #fff;
+      white-space: nowrap;
+      transition: background-color .3s ease, color .3s ease,
+        border-color .3s ease, transform .3s ease;
+    }
+
+    .sheets-page .gk-btn-solid:hover {
+      background: #D2743A;
+      border-color: #D2743A;
+    }
+
+    /* WHITE PRODUCT CARDS */
+
+    .sheets-page .kt-content {
+      position: relative;
+      z-index: 10;
+      background: #fff;
+      color: var(--gk-ink);
+    }
+
+    .sheets-page .kt-product {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      border: 1px solid rgba(20,20,20,.12);
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(20,20,20,.04);
+      transition: border-color .4s ease, transform .4s ease, box-shadow .4s ease;
+    }
+
+    .sheets-page .kt-product:hover {
+      border-color: rgba(192,101,43,.55);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 32px rgba(20,20,20,.1);
+    }
+
+    .sheets-page .kt-card-title {
+      font-family: var(--gk-display);
+      color: var(--gk-ink);
+      line-height: 1.3;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      font-size: .78rem;
+    }
+
+    .sheets-page .kt-card-desc {
+      font-family: var(--gk-sans);
+      font-weight: 400;
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: rgba(20,20,20,.64);
+    }
+
+    .sheets-page .kt-crop {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: rgba(10,10,10,.65);
+      border: 1px solid rgba(255,255,255,.3);
+      color: #fff;
+      backdrop-filter: blur(6px);
+      transition: background-color .3s ease, border-color .3s ease, transform .3s ease;
+    }
+
+    .sheets-page .kt-crop:hover {
+      background: var(--gk-accent);
+      border-color: var(--gk-accent);
+      transform: scale(1.08);
+    }
+
+    .sheets-page .kt-inquiry {
+      margin-top: 1rem;
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 11px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--gk-accent);
+      background: var(--gk-accent);
+      font-family: var(--gk-sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #fff;
+      white-space: nowrap;
+      transition: background-color .3s ease, border-color .3s ease, transform .3s ease;
+    }
+
+    .sheets-page .kt-inquiry:hover {
+      background: #D2743A;
+      border-color: #D2743A;
+    }
+
+    .sheets-page .kt-inquiry:active {
+      transform: scale(.98);
+    }
+
+    .sheets-page .kt-price {
+      font-family: var(--gk-sans);
+      color: var(--gk-accent);
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    /* PAGINATION */
+
+    .sheets-page .kt-pagination {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .sheets-page .kt-page-number,
+    .sheets-page .kt-page-arrow {
+      display: inline-flex;
+      min-width: 42px;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1px solid rgba(20,20,20,.18);
+      border-radius: 999px;
+      background: #fff;
+      padding: 0 13px;
+      color: rgba(20,20,20,.75);
+      font-family: var(--gk-sans);
+      font-size: 12px;
+      font-weight: 500;
+      transition: color .25s ease, background-color .25s ease, border-color .25s ease;
+    }
+
+    .sheets-page .kt-page-number:hover,
+    .sheets-page .kt-page-arrow:not(:disabled):hover {
+      color: var(--gk-accent);
+      border-color: var(--gk-accent);
+      background: rgba(192,101,43,.08);
+    }
+
+    .sheets-page .kt-page-number.is-active {
+      color: #fff;
+      border-color: var(--gk-ink);
+      background: var(--gk-ink);
+      box-shadow: 0 4px 18px rgba(20,20,20,.18);
+    }
+
+    .sheets-page .kt-page-arrow:disabled {
+      cursor: not-allowed;
+      opacity: .35;
+    }
+
+    /* BLACK PREVIEW */
+
+    .sheets-page .kt-ctrl {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: rgba(10,10,10,.7);
+      border: 1px solid rgba(255,255,255,.25);
+      color: #fff;
+      backdrop-filter: blur(6px);
+      transition: background-color .3s ease, color .3s ease;
+    }
+
+    .sheets-page .kt-ctrl:hover {
+      background: #fff;
+      color: #0A0A0A;
+    }
+
+    .sheets-page .kt-lb-img {
+      animation: kt-sheet-fade .35s ease;
+    }
+
+    @keyframes kt-sheet-fade {
+      from { opacity: 0; transform: scale(.98); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .sheets-page .kt-preview-info {
+      flex: 0 0 auto;
+      max-height: 48vh;
+      overflow-y: auto;
+      padding: 1.5rem 1.25rem 1.75rem;
+      background: #0A0A0A;
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+
+    /* RESPONSIVE */
+
+    @media (min-width: 640px) {
+      .sheets-page .gk-body { font-size: 16px; }
+      .sheets-page .kt-card-desc { font-size: 13.5px; }
+      .sheets-page .kt-card-title { font-size: 1rem; }
+
+      .sheets-page .kt-inquiry {
+        font-size: 11.5px;
+        padding: 13px 14px;
+        letter-spacing: .1em;
+      }
+
+      .sheets-page .kt-preview-info { padding: 2rem 2rem 2.25rem; }
+    }
+
+    @media (min-width: 1024px) {
+      .sheets-page .kt-preview-info {
+        width: 420px;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3rem 2.75rem;
+        border-top: 0;
+        border-left: 1px solid rgba(255,255,255,.1);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .sheets-page .gk-eyebrow {
+        font-size: 10px;
+        letter-spacing: .24em;
+      }
+
+      .sheets-page .kt-card-title { font-size: .78rem; }
+
+      .sheets-page .kt-inquiry {
+        font-size: 10px;
+        letter-spacing: .03em;
+        gap: 5px;
+        padding: 9px 5px;
+      }
+
+      .sheets-page .kt-preview-info { max-height: 48dvh; }
+    }
+
+    @media (max-width: 400px) {
+      .sheets-page .kt-page-number,
+      .sheets-page .kt-page-arrow {
+        min-width: 36px;
+        height: 38px;
+        padding: 0 9px;
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .sheets-page .kt-card-title { font-size: .7rem; }
+
+      .sheets-page .kt-inquiry {
+        font-size: 8px;
+        gap: 4px;
+        padding: 8px 3px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sheets-page .kt-product,
+      .sheets-page .kt-lb-img {
+        animation: none;
+        transition: none;
+      }
+    }
+  `}</style>
+);
+
+/* =========================================================
+   7. MAIN PAGE
+========================================================= */
+
+export default function Sheets() {
+  const [products, setProducts] = useState(null); // null = loading
+  const [loadError, setLoadError] = useState("");
+
+  const [previewIndex, setPreviewIndex] = useState(null);
+  const [inquiryProduct, setInquiryProduct] = useState(null);
+
+  const fetchProducts = useCallback(async () => {
+    setLoadError("");
+    setProducts(null);
+
+    try {
+      setProducts(await loadSheetProducts());
+    } catch (error) {
+      console.error("Sheet products could not be loaded from Supabase:", error);
+      setProducts(fallbackProducts);
+      setLoadError(
+        "Unable to connect to the sheets collection. Showing local designs instead."
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
 
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from(TABLE)
-          .select("id, image_url, alt, sort_order, created_at")
-          .order("sort_order", { ascending: true })
-          .order("created_at", { ascending: true });
-
-        if (!active) return;
-
-        if (error || !data?.length) {
-          setRemote([]);
-          return;
+        const data = await loadSheetProducts();
+        if (!cancelled) setProducts(data);
+      } catch (error) {
+        console.error("Sheet products could not be loaded from Supabase:", error);
+        if (!cancelled) {
+          setProducts(fallbackProducts);
+          setLoadError(
+            "Unable to connect to the sheets collection. Showing local designs instead."
+          );
         }
-
-        setRemote(
-          data.map((row, i) => ({
-            id: row.id,
-            src: row.image_url,
-            alt: row.alt || `${GALLERY_LABEL} ${i + 1}`,
-          }))
-        );
-      } catch (err) {
-        if (active) setRemote([]);
       }
     })();
 
     return () => {
-      active = false;
+      cancelled = true;
     };
   }, []);
 
-  const loading = remote === null;
+  const list = useMemo(() => products || [], [products]);
+  const loading = products === null;
 
-  const images = useMemo(() => {
-    if (remote === null) return [];
-    return remote.length ? remote : fallbackImages;
-  }, [remote]);
+  const openPreview = useCallback(
+    (product) => {
+      const index = list.findIndex((item) => item.id === product.id);
+      if (index >= 0) setPreviewIndex(index);
+    },
+    [list]
+  );
 
-  const totalPages = Math.max(1, Math.ceil(images.length / PAGE_SIZE));
-  const pageStart = (page - 1) * PAGE_SIZE;
-  const pageImages = images.slice(pageStart, pageStart + PAGE_SIZE);
-  const pageEnd = pageStart + pageImages.length;
+  const closePreview = useCallback(() => setPreviewIndex(null), []);
+  const closeInquiry = useCallback(() => setInquiryProduct(null), []);
 
-  useEffect(() => {
-    if (page > totalPages) setPage(1);
-  }, [page, totalPages]);
-
-  const goToPage = (p) => {
-    if (p < 1 || p > totalPages || p === page) return;
-    setPage(p);
-
-    requestAnimationFrame(() => {
-      galleryRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
+  const openInquiryFromPreview = (product) => {
+    setPreviewIndex(null);
+    setInquiryProduct(product);
   };
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
+    <main className="sheets-page min-h-screen overflow-x-clip bg-white text-[#141414] antialiased">
+      <Styles />
 
-        .sht-wrap,
-        .sht-wrap *,
-        .sht-wrap *::before,
-        .sht-wrap *::after,
-        .sht-lightbox,
-        .sht-lightbox *,
-        .sht-lightbox *::before,
-        .sht-lightbox *::after {
-          box-sizing: border-box;
-        }
+      {/* ================= BLACK: HEADING + DESCRIPTION ================= */}
+      <section className="sht-top" aria-labelledby="sht-title">
+        <div className="sht-top-inner">
+          <h1 className="sht-heading" id="sht-title">
+            Our <em>Sheets</em>
+          </h1>
 
-        .sht-wrap {
-          --sht-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
-          --sht-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
-          --sht-accent: #C0652B;
-          --sht-ease: cubic-bezier(0.2, 0.65, 0.3, 1);
+          <span className="sht-heading-rule" aria-hidden="true" />
 
-          font-family: var(--sht-sans);
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
+          <p className="sht-subtext">
+            A wide range of premium sheets in refined colours, textures and
+            finishes for kitchens, wardrobes and interior surfaces. Durable,
+            easy to clean and carefully chosen to give every space a smooth,
+            high-quality look.
+          </p>
+        </div>
+      </section>
 
-        .sht-wrap button,
-        .sht-lightbox,
-        .sht-lightbox button {
-          font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
-        }
+      {/* ================= WHITE: PRODUCT CARDS ================= */}
+      <div className="kt-content">
+        {loadError && (
+          <div
+            role="status"
+            className="px-4 pt-5 text-center font-sans text-xs text-neutral-500"
+          >
+            {loadError}
 
-        .sht-container {
-          width: 100%;
-          padding-inline: 16px;
-        }
-        @media (min-width: 640px)  { .sht-container { padding-inline: 32px; } }
-        @media (min-width: 1024px) { .sht-container { padding-inline: 40px; } }
-        @media (min-width: 1280px) { .sht-container { padding-inline: 56px; } }
-        @media (min-width: 1536px) { .sht-container { padding-inline: 80px; } }
-
-        /* =====================================================
-           HEADING SECTION (BLACK)
-        ===================================================== */
-
-        .sht-top {
-          background: #000000;
-          color: #FFFFFF;
-          padding-block: 104px 56px;
-        }
-        @media (min-width: 640px)  { .sht-top { padding-block: 124px 68px; } }
-        @media (min-width: 1024px) { .sht-top { padding-block: 148px 84px; } }
-
-        .sht-heading {
-          margin: 0;
-          color: #FFFFFF;
-          font-family: var(--sht-display);
-          font-size: 38px;
-          font-weight: 600;
-          line-height: 1.1;
-          letter-spacing: 0.02em;
-          text-transform: uppercase;
-        }
-        @media (min-width: 640px)  { .sht-heading { font-size: 48px; } }
-        @media (min-width: 1024px) { .sht-heading { font-size: 60px; } }
-
-        .sht-heading-rule {
-          display: block;
-          width: 56px;
-          height: 2px;
-          margin-top: 20px;
-          background: var(--sht-accent);
-        }
-
-        .sht-subtext {
-          max-width: 680px;
-          margin: 20px 0 0;
-          color: rgba(255, 255, 255, 0.72);
-          font-size: 13px;
-          font-weight: 400;
-          line-height: 1.9;
-          letter-spacing: 0.01em;
-        }
-        @media (min-width: 640px) { .sht-subtext { font-size: 14px; } }
-
-        /* =====================================================
-           GALLERY SECTION (WHITE)
-        ===================================================== */
-
-        .sht-products {
-          background: #FFFFFF;
-          color: #141414;
-          padding-block: 40px 64px;
-          scroll-margin-top: 70px;
-          --sht-text: #141414;
-          --sht-muted: rgba(20, 20, 20, 0.62);
-          --sht-line: rgba(20, 20, 20, 0.14);
-          --sht-gap: 10px;
-        }
-        @media (min-width: 640px) {
-          .sht-products { padding-block: 56px 80px; --sht-gap: 14px; }
-        }
-        @media (min-width: 1024px) {
-          .sht-products { padding-block: 64px 96px; --sht-gap: 18px; }
-        }
-
-        .sht-gallery-head {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 8px 16px;
-          margin-bottom: 28px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid var(--sht-line);
-        }
-
-        .sht-gallery-count {
-          color: var(--sht-muted);
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          white-space: nowrap;
-        }
-
-        .sht-loading {
-          padding: 80px 0;
-          color: var(--sht-muted);
-          font-size: 12px;
-          font-weight: 500;
-          letter-spacing: 0.14em;
-          text-align: center;
-          text-transform: uppercase;
-        }
-
-        /* PINTEREST MASONRY */
-
-        .sht-masonry {
-          column-count: 2;
-          column-gap: var(--sht-gap);
-        }
-        @media (min-width: 768px)  { .sht-masonry { column-count: 3; } }
-        @media (min-width: 1280px) { .sht-masonry { column-count: 4; } }
-
-        /* image = poori height, box ko pura cover, koi gap/crop nahi */
-        .sht-item {
-          position: relative;
-          display: block;
-          width: 100%;
-          height: auto;
-          margin: 0 0 var(--sht-gap);
-          padding: 0;
-          overflow: hidden;
-          break-inside: avoid;
-          border: 0;
-          border-radius: 10px;
-          background: transparent;
-          line-height: 0;
-          font-size: 0;
-          cursor: zoom-in;
-          opacity: 0;
-          transform: translate3d(0, 14px, 0);
-          transition: opacity 500ms var(--sht-ease), transform 500ms var(--sht-ease);
-          transition-delay: calc(var(--i, 0) * 40ms);
-        }
-        .sht-item.is-loaded {
-          opacity: 1;
-          transform: translate3d(0, 0, 0);
-        }
-
-        .sht-item img {
-          display: block;
-          width: 100%;
-          height: auto;
-          object-fit: cover;
-          vertical-align: top;
-          transition: transform 700ms var(--sht-ease);
-        }
-
-        /* load hone se pehle layout jump na ho */
-        .sht-item:not(.is-loaded) {
-          background: #F3F0EC;
-        }
-        .sht-item:not(.is-loaded) img {
-          min-height: 220px;
-        }
-
-        .sht-item:hover img { transform: scale(1.03); }
-
-        .sht-item-overlay {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: flex-end;
-          justify-content: flex-end;
-          padding: 14px;
-          background: linear-gradient(to top, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 50%);
-          opacity: 0;
-          transition: opacity 300ms ease;
-        }
-        .sht-item:hover .sht-item-overlay,
-        .sht-item:focus-visible .sht-item-overlay { opacity: 1; }
-
-        .sht-item-zoom {
-          display: flex;
-          width: 32px;
-          height: 32px;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.7);
-          border-radius: 50%;
-          color: #FFFFFF;
-          font-size: 16px;
-          line-height: 1;
-        }
-
-        @media (hover: none) {
-          .sht-item-overlay { display: none; }
-        }
-
-        .sht-item:focus-visible,
-        .sht-page-btn:focus-visible {
-          outline: 2px solid var(--sht-accent);
-          outline-offset: 3px;
-        }
-
-        /* PAGINATION */
-
-        .sht-pagination {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          margin-top: 40px;
-        }
-
-        .sht-page-btn {
-          display: inline-flex;
-          min-width: 42px;
-          min-height: 42px;
-          align-items: center;
-          justify-content: center;
-          padding: 0 12px;
-          border: 1px solid var(--sht-line);
-          border-radius: 2px;
-          background: #FFFFFF;
-          color: var(--sht-text);
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.04em;
-          cursor: pointer;
-          transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease;
-        }
-        .sht-page-btn:hover:not(:disabled):not([aria-current="page"]) {
-          border-color: var(--sht-accent);
-          color: var(--sht-accent);
-        }
-        .sht-page-btn[aria-current="page"] {
-          background: #141414;
-          border-color: #141414;
-          color: #FFFFFF;
-          cursor: default;
-        }
-        .sht-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-        @media (max-width: 480px) {
-          .sht-page-btn { min-width: 38px; min-height: 38px; padding: 0 9px; }
-          .sht-pagination { gap: 6px; }
-        }
-
-        /* =====================================================
-           LIGHTBOX
-        ===================================================== */
-
-        .sht-lightbox {
-          --sht-accent: #C0652B;
-
-          position: fixed;
-          inset: 0;
-          z-index: 1000;
-          display: flex;
-          flex-direction: column;
-          background: rgba(0, 0, 0, 0.94);
-          animation: sht-fade 250ms ease both;
-        }
-
-        .sht-lightbox-top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 14px 16px;
-          color: #FFFFFF;
-        }
-        @media (min-width: 640px) { .sht-lightbox-top { padding: 18px 32px; } }
-
-        .sht-lightbox-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-
-        .sht-lightbox-title {
-          overflow: hidden;
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.12em;
-          text-overflow: ellipsis;
-          text-transform: uppercase;
-          white-space: nowrap;
-        }
-
-        .sht-lightbox-count {
-          color: rgba(255, 255, 255, 0.65);
-          font-size: 11px;
-          letter-spacing: 0.14em;
-        }
-
-        .sht-lightbox-close {
-          display: flex;
-          width: 42px;
-          height: 42px;
-          flex: 0 0 auto;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.4);
-          border-radius: 50%;
-          background: transparent;
-          color: #FFFFFF;
-          font-size: 16px;
-          cursor: pointer;
-          transition: background-color 200ms ease, border-color 200ms ease;
-        }
-        .sht-lightbox-close:hover { background: var(--sht-accent); border-color: var(--sht-accent); }
-
-        .sht-lightbox-stage {
-          position: relative;
-          display: flex;
-          min-height: 0;
-          flex: 1;
-          align-items: center;
-          justify-content: center;
-          padding: 0 12px 24px;
-        }
-        @media (min-width: 640px) { .sht-lightbox-stage { padding: 0 80px 32px; } }
-
-        /* popup mein image screen ki poori height tak */
-        .sht-lightbox-stage img {
-          display: block;
-          width: auto;
-          height: auto;
-          max-width: 100%;
-          max-height: calc(100vh - 110px);
-          object-fit: contain;
-          animation: sht-fade 300ms ease both;
-        }
-
-        .sht-lightbox-nav {
-          position: absolute;
-          top: 50%;
-          z-index: 2;
-          display: flex;
-          width: 44px;
-          height: 44px;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.4);
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.5);
-          color: #FFFFFF;
-          font-size: 26px;
-          line-height: 1;
-          transform: translateY(-50%);
-          cursor: pointer;
-          transition: background-color 200ms ease, border-color 200ms ease;
-        }
-        .sht-lightbox-nav:hover { background: var(--sht-accent); border-color: var(--sht-accent); }
-        .sht-lightbox-prev { left: 10px; }
-        .sht-lightbox-next { right: 10px; }
-        @media (min-width: 640px) {
-          .sht-lightbox-prev { left: 20px; }
-          .sht-lightbox-next { right: 20px; }
-        }
-
-        @keyframes sht-fade {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .sht-wrap *,
-          .sht-lightbox,
-          .sht-lightbox * {
-            animation: none !important;
-            transition: none !important;
-          }
-          .sht-item { opacity: 1; transform: none; }
-        }
-      `}</style>
-
-      <div className="sht-wrap">
-        {/* ================= BLACK: HEADING + DESCRIPTION ================= */}
-        <section className="sht-top" aria-labelledby="sht-title">
-          <div className="sht-container">
-            <h1 className="sht-heading" id="sht-title">
-              Our Sheets
-            </h1>
-            <span className="sht-heading-rule" aria-hidden="true" />
-            <p className="sht-subtext">
-              A wide range of premium sheets in refined colours, textures and
-              finishes for kitchens, wardrobes and interior surfaces. Durable,
-              easy to clean and carefully chosen to give every space a smooth,
-              high-quality look.
-            </p>
+            <button
+              type="button"
+              onClick={fetchProducts}
+              className="ml-2 font-medium text-[#C0652B] underline underline-offset-4"
+            >
+              Try again
+            </button>
           </div>
-        </section>
+        )}
 
-        {/* ================= WHITE: MASONRY GALLERY ================= */}
-        <section
-          className="sht-products"
-          ref={galleryRef}
-          aria-label={`${GALLERY_LABEL} gallery`}
-        >
-          <div className="sht-container">
-            {loading ? (
-              <p className="sht-loading" role="status">
-                Loading gallery...
-              </p>
-            ) : (
-              <>
-                <div className="sht-gallery-head">
-                  <span className="sht-gallery-count">
-                    Showing {images.length ? pageStart + 1 : 0}–{pageEnd} of{" "}
-                    {images.length}
-                  </span>
-                  <span className="sht-gallery-count">
-                    Page {page} / {totalPages}
-                  </span>
-                </div>
-
-                <div className="sht-masonry" key={page}>
-                  {pageImages.map((img, i) => (
-                    <MasonryItem
-                      key={img.id}
-                      img={img}
-                      index={i}
-                      onOpen={() => setLightboxIndex(pageStart + i)}
-                    />
-                  ))}
-                </div>
-
-                {/* PAGINATION: 1 2 3 4 5 */}
-                {totalPages > 1 && (
-                  <nav
-                    className="sht-pagination"
-                    aria-label="Gallery pagination"
-                  >
-                    <button
-                      type="button"
-                      className="sht-page-btn"
-                      onClick={() => goToPage(page - 1)}
-                      disabled={page === 1}
-                      aria-label="Previous page"
-                    >
-                      ‹
-                    </button>
-
-                    {getPageNumbers(page, totalPages).map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        className="sht-page-btn"
-                        onClick={() => goToPage(p)}
-                        aria-current={p === page ? "page" : undefined}
-                        aria-label={`Page ${p}`}
-                      >
-                        {p}
-                      </button>
-                    ))}
-
-                    <button
-                      type="button"
-                      className="sht-page-btn"
-                      onClick={() => goToPage(page + 1)}
-                      disabled={page === totalPages}
-                      aria-label="Next page"
-                    >
-                      ›
-                    </button>
-                  </nav>
-                )}
-              </>
-            )}
-          </div>
-        </section>
+        <Products
+          products={list}
+          loading={loading}
+          onPreview={openPreview}
+          onInquiry={setInquiryProduct}
+        />
       </div>
 
-      {/* POPUP */}
-      {lightboxIndex !== null && (
-        <Lightbox
-          images={images}
-          index={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-          onChange={setLightboxIndex}
+      {previewIndex !== null && (
+        <Preview
+          products={list}
+          index={previewIndex}
+          onClose={closePreview}
+          onChange={setPreviewIndex}
+          onInquiry={openInquiryFromPreview}
         />
       )}
-    </>
-  );
-};
 
-export default Sheets;
+      {inquiryProduct && (
+        <InquiryModal product={inquiryProduct} onClose={closeInquiry} />
+      )}
+    </main>
+  );
+}

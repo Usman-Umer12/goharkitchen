@@ -989,16 +989,97 @@ const Styles = () => (
 
     .kt-hero-btn { margin-top: 1.75rem; height: 48px; padding: 0 28px; font-size: 11.5px; letter-spacing: .12em; }
 
-    @media (max-width: 640px) {
-      .kt-hero { padding: 6.5rem 0 2.5rem; }
-      .kt-hero-lines { background-size: 50% 100%; }
-      .kt-hero-text { font-size: .88rem; line-height: 1.65; margin-top: 1rem; padding: 0 6px; max-width: 340px; }
-      .kt-hero-btn { width: auto; max-width: 100%; height: 44px; margin-top: 1.5rem; padding: 0 22px; font-size: 11px; }
+    /* chhoti height wali screens (desktop landscape) */
+    @media (min-width: 1024px) and (max-height: 640px) {
+      .kt-hero { padding-top: 6rem; padding-bottom: 2rem; }
     }
 
-    /* chhoti height wali screens (landscape phones) */
-    @media (max-height: 640px) {
-      .kt-hero { padding-top: 6rem; padding-bottom: 2rem; }
+    /* ---------- TABLET + MOBILE HERO: HEIGHT 70 ---------- */
+    @media (max-width: 1023px) {
+      .kt-first {
+        min-height: 0;
+        height: auto;
+      }
+
+      .kt-hero {
+        flex: none;
+        min-height: 0;
+        max-height: none;
+        height: 70vh;
+        height: 70svh;
+        padding: 80px 0 28px;
+      }
+
+      /* sirf title / description / button -> eyebrow hide */
+      .kt-hero .gk-eyebrow { display: none; }
+
+      .kt-hero .gk-hero-title {
+        font-size: clamp(1.65rem, 5vw, 3rem);
+        line-height: 1.12;
+        letter-spacing: 0.015em;
+      }
+
+      .kt-hero-text {
+        max-width: 460px;
+        margin: 12px auto 0;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .kt-hero-btn { margin-top: 18px; }
+    }
+
+    @media (max-width: 640px) {
+      .kt-hero { padding: 72px 0 24px; }
+      .kt-hero-lines { background-size: 50% 100%; }
+
+      .kt-hero .gk-hero-title {
+        font-size: clamp(1.5rem, 6.2vw, 2.15rem);
+        line-height: 1.14;
+        letter-spacing: 0;
+      }
+
+      .kt-hero-text {
+        font-size: 12px;
+        line-height: 1.55;
+        margin-top: 10px;
+        padding: 0 8px;
+        max-width: 330px;
+      }
+
+      .kt-hero-btn {
+        width: auto;
+        max-width: 100%;
+        height: 42px;
+        margin-top: 16px;
+        padding: 0 20px;
+        font-size: 10px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .kt-hero { padding: 68px 0 20px; }
+
+      .kt-hero .gk-hero-title { font-size: clamp(1.35rem, 6vw, 1.7rem); }
+
+      .kt-hero-text {
+        max-width: 290px;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .kt-hero-btn {
+        height: 40px;
+        margin-top: 13px;
+        padding: 0 16px;
+        font-size: 9px;
+      }
+    }
+
+    @media (max-width: 640px) and (max-height: 600px) {
+      .kt-hero { padding: 60px 0 18px; }
+      .kt-hero-text { margin-top: 8px; }
+      .kt-hero-btn { margin-top: 12px; }
     }
 
     /* ---------- Product card (white) ---------- */
@@ -1079,6 +1160,10 @@ const Styles = () => (
 
     @media (min-width: 640px) {
       .kt-inquiry { font-size: 11.5px; padding: 13px 14px; letter-spacing: 0.1em; }
+    }
+
+    @media (max-width: 640px) {
+      .kt-product:hover { transform: none; }
     }
 
     /* ---------- PAGINATION (light) ---------- */

@@ -1,3 +1,8 @@
+// admin/Sheets.jsx  (AdminSheets)
+// Supabase table: sheets_images
+// Columns: id, image_url, storage_path, title, description, price, delivery_text, status, alt, sort_order, created_at
+// Storage bucket: sheets
+
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -11,6 +16,10 @@ const PAGE_SIZE = 24;
 const MAX_FILE_MB = 15;
 const MAX_WIDTH = 1800;
 const WEBP_QUALITY = 0.86;
+
+const DEFAULT_DELIVERY = "Delivery All Over Pakistan";
+const MAX_TITLE = 80;
+const MAX_DESC = 300;
 
 /* Purani website images (sirf "Import existing images" ke liye) */
 const localGroups = [{ prefix: "kitchen", count: 30 }];
@@ -100,6 +109,13 @@ const uploadToStorage = async (file) => {
 const isValidImage = (file) =>
   file.type.startsWith("image/") && file.size <= MAX_FILE_MB * 1024 * 1024;
 
+const formatPrice = (price) => {
+  const value = Number(price);
+  return Number.isFinite(value) && value > 0
+    ? `PKR ${value.toLocaleString("en-PK")}`
+    : "Price on request";
+};
+
 /* =========================================================
    COMPONENT
 ========================================================= */
@@ -113,10 +129,21 @@ const AdminSheets = () => {
   const [toast, setToast] = useState(null);
   const [dragOver, setDragOver] = useState(false);
 
+  /* edit modal */
+  const [editRow, setEditRow] = useState(null);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+    delivery_text: DEFAULT_DELIVERY,
+    status: "active",
+  });
+  const [saving, setSaving] = useState(false);
+
   const fileInputRef = useRef(null);
   const toastTimer = useRef(null);
 
-  const locked = Boolean(progress) || Boolean(busyId);
+  const locked = Boolean(progress) || Boolean(busyId) || saving;
 
   const notify = useCallback((type, text) => {
     setToast({ type, text });
@@ -161,6 +188,94 @@ const AdminSheets = () => {
     ? Math.max(...rows.map((r) => r.sort_order || 0)) + 1
     : 0;
 
+  /* ---------- EDIT DETAILS (title / description / price / delivery) ---------- */
+
+  const openEdit = (row) => {
+    if (locked) return;
+    setEditRow(row);
+    setForm({
+      title: row.title || "",
+      description: row.description || "",
+      price:
+        row.price === null || row.price === undefined || Number(row.price) === 0
+          ? ""
+          : String(row.price),
+      delivery_text: row.delivery_text || DEFAULT_DELIVERY,
+      status: row.status || "active",
+    });
+  };
+
+  const closeEdit = () => {
+    if (saving) return;
+    setEditRow(null);
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveDetails = async (e) => {
+    e.preventDefault();
+    if (!editRow || saving) return;
+
+    const priceNumber = form.price === "" ? 0 : Number(form.price);
+
+    if (!Number.isFinite(priceNumber) || priceNumber < 0) {
+      notify("error", "Price sahi number hona chahiye (0 ya us se zyada).");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const payload = {
+        title: form.title.trim() || null,
+        description: form.description.trim() || null,
+        price: priceNumber,
+        delivery_text: form.delivery_text.trim() || DEFAULT_DELIVERY,
+        status: form.status,
+      };
+
+      const { error } = await supabase
+        .from(TABLE)
+        .update(payload)
+        .eq("id", editRow.id);
+
+      if (error) throw error;
+
+      setRows((prev) =>
+        prev.map((r) => (r.id === editRow.id ? { ...r, ...payload } : r))
+      );
+
+      setEditRow(null);
+      notify("success", "Details save ho gayi. Website par update nazar aayega.");
+    } catch (err) {
+      console.error(err);
+      notify("error", `Save nahi hua: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* Escape se modal band */
+  useEffect(() => {
+    if (!editRow) return undefined;
+
+    const onKey = (e) => {
+      if (e.key === "Escape" && !saving) setEditRow(null);
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [editRow, saving]);
+
   /* ---------- ADD NEW IMAGES ---------- */
 
   const handleFiles = async (fileList) => {
@@ -190,6 +305,11 @@ const AdminSheets = () => {
           image_url: url,
           storage_path: path,
           alt: null,
+          title: null,
+          description: null,
+          price: 0,
+          delivery_text: DEFAULT_DELIVERY,
+          status: "active",
           sort_order: sort,
         });
 
@@ -214,7 +334,9 @@ const AdminSheets = () => {
     if (success && !lastError) {
       notify(
         "success",
-        `${success} image(s) add ho gayi.${skipped ? ` ${skipped} skip hui.` : ""}`
+        `${success} image(s) add ho gayi. Ab "Edit" se title, description aur price likhein.${
+          skipped ? ` ${skipped} skip hui.` : ""
+        }`
       );
     } else if (success) {
       notify("error", `${success} add hui, baaki fail: ${lastError}`);
@@ -263,11 +385,11 @@ const AdminSheets = () => {
     }
   };
 
-  /* ---------- DELETE IMAGE ---------- */
+  /* ---------- DELETE ---------- */
 
   const handleDelete = async (row) => {
     if (locked) return;
-    if (!window.confirm("Ye image delete karni hai? Ye wapas nahi aayegi.")) return;
+    if (!window.confirm("Ye design delete karna hai? Ye wapas nahi aayega.")) return;
 
     setBusyId(row.id);
 
@@ -280,10 +402,10 @@ const AdminSheets = () => {
       }
 
       await load();
-      notify("success", "Image delete ho gayi.");
+      notify("success", "Design delete ho gaya.");
     } catch (err) {
       console.error(err);
-      notify("error", `Delete nahi hui: ${err.message}`);
+      notify("error", `Delete nahi hua: ${err.message}`);
     } finally {
       setBusyId(null);
     }
@@ -370,6 +492,11 @@ const AdminSheets = () => {
             image_url: publicUrl,
             storage_path: path,
             alt: `Sheets ${i + 1}`,
+            title: `Sheet Design ${i + 1}`,
+            description: null,
+            price: 0,
+            delivery_text: DEFAULT_DELIVERY,
+            status: "active",
             sort_order: success,
           });
 
@@ -420,6 +547,8 @@ const AdminSheets = () => {
   return (
     <div className="aa-page">
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
         .aa-page, .aa-page * { box-sizing: border-box; }
         .aa-page {
           --aa-ink: #171717;
@@ -431,6 +560,10 @@ const AdminSheets = () => {
           padding: 24px 16px 64px;
           background: #f7f7f5;
           color: var(--aa-ink);
+          font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+        .aa-page button, .aa-page input, .aa-page textarea, .aa-page select, .aa-page label {
+          font-family: inherit;
         }
         @media (min-width: 768px) { .aa-page { padding: 40px 40px 80px; } }
 
@@ -469,31 +602,65 @@ const AdminSheets = () => {
         .aa-btn:disabled, .aa-btn.is-disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
         .aa-btn-primary { border-color: #171717; background: #171717; color: #fff; }
         .aa-btn-primary:hover:not(:disabled) { border-color: var(--aa-accent); background: var(--aa-accent); color: #fff; }
+        .aa-btn-accent { border-color: var(--aa-accent); background: var(--aa-accent); color: #fff; }
+        .aa-btn-accent:hover:not(:disabled) { background: #D2743A; border-color: #D2743A; color: #fff; }
         .aa-btn-danger:hover:not(:disabled) { border-color: var(--aa-danger); color: var(--aa-danger); }
         .aa-btn:focus-visible, .aa-drop:focus-visible { outline: 2px solid var(--aa-accent); outline-offset: 2px; }
 
         .aa-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
         @media (min-width: 640px)  { .aa-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
         @media (min-width: 1024px) { .aa-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-        @media (min-width: 1280px) { .aa-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+        @media (min-width: 1280px) { .aa-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 
-        .aa-card { overflow: hidden; border: 1px solid var(--aa-line); border-radius: 10px; background: #fff; }
+        .aa-card { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--aa-line); border-radius: 10px; background: #fff; }
+        .aa-card.is-hidden-item { opacity: .75; }
         .aa-thumb { position: relative; aspect-ratio: 1 / 1; background: #f3f0ec; }
         .aa-thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
         .aa-badge { position: absolute; top: 8px; left: 8px; min-width: 26px; padding: 3px 8px; border-radius: 999px; background: rgba(0,0,0,.72); color: #fff; font-size: 11px; font-weight: 600; text-align: center; }
+        .aa-status { position: absolute; top: 8px; right: 8px; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+        .aa-status.is-active { background: #dcfce7; color: #166534; }
+        .aa-status.is-hidden { background: #fee2e2; color: #991b1b; }
         .aa-card-busy { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.7); }
         .aa-spinner { width: 24px; height: 24px; border: 3px solid #ddd; border-top-color: var(--aa-accent); border-radius: 50%; animation: aa-spin .8s linear infinite; }
         @keyframes aa-spin { to { transform: rotate(360deg); } }
 
-        .aa-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; }
+        .aa-info { padding: 10px 10px 2px; }
+        .aa-info-title { margin: 0; overflow: hidden; font-size: 12px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; text-overflow: ellipsis; white-space: nowrap; }
+        .aa-info-title.is-empty { color: #a1a1aa; font-weight: 500; text-transform: none; }
+        .aa-info-price { margin: 4px 0 0; font-size: 12px; font-weight: 700; color: var(--aa-accent); }
+        .aa-info-price.is-empty { color: #a1a1aa; font-weight: 500; }
+        .aa-info-meta { margin: 4px 0 0; overflow: hidden; font-size: 11px; color: var(--aa-muted); text-overflow: ellipsis; white-space: nowrap; }
+
+        .aa-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; margin-top: auto; }
         .aa-actions .aa-btn { min-height: 32px; padding: 0 6px; }
+        .aa-actions .aa-span-2 { grid-column: span 2; }
 
         .aa-empty { margin-top: 24px; padding: 40px 20px; border: 1px solid var(--aa-line); border-radius: 10px; background: #fff; text-align: center; font-size: 13px; color: var(--aa-muted); }
 
         .aa-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; }
         .aa-pagination span { font-size: 12px; font-weight: 600; color: var(--aa-muted); }
 
-        .aa-toast { position: fixed; right: 16px; bottom: 16px; z-index: 50; max-width: min(92vw, 380px); padding: 12px 16px; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; line-height: 1.5; box-shadow: 0 12px 30px -10px rgba(0,0,0,.4); }
+        /* EDIT MODAL */
+        .aa-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.6); backdrop-filter: blur(3px); }
+        .aa-modal { width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; border-radius: 12px; background: #fff; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+        .aa-modal-head { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid var(--aa-line); }
+        .aa-modal-thumb { width: 56px; height: 56px; flex: 0 0 auto; overflow: hidden; border-radius: 8px; background: #f3f0ec; }
+        .aa-modal-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .aa-modal-title { margin: 0; font-size: 16px; font-weight: 700; }
+        .aa-modal-sub { margin: 2px 0 0; font-size: 12px; color: var(--aa-muted); }
+        .aa-modal-close { margin-left: auto; display: flex; width: 34px; height: 34px; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid var(--aa-line); border-radius: 50%; background: #fff; font-size: 14px; cursor: pointer; }
+        .aa-modal-close:hover { border-color: var(--aa-accent); color: var(--aa-accent); }
+        .aa-form { display: grid; gap: 16px; padding: 20px; }
+        .aa-field label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #525252; }
+        .aa-field label small { font-size: 10px; font-weight: 500; letter-spacing: 0; text-transform: none; color: #a1a1aa; }
+        .aa-input { width: 100%; padding: 11px 12px; border: 1px solid #d4d4d4; border-radius: 8px; background: #fafafa; color: var(--aa-ink); font-size: 14px; outline: none; transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
+        .aa-input:focus { border-color: var(--aa-accent); background: #fff; box-shadow: 0 0 0 3px rgba(192,101,43,.15); }
+        textarea.aa-input { min-height: 96px; resize: vertical; line-height: 1.6; }
+        .aa-hint { margin: 6px 0 0; font-size: 11px; color: var(--aa-muted); }
+        .aa-form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding-top: 4px; }
+        .aa-form-actions .aa-btn { min-height: 40px; padding: 0 20px; }
+
+        .aa-toast { position: fixed; right: 16px; bottom: 16px; z-index: 200; max-width: min(92vw, 380px); padding: 12px 16px; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; line-height: 1.5; box-shadow: 0 12px 30px -10px rgba(0,0,0,.4); }
         .aa-toast.is-success { background: #166534; }
         .aa-toast.is-error { background: #B91C1C; }
 
@@ -506,13 +673,15 @@ const AdminSheets = () => {
       <div className="aa-head">
         <div>
           <p className="aa-eyebrow">Gohar Kitchen / Admin</p>
-          <h1 className="aa-title">Sheets Images</h1>
+          <h1 className="aa-title">Sheets Designs</h1>
           <p className="aa-sub">
-            Yahan se Sheets page ki images add, change, delete aur reorder
-            karein. Changes website par foran nazar aate hain.
+            Yahan se Sheets page ke designs add, change, delete aur reorder
+            karein. Har design ka title, description, price aur delivery text
+            "Edit" button se khud badal sakte hain. Changes website par foran
+            nazar aate hain.
           </p>
         </div>
-        <span className="aa-count">{rows.length} images</span>
+        <span className="aa-count">{rows.length} designs</span>
       </div>
 
       {/* UPLOAD */}
@@ -536,7 +705,7 @@ const AdminSheets = () => {
         onDrop={onDrop}
       >
         <span className="aa-drop-icon" aria-hidden="true">＋</span>
-        <p className="aa-drop-title">Nayi images add karein</p>
+        <p className="aa-drop-title">Naye designs add karein</p>
         <p className="aa-drop-text">
           Click karein ya images yahan drag karein (ek saath kayi). Max {MAX_FILE_MB}MB har image.
         </p>
@@ -571,7 +740,7 @@ const AdminSheets = () => {
       {!loading && rows.length === 0 && !progress && (
         <div className="aa-import">
           <p>
-            Abhi Supabase mein koi image nahi hai. Website ki purani Sheets
+            Abhi Supabase mein koi design nahi hai. Website ki purani Sheets
             images ek click mein import kar sakte hain, uske baad unhein yahan
             se manage kar sakte hain.
           </p>
@@ -588,25 +757,35 @@ const AdminSheets = () => {
 
       {/* GRID */}
       {loading ? (
-        <div className="aa-empty">Images load ho rahi hain...</div>
+        <div className="aa-empty">Designs load ho rahe hain...</div>
       ) : rows.length === 0 ? (
-        <div className="aa-empty">Abhi koi image nahi hai.</div>
+        <div className="aa-empty">Abhi koi design nahi hai.</div>
       ) : (
         <>
           <div className="aa-grid">
             {pageRows.map((row, i) => {
               const globalIndex = pageStart + i;
               const isBusy = busyId === row.id;
+              const isHiddenItem = row.status === "hidden";
+              const hasPrice = Number(row.price) > 0;
 
               return (
-                <article className="aa-card" key={row.id}>
+                <article
+                  className={`aa-card ${isHiddenItem ? "is-hidden-item" : ""}`}
+                  key={row.id}
+                >
                   <div className="aa-thumb">
                     <img
                       src={row.image_url}
-                      alt={row.alt || `Sheets ${globalIndex + 1}`}
+                      alt={row.title || row.alt || `Sheets ${globalIndex + 1}`}
                       loading="lazy"
                     />
                     <span className="aa-badge">{globalIndex + 1}</span>
+                    <span
+                      className={`aa-status ${isHiddenItem ? "is-hidden" : "is-active"}`}
+                    >
+                      {isHiddenItem ? "Hidden" : "Live"}
+                    </span>
                     {isBusy && (
                       <div className="aa-card-busy" aria-hidden="true">
                         <span className="aa-spinner" />
@@ -614,7 +793,28 @@ const AdminSheets = () => {
                     )}
                   </div>
 
+                  <div className="aa-info">
+                    <p className={`aa-info-title ${row.title ? "" : "is-empty"}`}>
+                      {row.title || "Title nahi likha"}
+                    </p>
+                    <p className={`aa-info-price ${hasPrice ? "" : "is-empty"}`}>
+                      {formatPrice(row.price)}
+                    </p>
+                    <p className="aa-info-meta">
+                      {row.delivery_text || DEFAULT_DELIVERY}
+                    </p>
+                  </div>
+
                   <div className="aa-actions">
+                    <button
+                      type="button"
+                      className="aa-btn aa-btn-accent aa-span-2"
+                      onClick={() => openEdit(row)}
+                      disabled={locked}
+                    >
+                      Edit Details
+                    </button>
+
                     <button
                       type="button"
                       className="aa-btn"
@@ -688,6 +888,149 @@ const AdminSheets = () => {
             </nav>
           )}
         </>
+      )}
+
+      {/* EDIT DETAILS MODAL */}
+      {editRow && (
+        <div
+          className="aa-overlay"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeEdit();
+          }}
+        >
+          <div
+            className="aa-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="aa-edit-title"
+          >
+            <div className="aa-modal-head">
+              <div className="aa-modal-thumb">
+                <img src={editRow.image_url} alt="" />
+              </div>
+              <div>
+                <h2 className="aa-modal-title" id="aa-edit-title">
+                  Design Details
+                </h2>
+                <p className="aa-modal-sub">
+                  Ye details website ke card aur preview mein dikhengi.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="aa-modal-close"
+                onClick={closeEdit}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form className="aa-form" onSubmit={handleSaveDetails}>
+              <div className="aa-field">
+                <label htmlFor="aa-title">
+                  Title
+                  <small>
+                    {form.title.length}/{MAX_TITLE}
+                  </small>
+                </label>
+                <input
+                  id="aa-title"
+                  name="title"
+                  type="text"
+                  className="aa-input"
+                  maxLength={MAX_TITLE}
+                  value={form.title}
+                  onChange={handleFormChange}
+                  placeholder="Jaise: Premium Kitchen Sheet"
+                />
+              </div>
+
+              <div className="aa-field">
+                <label htmlFor="aa-description">
+                  Description
+                  <small>
+                    {form.description.length}/{MAX_DESC}
+                  </small>
+                </label>
+                <textarea
+                  id="aa-description"
+                  name="description"
+                  className="aa-input"
+                  maxLength={MAX_DESC}
+                  value={form.description}
+                  onChange={handleFormChange}
+                  placeholder="Design ke baare mein chhoti si detail likhein"
+                />
+              </div>
+
+              <div className="aa-field">
+                <label htmlFor="aa-price">Price (PKR)</label>
+                <input
+                  id="aa-price"
+                  name="price"
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  step="1"
+                  className="aa-input"
+                  value={form.price}
+                  onChange={handleFormChange}
+                  placeholder="Jaise: 25000"
+                />
+                <p className="aa-hint">
+                  Khali ya 0 chhodein to website par price nahi dikhegi (inquiry
+                  message mein "Price on request" jayega).
+                </p>
+              </div>
+
+              <div className="aa-field">
+                <label htmlFor="aa-delivery">Delivery Text</label>
+                <input
+                  id="aa-delivery"
+                  name="delivery_text"
+                  type="text"
+                  className="aa-input"
+                  value={form.delivery_text}
+                  onChange={handleFormChange}
+                  placeholder={DEFAULT_DELIVERY}
+                />
+              </div>
+
+              <div className="aa-field">
+                <label htmlFor="aa-status">Website par dikhana hai?</label>
+                <select
+                  id="aa-status"
+                  name="status"
+                  className="aa-input"
+                  value={form.status}
+                  onChange={handleFormChange}
+                >
+                  <option value="active">Haan, website par dikhao (Live)</option>
+                  <option value="hidden">Nahi, abhi chhupa do (Hidden)</option>
+                </select>
+              </div>
+
+              <div className="aa-form-actions">
+                <button
+                  type="button"
+                  className="aa-btn"
+                  onClick={closeEdit}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="aa-btn aa-btn-primary"
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {toast && (

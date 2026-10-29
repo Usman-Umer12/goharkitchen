@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const ACCENT = "#C0652B";
+const ACCENT_LIGHT = "#E08A4F";
 const PHONE_DISPLAY = "+923007023202";
 const PHONE_LINK = "+923007023202";
 
@@ -12,11 +13,19 @@ const LINKS = [
   { label: "Bedroom Walls", path: "/bedroom-walls" },
 ];
 
-/* Dropdown ("Explore") ke items */
+/* "Explore" dropdown.
+   Accessories has its own page; its sub pages open right below it. */
 const DROPDOWN = {
   label: "Explore",
   items: [
-    { label: "Accessories", path: "/accessories" },
+    {
+      label: "Accessories",
+      path: "/accessories",
+      children: [
+        { label: "Wardrobe Accessories", path: "/wardrobe-accessories" },
+        { label: "Kitchen Accessories", path: "/kitchen-accessories" },
+      ],
+    },
     { label: "Sheets", path: "/sheets" },
     { label: "Corian", path: "/corian" },
     { label: "Vanities", path: "/vanities" },
@@ -27,11 +36,17 @@ const DROPDOWN = {
 
 const ABOUT = { label: "About Us", path: "/about" };
 
-/* Mobile menu ki numbering ke liye ek flat order */
+const DROPDOWN_PATHS = DROPDOWN.items.flatMap((item) =>
+  item.children
+    ? [item.path, ...item.children.map((child) => child.path)]
+    : [item.path]
+);
+
+/* Mobile numbering order */
 const MOBILE_ORDER = [...LINKS, DROPDOWN, ABOUT];
 
 /* =========================================================
-   LOGO  (copper + white wordmark)
+   SMALL UI PIECES
 ========================================================= */
 const Logo = () => (
   <a
@@ -60,7 +75,6 @@ const Logo = () => (
   </a>
 );
 
-/* Chevron icon (dropdown arrow) */
 const Chevron = ({ open, className = "" }) => (
   <svg
     viewBox="0 0 12 12"
@@ -78,14 +92,21 @@ const Chevron = ({ open, className = "" }) => (
   </svg>
 );
 
+/* =========================================================
+   NAVBAR
+========================================================= */
 export default function Navbar() {
   const [open, setOpen] = useState(false); // mobile menu
   const [scrolled, setScrolled] = useState(false);
   const [dropOpen, setDropOpen] = useState(false); // desktop dropdown
+  const [subOpen, setSubOpen] = useState(false); // desktop Accessories items
   const [mobileDropOpen, setMobileDropOpen] = useState(false); // mobile accordion
+  const [mobileSubOpen, setMobileSubOpen] = useState(false); // mobile Accessories
 
   const dropRef = useRef(null);
+  const triggerRef = useRef(null);
   const closeTimer = useRef(null);
+  const subTimer = useRef(null);
 
   const currentPath =
     typeof window !== "undefined"
@@ -104,7 +125,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* ---------- lock page scroll while the menu is open ---------- */
+  /* ---------- lock page scroll while the mobile menu is open ---------- */
   useEffect(() => {
     if (!open) return;
 
@@ -138,19 +159,17 @@ export default function Navbar() {
     };
   }, [open]);
 
-  /* ---------- keyboard + resize ---------- */
+  /* ---------- resize + Escape (mobile menu) ---------- */
   useEffect(() => {
     const onKey = (event) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        setDropOpen(false);
-      }
+      if (event.key === "Escape") setOpen(false);
     };
 
     const onResize = () => {
       if (window.innerWidth >= 1280) {
         setOpen(false);
         setMobileDropOpen(false);
+        setMobileSubOpen(false);
       } else {
         setDropOpen(false);
       }
@@ -165,7 +184,7 @@ export default function Navbar() {
     };
   }, []);
 
-  /* ---------- desktop dropdown: bahar click par band ---------- */
+  /* ---------- desktop dropdown: outside click + Escape ---------- */
   useEffect(() => {
     if (!dropOpen) return;
 
@@ -175,23 +194,49 @@ export default function Navbar() {
       }
     };
 
+    const onKey = (event) => {
+      if (event.key === "Escape") {
+        setDropOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [dropOpen]);
+
+  /* Accessories items close together with the dropdown */
+  useEffect(() => {
+    if (!dropOpen) setSubOpen(false);
   }, [dropOpen]);
 
   /* timer cleanup */
-  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(closeTimer.current);
+      clearTimeout(subTimer.current);
+    },
+    []
+  );
 
-  /* menu band hone par accordion reset */
+  /* reset mobile accordions when the menu closes */
   useEffect(() => {
-    if (!open) setMobileDropOpen(false);
+    if (!open) {
+      setMobileDropOpen(false);
+      setMobileSubOpen(false);
+    }
   }, [open]);
 
   const isActive = (path) => currentPath === path;
-  const dropdownActive = DROPDOWN.items.some((item) => isActive(item.path));
+  const dropdownActive = DROPDOWN_PATHS.some((path) => isActive(path));
   const compact = scrolled && !open;
 
-  /* Hover (sirf mouse) - chhota delay taake cursor panel tak ja sake */
+  /* Hover (mouse only) - dropdown */
   const handleEnter = (event) => {
     if (event.pointerType && event.pointerType !== "mouse") return;
     clearTimeout(closeTimer.current);
@@ -201,13 +246,41 @@ export default function Navbar() {
   const handleLeave = (event) => {
     if (event.pointerType && event.pointerType !== "mouse") return;
     clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setDropOpen(false), 140);
+    closeTimer.current = setTimeout(() => setDropOpen(false), 160);
   };
 
-  /* Header background (fully opaque so nothing from the page shows through):
-     - Mobile / tablet: solid dark when scrolled or menu open
-     - Desktop top of page: transparent gradient over the hero
-     - Desktop after scroll: solid dark */
+  /* Hover (mouse only) - Accessories items */
+  const handleSubEnter = (event) => {
+    if (event.pointerType && event.pointerType !== "mouse") return;
+    clearTimeout(subTimer.current);
+    setSubOpen(true);
+  };
+
+  const handleSubLeave = (event) => {
+    if (event.pointerType && event.pointerType !== "mouse") return;
+    clearTimeout(subTimer.current);
+    subTimer.current = setTimeout(() => setSubOpen(false), 160);
+  };
+
+  /* close when keyboard focus leaves the dropdown */
+  const handleBlur = (event) => {
+    if (!dropRef.current?.contains(event.relatedTarget)) {
+      setDropOpen(false);
+    }
+  };
+
+  const handleTriggerKey = (event) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setDropOpen(true);
+    }
+  };
+
+  const closeAllDesktop = () => {
+    setSubOpen(false);
+    setDropOpen(false);
+  };
+
   const headerBg =
     open || scrolled
       ? "border-white/10 bg-[#0A0A0A]"
@@ -227,28 +300,37 @@ export default function Navbar() {
     />
   );
 
+  /* plain dropdown row: only a soft text + background change on hover */
+  const rowClass = (active, extra = "") =>
+    `gk-sans block px-5 py-2.5 text-[12px] font-medium uppercase tracking-[0.1em] transition-colors duration-200 hover:bg-white/[0.04] ${
+      active ? "text-[#E08A4F]" : "text-neutral-300 hover:text-white"
+    } ${extra}`;
+
   return (
     <>
       {/* =====================================================
-          NAVBAR  (fixed, always above the page)
-          Animations sirf desktop (xl) par hain.
+          NAVBAR (fixed)
       ====================================================== */}
       <header
         className={`fixed inset-x-0 top-0 z-[100] w-full border-b xl:transition-colors xl:duration-500 ${headerBg}`}
       >
         <nav
+          aria-label="Main navigation"
           className={`mx-auto flex max-w-[90rem] items-center justify-between px-4 sm:px-8 xl:transition-[height] xl:duration-500 ${
             compact ? "h-[68px] sm:h-[76px]" : "h-[76px] sm:h-[92px]"
           }`}
         >
-          {/* LOGO */}
           <Logo />
 
           {/* DESKTOP LINKS */}
           <ul className="hidden items-center gap-0 xl:flex 2xl:gap-0.5">
             {LINKS.map((item) => (
               <li key={item.path}>
-                <a href={item.path} className={desktopLinkClass(isActive(item.path))}>
+                <a
+                  href={item.path}
+                  aria-current={isActive(item.path) ? "page" : undefined}
+                  className={desktopLinkClass(isActive(item.path))}
+                >
                   {item.label}
                   {underline(isActive(item.path))}
                 </a>
@@ -261,10 +343,13 @@ export default function Navbar() {
               className="relative"
               onPointerEnter={handleEnter}
               onPointerLeave={handleLeave}
+              onBlur={handleBlur}
             >
               <button
+                ref={triggerRef}
                 type="button"
                 onClick={() => setDropOpen((value) => !value)}
+                onKeyDown={handleTriggerKey}
                 aria-haspopup="true"
                 aria-expanded={dropOpen}
                 aria-controls="gk-explore-menu"
@@ -275,50 +360,124 @@ export default function Navbar() {
                 {underline(dropdownActive || dropOpen)}
               </button>
 
-              {/* panel (pt-3 = hover gap bridge) */}
+              {/* panel (pt-3 = invisible hover bridge) */}
               <div
                 id="gk-explore-menu"
-                className={`absolute left-1/2 top-full w-64 -translate-x-1/2 pt-3 transition-all duration-200 ${
+                className={`absolute left-1/2 top-full w-60 -translate-x-1/2 pt-3 transition-all duration-200 ${
                   dropOpen
                     ? "visible translate-y-0 opacity-100"
-                    : "invisible -translate-y-1 opacity-0"
+                    : "pointer-events-none invisible -translate-y-1 opacity-0"
                 }`}
               >
-                <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0A0A0A] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.7)]">
-                  <span
-                    className="block h-[2px] w-full"
-                    style={{
-                      background: `linear-gradient(90deg, ${ACCENT}, transparent)`,
-                    }}
-                  />
-                  <ul className="py-2">
-                    {DROPDOWN.items.map((item) => (
-                      <li key={item.path}>
-                        <a
-                          href={item.path}
-                          tabIndex={dropOpen ? 0 : -1}
-                          onClick={() => setDropOpen(false)}
-                          className={`gk-sans group/item flex items-center justify-between px-5 py-3 text-[12px] font-medium uppercase tracking-[0.1em] transition-colors duration-200 hover:bg-white/5 ${
-                            isActive(item.path)
-                              ? "text-[#E08A4F]"
-                              : "text-neutral-300 hover:text-white"
-                          }`}
-                        >
-                          <span>{item.label}</span>
-                          <span
-                            className="h-[2px] w-0 rounded-full transition-all duration-300 group-hover/item:w-4"
-                            style={{ backgroundColor: ACCENT }}
-                          />
-                        </a>
-                      </li>
-                    ))}
+                <div className="overflow-hidden rounded-md border border-white/10 bg-[#0A0A0A] shadow-[0_18px_40px_-12px_rgba(0,0,0,0.7)]">
+                  <ul className="py-1.5">
+                    {DROPDOWN.items.map((item) => {
+                      /* ----- Accessories: link + items open below ----- */
+                      if (item.children) {
+                        const parentActive =
+                          isActive(item.path) ||
+                          item.children.some((child) => isActive(child.path));
+
+                        return (
+                          <li
+                            key={item.path}
+                            onPointerEnter={handleSubEnter}
+                            onPointerLeave={handleSubLeave}
+                          >
+                            <div className="flex items-stretch transition-colors duration-200 hover:bg-white/[0.04]">
+                              <a
+                                href={item.path}
+                                tabIndex={dropOpen ? 0 : -1}
+                                onClick={closeAllDesktop}
+                                className={`gk-sans flex-1 py-2.5 pl-5 pr-2 text-[12px] font-medium uppercase tracking-[0.1em] transition-colors duration-200 ${
+                                  parentActive || subOpen
+                                    ? "text-[#E08A4F]"
+                                    : "text-neutral-300 hover:text-white"
+                                }`}
+                              >
+                                {item.label}
+                              </a>
+
+                              <button
+                                type="button"
+                                onClick={() => setSubOpen((value) => !value)}
+                                tabIndex={dropOpen ? 0 : -1}
+                                aria-label={`${item.label} submenu`}
+                                aria-expanded={subOpen}
+                                aria-controls="gk-accessories-menu"
+                                className="flex w-11 shrink-0 items-center justify-center text-neutral-500 transition-colors duration-200 hover:text-white"
+                              >
+                                <Chevron open={subOpen} />
+                              </button>
+                            </div>
+
+                            {/* smooth height animation (0fr -> 1fr) */}
+                            <div
+                              id="gk-accessories-menu"
+                              className="grid transition-[grid-template-rows] duration-300 ease-out"
+                              style={{
+                                gridTemplateRows: subOpen ? "1fr" : "0fr",
+                              }}
+                            >
+                              <div
+                                className="overflow-hidden"
+                                style={{
+                                  visibility: subOpen ? "visible" : "hidden",
+                                  transition: `visibility 0s linear ${
+                                    subOpen ? "0ms" : "300ms"
+                                  }`,
+                                }}
+                              >
+                                <ul className="bg-white/[0.02]">
+                                  {item.children.map((child) => (
+                                    <li key={child.path}>
+                                      <a
+                                        href={child.path}
+                                        tabIndex={subOpen ? 0 : -1}
+                                        onClick={closeAllDesktop}
+                                        className={`gk-sans block py-2.5 pl-8 pr-5 text-[11.5px] font-medium uppercase tracking-[0.08em] transition-colors duration-200 hover:bg-white/[0.04] ${
+                                          isActive(child.path)
+                                            ? "text-[#E08A4F]"
+                                            : "text-neutral-400 hover:text-white"
+                                        }`}
+                                      >
+                                        {child.label}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      }
+
+                      /* ----- normal item ----- */
+                      return (
+                        <li key={item.path}>
+                          <a
+                            href={item.path}
+                            tabIndex={dropOpen ? 0 : -1}
+                            onClick={closeAllDesktop}
+                            aria-current={isActive(item.path) ? "page" : undefined}
+                            className={rowClass(isActive(item.path))}
+                          >
+                            {item.label}
+                          </a>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               </div>
             </li>
 
             <li>
-              <a href={ABOUT.path} className={desktopLinkClass(isActive(ABOUT.path))}>
+              <a
+                href={ABOUT.path}
+                aria-current={isActive(ABOUT.path) ? "page" : undefined}
+                className={desktopLinkClass(isActive(ABOUT.path))}
+              >
                 {ABOUT.label}
                 {underline(isActive(ABOUT.path))}
               </a>
@@ -334,7 +493,7 @@ export default function Navbar() {
             Get Quote
           </a>
 
-          {/* MOBILE HAMBURGER (koi animation nahi) */}
+          {/* MOBILE HAMBURGER */}
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
@@ -368,11 +527,6 @@ export default function Navbar() {
 
       {/* =====================================================
           MOBILE / TABLET MENU
-          - full width + full height
-          - bina animation: click par seedha khulta / band hota hai
-          - bar (logo + close) upar fixed, sirf links scroll hote hain,
-            Get Quote neeche pinned rehta hai
-          - "Explore" accordion ki tarah khulta hai
       ====================================================== */}
       {open && (
         <div
@@ -384,7 +538,7 @@ export default function Navbar() {
           {/* spacer = navbar bar height */}
           <div className="h-[var(--bar-h)] shrink-0" />
 
-          {/* SCROLLABLE NAV ITEMS (only this area scrolls) */}
+          {/* SCROLLABLE NAV ITEMS */}
           <div className="gk-scroll relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
             <div className="mx-auto max-w-3xl px-6 pb-8 pt-4 sm:px-10">
               <ul className="grid grid-cols-1 items-start sm:grid-cols-2 sm:gap-x-12">
@@ -398,13 +552,10 @@ export default function Navbar() {
                     </span>
                   );
 
-                  /* ----- accordion item ----- */
+                  /* ----- accordion item (Explore) ----- */
                   if (item.items) {
                     return (
-                      <li
-                        key="dropdown"
-                        className="border-b border-white/10"
-                      >
+                      <li key="dropdown" className="border-b border-white/10">
                         <button
                           type="button"
                           onClick={() => setMobileDropOpen((value) => !value)}
@@ -433,21 +584,90 @@ export default function Navbar() {
                             id="gk-mobile-explore"
                             className="mb-4 ml-[2.6rem] border-l border-white/15 pl-5"
                           >
-                            {item.items.map((sub) => (
-                              <li key={sub.path}>
-                                <a
-                                  href={sub.path}
-                                  onClick={() => setOpen(false)}
-                                  className={`gk-sans block py-3 text-[14px] font-medium uppercase tracking-[0.08em] sm:text-[15px] ${
-                                    isActive(sub.path)
-                                      ? "text-[#E08A4F]"
-                                      : "text-neutral-300"
-                                  }`}
-                                >
-                                  {sub.label}
-                                </a>
-                              </li>
-                            ))}
+                            {item.items.map((sub) => {
+                              /* ----- Accessories: link + chevron toggle ----- */
+                              if (sub.children) {
+                                const parentActive =
+                                  isActive(sub.path) ||
+                                  sub.children.some((child) =>
+                                    isActive(child.path)
+                                  );
+
+                                return (
+                                  <li key={sub.path}>
+                                    <div className="flex items-center justify-between">
+                                      <a
+                                        href={sub.path}
+                                        onClick={() => setOpen(false)}
+                                        className={`gk-sans flex-1 py-3 text-[14px] font-medium uppercase tracking-[0.08em] sm:text-[15px] ${
+                                          parentActive || mobileSubOpen
+                                            ? "text-[#E08A4F]"
+                                            : "text-neutral-300"
+                                        }`}
+                                      >
+                                        {sub.label}
+                                      </a>
+
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setMobileSubOpen((value) => !value)
+                                        }
+                                        aria-label={`${sub.label} submenu`}
+                                        aria-expanded={mobileSubOpen}
+                                        aria-controls="gk-mobile-accessories"
+                                        className="flex h-10 w-10 shrink-0 items-center justify-center text-white/60"
+                                      >
+                                        <Chevron
+                                          open={mobileSubOpen}
+                                          className="h-3.5 w-3.5"
+                                        />
+                                      </button>
+                                    </div>
+
+                                    {mobileSubOpen && (
+                                      <ul
+                                        id="gk-mobile-accessories"
+                                        className="mb-2 ml-1 border-l border-white/10 pl-4"
+                                      >
+                                        {sub.children.map((child) => (
+                                          <li key={child.path}>
+                                            <a
+                                              href={child.path}
+                                              onClick={() => setOpen(false)}
+                                              className={`gk-sans block py-2.5 text-[13px] font-medium uppercase tracking-[0.08em] sm:text-[14px] ${
+                                                isActive(child.path)
+                                                  ? "text-[#E08A4F]"
+                                                  : "text-neutral-400"
+                                              }`}
+                                            >
+                                              {child.label}
+                                            </a>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </li>
+                                );
+                              }
+
+                              /* ----- normal sub item ----- */
+                              return (
+                                <li key={sub.path}>
+                                  <a
+                                    href={sub.path}
+                                    onClick={() => setOpen(false)}
+                                    className={`gk-sans block py-3 text-[14px] font-medium uppercase tracking-[0.08em] sm:text-[15px] ${
+                                      isActive(sub.path)
+                                        ? "text-[#E08A4F]"
+                                        : "text-neutral-300"
+                                    }`}
+                                  >
+                                    {sub.label}
+                                  </a>
+                                </li>
+                              );
+                            })}
                           </ul>
                         )}
                       </li>
@@ -480,7 +700,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* PINNED FOOTER (does not scroll) */}
+          {/* PINNED FOOTER */}
           <div className="relative shrink-0 border-t border-white/10 bg-[#0A0A0A] px-6 pb-5 pt-4 sm:px-10">
             <div className="mx-auto max-w-3xl">
               <a
@@ -512,7 +732,7 @@ export default function Navbar() {
       )}
 
       {/* =====================================================
-          FONTS + THEME  (Montserrat = logo jaisa, poori site mein)
+          FONTS + THEME
       ====================================================== */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -522,7 +742,6 @@ export default function Navbar() {
           font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
         }
 
-        /* navbar bar height (menu ke upar ka spacer) */
         .gk-menu-wrap {
           --bar-h: 76px;
         }
@@ -533,12 +752,10 @@ export default function Navbar() {
           }
         }
 
-        /* Dark menu */
         .gk-menu {
           background: #0A0A0A;
         }
 
-        /* hide scrollbar for the links list */
         .gk-scroll {
           scrollbar-width: none;
         }
@@ -547,12 +764,11 @@ export default function Navbar() {
           display: none;
         }
 
-        /* keyboard focus visible */
         header a:focus-visible,
         header button:focus-visible,
         .gk-menu a:focus-visible,
         .gk-menu button:focus-visible {
-          outline: 2px solid ${ACCENT};
+          outline: 2px solid ${ACCENT_LIGHT};
           outline-offset: 3px;
           border-radius: 6px;
         }

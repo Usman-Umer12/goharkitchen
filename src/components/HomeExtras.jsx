@@ -1,64 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 /* =========================================================
-   BRAND LOGO STYLE
-   "white"    = har logo automatically clean white silhouette ban jata
-                hai (white, black, colored ya transparent - koi bhi
-                background ho). Extra khali jagah crop hoti hai aur
-                sab logos barabar size mein dikhte hain.
-   "original" = logos apne asli rang mein, white tile par
+   SETTINGS
 ========================================================= */
 
-const BRAND_LOGO_MODE = "white"; // "white" | "original"
+const BRAND_TABLE = "brand_logos";
+
 
 /* =========================================================
-   SERVICES DATA
+   BRAND PARTNERS (fallback: local brand1 - brand8)
 ========================================================= */
 
-const services = [
-  {
-    number: "01",
-    title: "Custom Kitchens",
-    description:
-      "Thoughtfully designed kitchens combining practical layouts, refined finishes and smart storage for everyday living.",
-    image: "kitchen3.webp",
-    link: "/kitchen",
-  },
-  {
-    number: "02",
-    title: "Luxury Wardrobes",
-    description:
-      "Made-to-measure wardrobes designed to maximize storage while complementing your bedroom's style.",
-    image: "word1.webp",
-    link: "/wordrobe",
-  },
-  {
-    number: "03",
-    title: "Media Walls",
-    description:
-      "Contemporary media walls that bring together entertainment, storage and sophisticated interior design.",
-    image: "media1.webp",
-    link: "/media-walls",
-  },
-  {
-    number: "04",
-    title: "Bedroom Furniture",
-    description:
-      "Beautifully considered bedroom furniture tailored to your space, preferences and everyday comfort.",
-    image: "bed1.webp",
-    link: "/bedroom-walls",
-  },
-];
-
-/* =========================================================
-   BRAND PARTNERS
-========================================================= */
-
-const brands = [
+const fallbackBrands = [
   { name: "NUOMI Pakistan", image: "brand1.webp" },
   { name: "DTC", image: "brand2.webp" },
   { name: "Brand Partner 3", image: "brand3.webp" },
   { name: "Corian Solid Surface", image: "brand4.webp" },
+  { name: "Brand Partner 5", image: "brand5.webp" },
+  { name: "Brand Partner 6", image: "brand6.webp" },
+  { name: "Brand Partner 7", image: "brand7.webp" },
+  { name: "Brand Partner 8", image: "brand8.webp" },
 ];
 
 /* =========================================================
@@ -178,8 +140,6 @@ const Reveal = ({ children, delay = 0, className = "" }) => {
 
 /* =========================================================
    SECTION HEADING
-   Home.jsx ki "Discover Our Collections" heading jaisi:
-   same size, same weight, left aligned, uppercase
 ========================================================= */
 
 const SectionHeading = ({ id, children }) => (
@@ -188,64 +148,6 @@ const SectionHeading = ({ id, children }) => (
   </h2>
 );
 
-/* =========================================================
-   OUR SERVICES  (soft white)
-========================================================= */
-
-const OurServices = () => (
-  <section
-    className="gk-section gk-services"
-    id="our-services"
-    aria-labelledby="gk-services-title"
-  >
-    <div className="gk-container">
-      <Reveal className="gk-heading-wrap">
-        <SectionHeading id="gk-services-title">Our Services</SectionHeading>
-      </Reveal>
-
-      <div className="gk-services-grid">
-        {services.map((service, index) => (
-          <Reveal
-            key={service.number}
-            delay={index * 60}
-            className="gk-service-card"
-          >
-            <a
-              href={service.link}
-              className="gk-service-link"
-              aria-label={`Explore ${service.title}`}
-            >
-              <div className="gk-service-image">
-                <img
-                  src={getImage(service.image)}
-                  alt={service.title}
-                  loading="lazy"
-                  decoding="async"
-                />
-
-                <span className="gk-service-number">{service.number}</span>
-
-                <span className="gk-service-arrow" aria-hidden="true">
-                  ↗
-                </span>
-              </div>
-
-              <div className="gk-service-content">
-                <h3>{service.title}</h3>
-                <p>{service.description}</p>
-
-                <span className="gk-service-discover">
-                  Explore Service
-                  <span aria-hidden="true"> ↗</span>
-                </span>
-              </div>
-            </a>
-          </Reveal>
-        ))}
-      </div>
-    </div>
-  </section>
-);
 
 /* =========================================================
    WHY CHOOSE US  (pure white)
@@ -306,216 +208,106 @@ const WhyChooseGohar = () => (
 );
 
 /* =========================================================
-   LOGO NORMALISER
-   Logo image ko canvas par padhta hai, background (white / black /
-   colored / transparent) pehchan kar hata deta hai, logo ko pure white
-   banata hai aur logo ke aas-paas ki extra jagah crop kar deta hai.
+   BRAND PARTNERSHIPS  (black section, original colour logos)
+   Desktop: 4 + 4  |  Tablet/Mobile: 2 columns
+   Logos Supabase (admin) se aate hain; khali ho to local fallback
 ========================================================= */
 
-const logoCache = new Map();
-
-const smoothstep = (t) => t * t * (3 - 2 * t);
-
-const normaliseLogo = (src) => {
-  if (logoCache.has(src)) return logoCache.get(src);
-
-  const job = new Promise((resolve, reject) => {
-    const img = new Image();
-    img.decoding = "async";
-    img.crossOrigin = "anonymous";
-
-    img.onload = () => {
-      try {
-        const MAX = 720;
-        const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
-        const w = Math.max(1, Math.round(img.naturalWidth * scale));
-        const h = Math.max(1, Math.round(img.naturalHeight * scale));
-
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        ctx.drawImage(img, 0, 0, w, h);
-
-        const imageData = ctx.getImageData(0, 0, w, h);
-        const px = imageData.data;
-
-        /* background colour = average of the four corners */
-        const patch = Math.max(1, Math.min(4, Math.floor(Math.min(w, h) / 6)));
-        let br = 0, bg = 0, bb = 0, ba = 0, n = 0;
-
-        [[0, 0], [w - patch, 0], [0, h - patch], [w - patch, h - patch]].forEach(
-          ([sx, sy]) => {
-            for (let y = sy; y < sy + patch; y += 1) {
-              for (let x = sx; x < sx + patch; x += 1) {
-                const i = (y * w + x) * 4;
-                br += px[i];
-                bg += px[i + 1];
-                bb += px[i + 2];
-                ba += px[i + 3];
-                n += 1;
-              }
-            }
-          }
-        );
-
-        br /= n; bg /= n; bb /= n; ba /= n;
-        const transparentBg = ba < 200;
-
-        let minX = w, minY = h, maxX = -1, maxY = -1;
-
-        for (let y = 0; y < h; y += 1) {
-          for (let x = 0; x < w; x += 1) {
-            const i = (y * w + x) * 4;
-            const a = px[i + 3] / 255;
-            let alpha = a;
-
-            if (!transparentBg) {
-              const dr = px[i] - br;
-              const dg = px[i + 1] - bg;
-              const db = px[i + 2] - bb;
-              const dist = Math.sqrt(dr * dr + dg * dg + db * db) / 441.67;
-              const t = Math.min(1, Math.max(0, (dist - 0.07) / 0.25));
-              alpha = smoothstep(t) * a;
-            }
-
-            px[i] = 255;
-            px[i + 1] = 255;
-            px[i + 2] = 255;
-            px[i + 3] = Math.round(alpha * 255);
-
-            if (alpha > 0.1) {
-              if (x < minX) minX = x;
-              if (x > maxX) maxX = x;
-              if (y < minY) minY = y;
-              if (y > maxY) maxY = y;
-            }
-          }
-        }
-
-        if (maxX < 0) {
-          reject(new Error("empty logo"));
-          return;
-        }
-
-        ctx.putImageData(imageData, 0, 0);
-
-        /* crop to the logo itself (+ tiny margin) */
-        const pad = 2;
-        const cx = Math.max(0, minX - pad);
-        const cy = Math.max(0, minY - pad);
-        const cw = Math.min(w - cx, maxX - minX + 1 + pad * 2);
-        const ch = Math.min(h - cy, maxY - minY + 1 + pad * 2);
-
-        const out = document.createElement("canvas");
-        out.width = cw;
-        out.height = ch;
-        out.getContext("2d").drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
-
-        resolve({ url: out.toDataURL("image/png"), ratio: cw / ch });
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    img.onerror = reject;
-    img.src = src;
-  });
-
-  logoCache.set(src, job);
-  return job;
-};
-
-const BrandLogo = ({ src, name }) => {
-  const [logo, setLogo] = useState({ status: "loading" });
+const BrandPartnerships = () => {
+  const [remote, setRemote] = useState(null); // null = loading
 
   useEffect(() => {
     let active = true;
 
-    if (BRAND_LOGO_MODE !== "white") {
-      setLogo({ status: "original" });
-      return undefined;
-    }
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from(BRAND_TABLE)
+          .select("id, name, image_url, sort_order, created_at")
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true });
 
-    normaliseLogo(src)
-      .then((result) => {
-        if (active) setLogo({ status: "ready", ...result });
-      })
-      .catch(() => {
-        if (active) setLogo({ status: "fallback" });
-      });
+        if (!active) return;
+
+        if (error || !data?.length) {
+          setRemote([]);
+          return;
+        }
+
+        setRemote(
+          data.map((row) => ({
+            id: row.id,
+            name: row.name || "Brand Partner",
+            src: row.image_url,
+          }))
+        );
+      } catch (err) {
+        if (active) setRemote([]);
+      }
+    })();
 
     return () => {
       active = false;
     };
-  }, [src]);
+  }, []);
 
-  if (logo.status === "loading") {
-    return <span className="gk-brand-skeleton" aria-hidden="true" />;
-  }
-
-  if (logo.status === "ready") {
-    return (
-      <img
-        className="gk-brand-logo"
-        style={{ "--gk-ar": logo.ratio.toFixed(3) }}
-        src={logo.url}
-        alt={name}
-        decoding="async"
-      />
-    );
-  }
+  const brands =
+    remote === null
+      ? []
+      : remote.length
+      ? remote
+      : fallbackBrands.map((b) => ({
+          id: b.image,
+          name: b.name,
+          src: getImage(b.image),
+        }));
 
   return (
-    <img
-      className={`gk-brand-logo gk-brand-logo-${logo.status}`}
-      src={src}
-      alt={name}
-      loading="lazy"
-      decoding="async"
-    />
+    <section
+      className="gk-section gk-partnerships"
+      id="brand-partnerships"
+      aria-labelledby="gk-partnerships-title"
+    >
+      <div className="gk-container">
+        <Reveal className="gk-heading-wrap gk-partnerships-heading">
+          <SectionHeading id="gk-partnerships-title">
+            Our Brand Partners
+          </SectionHeading>
+
+          <p className="gk-body gk-partnerships-description">
+            Thoughtful interiors begin with the right choices. We consider
+            materials, finishes and fittings to complement each project's
+            design and requirements.
+          </p>
+        </Reveal>
+
+        <div className="gk-brands-grid">
+          {remote === null
+            ? Array.from({ length: 8 }, (_, i) => (
+                <div className="gk-brand-item" key={`sk-${i}`}>
+                  <span className="gk-brand-skeleton" aria-hidden="true" />
+                </div>
+              ))
+            : brands.map((brand, index) => (
+                <Reveal
+                  key={brand.id}
+                  delay={(index % 4) * 70}
+                  className="gk-brand-item"
+                >
+                  <img
+                    className="gk-brand-logo"
+                    src={brand.src}
+                    alt={brand.name}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </Reveal>
+              ))}
+        </div>
+      </div>
+    </section>
   );
 };
-
-/* =========================================================
-   BRAND PARTNERSHIPS  (shortest section = BLACK, white text)
-   Logos uniform white, equal tiles
-========================================================= */
-
-const BrandPartnerships = () => (
-  <section
-    className="gk-section gk-partnerships"
-    id="brand-partnerships"
-    aria-labelledby="gk-partnerships-title"
-  >
-    <div className="gk-container">
-      <Reveal className="gk-heading-wrap gk-partnerships-heading">
-        <SectionHeading id="gk-partnerships-title">
-          Our Brand Partners
-        </SectionHeading>
-
-        <p className="gk-body gk-partnerships-description">
-          Thoughtful interiors begin with the right choices. We consider
-          materials, finishes and fittings to complement each project's design
-          and requirements.
-        </p>
-      </Reveal>
-
-      <div className="gk-brands-grid" data-logo-mode={BRAND_LOGO_MODE}>
-        {brands.map((brand, index) => (
-          <Reveal
-            key={brand.image}
-            delay={index * 70}
-            className="gk-brand-item"
-          >
-            <BrandLogo src={getImage(brand.image)} name={brand.name} />
-          </Reveal>
-        ))}
-      </div>
-    </div>
-  </section>
-);
 
 /* =========================================================
    GLOBAL SECTION STYLES
@@ -543,7 +335,6 @@ const Styles = () => (
       isolation: isolate;
       font-family: var(--gk-sans);
 
-      /* default = LIGHT tokens */
       --gk-bg: #FFFFFF;
       --gk-text: #141414;
       --gk-muted: rgba(20, 20, 20, 0.68);
@@ -588,7 +379,6 @@ const Styles = () => (
       --gk-card: #FAF8F5;
     }
 
-    /* Shortest section = black */
     .gk-partnerships {
       --gk-bg: #000000;
       --gk-text: #FFFFFF;
@@ -607,8 +397,6 @@ const Styles = () => (
       .gk-partnerships { padding-block: 72px; }
     }
 
-    /* Home.jsx collections jitni hi width + padding:
-       px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-20 */
     .gk-container {
       width: 100%;
       padding-inline: 16px;
@@ -656,8 +444,7 @@ const Styles = () => (
       transform: translate3d(0, 0, 0);
     }
 
-    /* SECTION HEADING = Home.jsx "Discover Our Collections"
-       20px / 24px / 28px / 30px, semibold, uppercase, left aligned */
+    /* SECTION HEADING */
 
     .gk-heading {
       margin: 0;
@@ -682,7 +469,6 @@ const Styles = () => (
       .gk-heading { font-size: 30px; }
     }
 
-    /* heading ke neeche gap (Home: mb-8 sm:mb-10 lg:mb-12) */
     .gk-heading-wrap {
       margin-bottom: 32px;
     }
@@ -708,7 +494,7 @@ const Styles = () => (
       .gk-body { font-size: 14px; }
     }
 
-    /* BUTTON (black on white sections) */
+    /* BUTTON */
 
     .gk-btn-solid {
       display: inline-flex;
@@ -740,112 +526,192 @@ const Styles = () => (
       border-color: var(--gk-accent);
     }
 
-    /* OUR SERVICES */
+    /* =====================================================
+       OUR SERVICES
+       Desktop: [ label | 3 column tiles ]
+       Tablet/Mobile: label upar, neeche 3 column tiles
+       Layout: 1 2 3 / 4 5 6
+    ===================================================== */
 
-    .gk-services-grid {
+    .gk-svc-intro {
+      max-width: 520px;
+      margin-top: 14px;
+    }
+
+    .gk-svc-groups {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 20px;
     }
 
-    .gk-service-card {
+    .gk-svc-group {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+      padding-block: 32px;
+      border-top: 1px solid var(--gk-border);
+    }
+
+    .gk-svc-group:last-child {
+      border-bottom: 1px solid var(--gk-border);
+    }
+
+    @media (min-width: 1024px) {
+      .gk-svc-group {
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 48px;
+        padding-block: 44px;
+      }
+    }
+
+    .gk-svc-meta {
       min-width: 0;
-      border: 1px solid var(--gk-border);
-      background: var(--gk-card);
-      box-shadow: 0 1px 2px rgba(20, 20, 20, 0.04);
     }
 
-    .gk-service-link {
-      display: block;
-      height: 100%;
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .gk-service-image {
-      position: relative;
-      aspect-ratio: 4 / 3;
-      overflow: hidden;
-      background: #E9E5E0;
-    }
-
-    .gk-service-image img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-      transform: none !important;
-      transition: none !important;
-    }
-
-    .gk-service-number {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      display: inline-flex;
-      min-width: 34px;
-      min-height: 30px;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      color: #FFFFFF;
-      background: rgba(0, 0, 0, 0.55);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      backdrop-filter: blur(8px);
-    }
-
-    .gk-service-arrow {
-      position: absolute;
-      right: 12px;
-      bottom: 12px;
-      display: flex;
-      width: 35px;
-      height: 35px;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.55);
-      border-radius: 50%;
-      color: #FFFFFF;
-      background: rgba(0, 0, 0, 0.45);
-      font-size: 18px;
-      transition: none !important;
-    }
-
-    .gk-service-content {
-      padding: 18px 15px 20px;
-    }
-
-    .gk-service-content h3 {
-      margin: 0 0 9px;
+    .gk-svc-label {
+      margin: 0;
       color: var(--gk-text);
       font-family: var(--gk-display);
-      font-size: clamp(16px, 1.4vw, 20px);
-      font-weight: 600;
-      line-height: 1.25;
-      letter-spacing: -0.01em;
-      overflow-wrap: break-word;
-    }
-
-    .gk-service-content p {
-      margin: 0;
-      color: var(--gk-muted);
-      font-size: 12px;
-      line-height: 1.8;
-    }
-
-    .gk-service-discover {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      margin-top: 16px;
-      color: var(--gk-link);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
+    }
+
+    .gk-svc-label::after {
+      content: "";
+      display: block;
+      width: 36px;
+      height: 2px;
+      margin-top: 14px;
+      background: var(--gk-accent);
+    }
+
+    .gk-svc-count {
+      margin: 12px 0 0;
+      color: var(--gk-muted);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    /* 3 columns har screen par */
+    .gk-svc-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .gk-svc-list li {
+      min-width: 0;
+      display: flex;
+    }
+
+    .gk-svc-link {
+      position: relative;
+      display: flex;
+      width: 100%;
+      min-height: 72px;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 20px;
+      border: 1px solid var(--gk-border);
+      border-radius: 2px;
+      background: var(--gk-card);
+      color: var(--gk-text);
+      text-decoration: none;
+      transition:
+        border-color 250ms ease,
+        background-color 250ms ease,
+        box-shadow 300ms var(--gk-ease),
+        transform 300ms var(--gk-ease);
+    }
+
+    /* neeche ki accent line (hover par bharti hai) */
+    .gk-svc-link::after {
+      content: "";
+      position: absolute;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      height: 2px;
+      background: var(--gk-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 400ms var(--gk-ease);
+    }
+
+    .gk-svc-link:hover,
+    .gk-svc-link:focus-visible {
+      border-color: rgba(192, 101, 43, 0.55);
+      background: #FFF9F4;
+      box-shadow: 0 10px 24px -14px rgba(20, 20, 20, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .gk-svc-link:hover::after,
+    .gk-svc-link:focus-visible::after {
+      transform: scaleX(1);
+    }
+
+    /* bullet: hover par lambi dash ban jati hai */
+    .gk-svc-bullet {
+      flex: 0 0 auto;
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--gk-accent);
+      transition: width 300ms var(--gk-ease);
+    }
+
+    .gk-svc-link:hover .gk-svc-bullet,
+    .gk-svc-link:focus-visible .gk-svc-bullet {
+      width: 20px;
+    }
+
+    .gk-svc-name {
+      min-width: 0;
+      flex: 1;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+      transition: color 250ms ease;
+    }
+
+    .gk-svc-link:hover .gk-svc-name,
+    .gk-svc-link:focus-visible .gk-svc-name {
+      color: var(--gk-accent);
+    }
+
+    .gk-svc-arrow {
+      display: inline-flex;
+      flex: 0 0 auto;
+      width: 30px;
+      height: 30px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--gk-border);
+      border-radius: 50%;
+      color: rgba(20, 20, 20, 0.5);
+      font-size: 13px;
+      line-height: 1;
+      transition:
+        background-color 250ms ease,
+        border-color 250ms ease,
+        color 250ms ease,
+        transform 300ms var(--gk-ease);
+    }
+
+    .gk-svc-link:hover .gk-svc-arrow,
+    .gk-svc-link:focus-visible .gk-svc-arrow {
+      border-color: var(--gk-accent);
+      background: var(--gk-accent);
+      color: #FFFFFF;
+      transform: rotate(45deg);
     }
 
     /* WHY CHOOSE US */
@@ -936,7 +802,7 @@ const Styles = () => (
       line-height: 1.85;
     }
 
-    /* BRAND PARTNERSHIPS (black section) */
+    /* BRAND PARTNERSHIPS (black section, original colour logos) */
 
     .gk-partnerships-heading .gk-body {
       max-width: 620px;
@@ -956,47 +822,38 @@ const Styles = () => (
       .gk-partnerships .gk-heading-wrap { margin-bottom: 36px; }
     }
 
+    /* desktop: 4 + 4 */
     .gk-brands-grid {
-      --gk-logo-h: 58px;
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       align-items: stretch;
       gap: 16px;
     }
 
+    /* white tile = logos apne asli rang mein saaf nazar aate hain */
     .gk-brand-item {
       display: flex;
       min-width: 0;
-      min-height: 150px;
+      height: 140px;
       align-items: center;
       justify-content: center;
-      padding: 28px 24px;
-      border: 1px solid var(--gk-border);
-      background: rgba(255, 255, 255, 0.035);
-      transition:
-        border-color 250ms ease,
-        background-color 250ms ease;
+      padding: 24px 28px;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      background: #FFFFFF;
     }
 
-    .gk-brand-item:hover {
-      border-color: rgba(224, 138, 79, 0.7);
-      background: rgba(255, 255, 255, 0.07);
-    }
-
-    /* normalised logo: crop ho chuka hai, isliye har logo
-       barabar height / balanced width mein aata hai */
     .gk-brand-logo {
       display: block;
-      width: min(82%, calc(var(--gk-logo-h) * var(--gk-ar, 2.4)));
+      width: auto;
       height: auto;
-      max-height: calc(var(--gk-logo-h) * 1.15);
+      max-width: 100%;
+      max-height: 100%;
       object-fit: contain;
-      opacity: 0.92;
-      transition: opacity 250ms ease, transform 250ms ease;
+      transition: transform 250ms ease;
     }
 
     .gk-brand-item:hover .gk-brand-logo {
-      opacity: 1;
       transform: scale(1.04);
     }
 
@@ -1005,50 +862,12 @@ const Styles = () => (
       width: 55%;
       height: 14px;
       border-radius: 2px;
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    /* fallback (agar canvas image process na kar sake) */
-    .gk-brand-logo-fallback {
-      width: 100%;
-      max-width: 190px;
-      height: var(--gk-logo-h);
-      object-fit: contain;
-      filter: grayscale(1) invert(1) brightness(1.8) contrast(1.6);
-      mix-blend-mode: screen;
-      opacity: 1;
-    }
-
-    /* "original" mode: white tile par asli rang ke logos */
-    .gk-brands-grid[data-logo-mode="original"] .gk-brand-item {
-      border-color: transparent;
-      background: #FFFFFF;
-    }
-
-    .gk-brands-grid[data-logo-mode="original"] .gk-brand-logo-original {
-      width: 100%;
-      max-width: 190px;
-      height: var(--gk-logo-h);
-      object-fit: contain;
-      opacity: 1;
+      background: rgba(20, 20, 20, 0.08);
     }
 
     /* TABLET */
 
     @media (max-width: 1023px) {
-      .gk-services-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-      }
-
-      .gk-service-image {
-        aspect-ratio: 16 / 10;
-      }
-
-      .gk-service-content {
-        padding: 20px 18px 22px;
-      }
-
       .gk-why-layout {
         grid-template-columns: minmax(0, 1fr);
         gap: 34px;
@@ -1063,13 +882,31 @@ const Styles = () => (
       }
 
       .gk-brands-grid {
-        --gk-logo-h: 52px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
       }
 
       .gk-brand-item {
-        min-height: 128px;
+        height: 120px;
+      }
+
+      /* services tablet: 3 column, thora chota */
+      .gk-svc-list {
+        gap: 12px;
+      }
+
+      .gk-svc-link {
+        min-height: 68px;
+        gap: 12px;
+        padding: 16px 14px;
+      }
+
+      .gk-svc-name {
+        font-size: 14px;
+      }
+
+      .gk-svc-arrow {
+        display: none;
       }
     }
 
@@ -1081,53 +918,57 @@ const Styles = () => (
         line-height: 1.85;
       }
 
-      /* SERVICES (2 columns, gap-3) */
+      /* SERVICES: 3 column (1 2 3 / 4 5 6), compact tiles */
 
-      .gk-services-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+      .gk-svc-group {
+        gap: 16px;
+        padding-block: 24px;
       }
 
-      .gk-service-image {
-        aspect-ratio: 4 / 3;
+      .gk-svc-label {
+        font-size: 13px;
       }
 
-      .gk-service-number {
-        top: 8px;
-        left: 8px;
-        min-width: 29px;
-        min-height: 26px;
-        font-size: 9px;
-      }
-
-      .gk-service-arrow {
-        right: 8px;
-        bottom: 8px;
-        width: 29px;
-        height: 29px;
-        font-size: 15px;
-      }
-
-      .gk-service-content {
-        padding: 13px 11px 15px;
-      }
-
-      .gk-service-content h3 {
-        margin-bottom: 7px;
-        font-size: 15px;
-        line-height: 1.25;
-      }
-
-      .gk-service-content p {
-        font-size: 11px;
-        line-height: 1.7;
-      }
-
-      .gk-service-discover {
-        gap: 4px;
+      .gk-svc-label::after {
         margin-top: 12px;
-        font-size: 9px;
-        letter-spacing: 0.04em;
+      }
+
+      .gk-svc-count {
+        margin-top: 10px;
+        font-size: 10px;
+      }
+
+      .gk-svc-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .gk-svc-link {
+        min-height: 64px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 10px;
+      }
+
+      .gk-svc-bullet {
+        width: 6px;
+        height: 6px;
+      }
+
+      .gk-svc-link:hover .gk-svc-bullet,
+      .gk-svc-link:focus-visible .gk-svc-bullet {
+        width: 16px;
+      }
+
+      .gk-svc-name {
+        flex: 0 1 auto;
+        width: 100%;
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: 0;
+        line-height: 1.3;
       }
 
       /* WHY CHOOSE US */
@@ -1191,38 +1032,29 @@ const Styles = () => (
       }
 
       .gk-brands-grid {
-        --gk-logo-h: 42px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 9px;
       }
 
       .gk-brand-item {
-        min-height: 104px;
-        padding: 20px 14px;
+        height: 100px;
+        padding: 16px 14px;
       }
     }
 
     /* SMALL MOBILE */
 
     @media (max-width: 360px) {
-      .gk-services-grid {
-        gap: 9px;
+      .gk-svc-list {
+        gap: 6px;
       }
 
-      .gk-service-content {
-        padding: 11px 9px 13px;
+      .gk-svc-link {
+        padding: 10px 8px;
       }
 
-      .gk-service-content h3 {
-        font-size: 14px;
-      }
-
-      .gk-service-content p {
-        font-size: 10px;
-      }
-
-      .gk-service-discover {
-        font-size: 8px;
+      .gk-svc-name {
+        font-size: 10.5px;
       }
 
       .gk-benefits-grid {
@@ -1241,13 +1073,9 @@ const Styles = () => (
         font-size: 10.5px;
       }
 
-      .gk-brands-grid {
-        --gk-logo-h: 36px;
-      }
-
       .gk-brand-item {
-        min-height: 92px;
-        padding: 16px 10px;
+        height: 88px;
+        padding: 12px 10px;
       }
     }
 
@@ -1260,9 +1088,11 @@ const Styles = () => (
         transition: none;
       }
 
-      .gk-service-image img,
-      .gk-service-arrow,
-      .gk-service-card,
+      .gk-svc-link,
+      .gk-svc-link::after,
+      .gk-svc-bullet,
+      .gk-svc-name,
+      .gk-svc-arrow,
       .gk-benefit-card,
       .gk-brand-logo {
         transition: none !important;
@@ -1278,7 +1108,6 @@ const Styles = () => (
 const HomeExtras = () => (
   <>
     <Styles />
-    <OurServices />
     <WhyChooseGohar />
     <BrandPartnerships />
   </>

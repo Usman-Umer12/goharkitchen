@@ -969,7 +969,7 @@ const Products = ({
 ========================================================= */
 
 const Styles = () => (
-  <style>{`
+ <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 
     .bed-page {
@@ -1461,6 +1461,64 @@ const Styles = () => (
       }
     }
 
+    /* desktop landscape short screens */
+    @media (min-width: 1024px) and (max-height: 640px) {
+      .bed-page .kt-hero {
+        padding-top: 6rem;
+        padding-bottom: 2rem;
+      }
+    }
+
+    /* TABLET + MOBILE HERO — HEIGHT 70 */
+
+    @media (max-width: 1023px) {
+      .bed-page .kt-first {
+        min-height: 0;
+        height: auto;
+      }
+
+      .bed-page .kt-hero {
+        flex: none;
+        min-height: 0;
+        max-height: none;
+        height: 70vh;
+        height: 70svh;
+        padding: 80px 0 28px;
+      }
+
+      .bed-page .kt-hero-shade {
+        background:
+          linear-gradient(
+            180deg,
+            rgba(10,10,10,.58) 0%,
+            rgba(10,10,10,.32) 45%,
+            rgba(10,10,10,.76) 100%
+          );
+      }
+
+      /* sirf title / description / button — eyebrow hide */
+      .bed-page .kt-hero .gk-eyebrow {
+        display: none;
+      }
+
+      .bed-page .kt-hero .gk-hero-title {
+        font-size: clamp(1.65rem, 5vw, 3rem);
+        line-height: 1.12;
+        letter-spacing: .015em;
+      }
+
+      .bed-page .kt-hero-text {
+        max-width: 460px;
+        margin: 12px auto 0;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .bed-page .kt-hero-btn {
+        margin-top: 18px;
+      }
+    }
+
     @media (max-width: 640px) {
       .bed-page .gk-eyebrow {
         font-size: 10px;
@@ -1468,7 +1526,13 @@ const Styles = () => (
       }
 
       .bed-page .kt-hero {
-        padding: 6.5rem 0 2.5rem;
+        padding: 72px 0 24px;
+      }
+
+      .bed-page .kt-hero .gk-hero-title {
+        font-size: clamp(1.5rem, 6.2vw, 2.15rem);
+        line-height: 1.14;
+        letter-spacing: 0;
       }
 
       .bed-page .kt-hero-lines {
@@ -1476,20 +1540,32 @@ const Styles = () => (
       }
 
       .bed-page .kt-hero-text {
-        font-size: .88rem;
-        line-height: 1.65;
-        margin-top: 1rem;
-        padding: 0 6px;
-        max-width: 340px;
+        font-size: 12px;
+        line-height: 1.55;
+        margin-top: 10px;
+        padding: 0 8px;
+        max-width: 330px;
       }
 
       .bed-page .kt-hero-btn {
         width: auto;
         max-width: 100%;
-        height: 44px;
-        margin-top: 1.5rem;
-        padding: 0 22px;
-        font-size: 11px;
+        height: 42px;
+        margin-top: 16px;
+        padding: 0 20px;
+        font-size: 10px;
+      }
+
+      .bed-page .kt-hero-glow-a {
+        width: 240px;
+        height: 240px;
+        filter: blur(65px);
+      }
+
+      .bed-page .kt-hero-glow-b {
+        width: 260px;
+        height: 260px;
+        filter: blur(65px);
       }
 
       .bed-page .kt-card-title {
@@ -1506,9 +1582,34 @@ const Styles = () => (
       .bed-page .kt-preview-info {
         max-height: 48dvh;
       }
+
+      .bed-page .kt-product:hover {
+        transform: none;
+      }
     }
 
     @media (max-width: 400px) {
+      .bed-page .kt-hero {
+        padding: 68px 0 20px;
+      }
+
+      .bed-page .kt-hero .gk-hero-title {
+        font-size: clamp(1.35rem, 6vw, 1.7rem);
+      }
+
+      .bed-page .kt-hero-text {
+        max-width: 290px;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .bed-page .kt-hero-btn {
+        height: 40px;
+        margin-top: 13px;
+        padding: 0 16px;
+        font-size: 9px;
+      }
+
       .bed-page .kt-page-number,
       .bed-page .kt-page-arrow {
         min-width: 36px;
@@ -1534,10 +1635,17 @@ const Styles = () => (
       }
     }
 
-    @media (max-height: 640px) {
+    @media (max-width: 640px) and (max-height: 600px) {
       .bed-page .kt-hero {
-        padding-top: 6rem;
-        padding-bottom: 2rem;
+        padding: 60px 0 18px;
+      }
+
+      .bed-page .kt-hero-text {
+        margin-top: 8px;
+      }
+
+      .bed-page .kt-hero-btn {
+        margin-top: 12px;
       }
     }
 
